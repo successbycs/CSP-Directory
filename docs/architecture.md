@@ -1,17 +1,29 @@
 # Architecture
 
-This repository implements the pipeline described in `docs/product_design.md`. The core unit of analysis is the vendor, not individual web pages. Python owns all orchestration, scheduling, and business logic. Apify is used exclusively as a crawling utility called on instruction from Python.
+The CSP Directory is a three-phase pipeline. The detailed pipeline design is in `docs/pipeline_design.md`. The vendor field schema is in `docs/vendor_schema.md`.
 
-The target architecture introduces a dual extraction model:
-Level 1 deterministic extraction and Level 2 LLM extraction using the OpenAI Responses API.
+## Three Phases
 
-Current implementation status:
-the active code path in this repo is deterministic-first and runs Level 1 extraction
-plus an active default-on Level 2 LLM extraction pass with deterministic fallback.
+**Phase 1 — URL Acquisition**
+Build a deduplicated seed list of vendor URLs from governed sources. Current source: Apify Google Search. Planned: G2, LinkedIn, ProductHunt, direct submission. A quality filter must discard non-vendor results (blog posts, review articles, error pages) before any URL enters the seed list.
 
-Current repo status:
-- the repo already includes directory export, vendor review export, static directory pages, a thin admin API, operator actions, and run tracking
-- the next major work is not basic feature creation; it is consolidation, hardening, repeatability, and launch readiness
+**Phase 2 — Enrichment**
+For each vendor URL, populate the fields defined in `docs/vendor_schema.md` using the best available tool per field. The primary enrichment path is a JS-capable web scraper (Apify Web Scraper or Website Content Crawler). LLM classification is used for fields that require interpretation (lifecycle stage, ICP, use cases, directory fit). Plain HTTP scraping is a fallback only.
+
+**Phase 3 — Persistence**
+Supabase is the source of truth. All enrichment writes to `cs_vendors` via upsert on normalised domain. The export layer builds `outputs/directory_dataset.json` from Supabase for the public frontend.
+
+## Key Design Rules
+
+- The schema defines what enrichment needs to produce — see `docs/vendor_schema.md`
+- Enrichment is field-targeted and source-governed — each field has a preferred source and a confidence tier
+- Higher-confidence values overwrite lower-confidence ones on re-enrichment
+- The frontend reads from exported JSON, not directly from Supabase
+- Python owns orchestration; Apify owns JS-capable crawling; LLMs own classification
+
+## Known Gaps (Current Implementation)
+
+The current codebase does not match this design. See `docs/pipeline_design.md` — "What Needs to Change" — for the full gap list. Key issues: enrichment uses plain HTTP instead of Apify web scraper; LLM extraction results are not writing structured fields to Supabase; no vendor quality filter at discovery.
 
 ---
 
