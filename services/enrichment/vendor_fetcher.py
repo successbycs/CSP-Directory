@@ -6,6 +6,7 @@ This module provides functions to fetch and enrich vendor website data.
 from __future__ import annotations
 
 import html
+import logging
 import re
 
 import requests
@@ -14,6 +15,8 @@ from services.config.load_config import load_pipeline_config
 from services.extraction.identity import company_name_from_website
 from services.extraction.page_text_extractor import extract_visible_text
 from services.enrichment.discovery_mode import fetch_page_with_fallback
+
+logger = logging.getLogger(__name__)
 
 BLOCKED_PAGE_HINTS = (
     "403 forbidden",
@@ -25,6 +28,10 @@ BLOCKED_PAGE_HINTS = (
 def fetch_vendor_homepage(vendor: dict[str, str]) -> dict[str, str | int]:
     """Fetch the homepage for a vendor and return structured page data.
 
+    Uses Apify Website Content Crawler as the primary fetch backend when configured
+    (external_fetch_backend == "apify"). Falls back to plain HTTP requests if Apify
+    fails or is not configured.
+
     Args:
         vendor: A dictionary with vendor information, including 'website'.
 
@@ -34,37 +41,70 @@ def fetch_vendor_homepage(vendor: dict[str, str]) -> dict[str, str | int]:
     """
     website = vendor["website"]
     vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, "")
-    request_timeout_seconds = load_pipeline_config().enrichment.request_timeout_seconds
+    config = load_pipeline_config().enrichment
+
+    # Apify-first path: use Website Content Crawler as the primary enrichment source
+    if config.external_fetch_backend == "apify":
+        logger.info("Fetching %s via Apify Website Content Crawler (primary path)", website)
+        apify_payload = fetch_page_with_fallback(website, config=config)
+        if apify_payload:
+            status_code = int(apify_payload.get("status_code", 200))
+            html_content = str(apify_payload.get("html", ""))
+            text = str(apify_payload.get("text", "")) or extract_visible_text(html_content)
+            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html_content)
+            fetch_backend = str(apify_payload.get("fetch_backend", "apify"))
+            logger.info(
+                "Apify fetch succeeded for %s: status=%s, text_length=%s",
+                website,
+                status_code,
+                len(text),
+            )
+            return {
+                "vendor_name": vendor_name,
+                "website": website,
+                "url": website,
+                "source": vendor.get("source", ""),
+                "page_type": "homepage",
+                "status_code": status_code,
+                "html": html_content,
+                "text": text,
+                "fetch_backend": fetch_backend,
+            }
+        else:
+            logger.warning("Apify fetch returned no result for %s, falling back to HTTP", website)
+
+    # Plain HTTP fallback (or primary when Apify not configured)
+    request_timeout_seconds = config.request_timeout_seconds
     try:
         response = requests.get(website, timeout=request_timeout_seconds)
         status_code = response.status_code
-        html = response.text
+        html_content = response.text
         fetch_backend = "requests"
         if _should_skip_page(response.status_code, response.text):
-            fallback_payload = fetch_page_with_fallback(website, config=load_pipeline_config().enrichment)
+            fallback_payload = fetch_page_with_fallback(website, config=config)
             if fallback_payload:
                 status_code = int(fallback_payload.get("status_code", status_code))
-                html = str(fallback_payload.get("html", ""))
-                vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html)
-                text = str(fallback_payload.get("text", "")) or extract_visible_text(html)
+                html_content = str(fallback_payload.get("html", ""))
+                vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html_content)
+                text = str(fallback_payload.get("text", "")) or extract_visible_text(html_content)
                 fetch_backend = str(fallback_payload.get("fetch_backend", "fallback"))
             else:
-                html = ""
+                html_content = ""
                 text = ""
         else:
-            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html)
-            text = extract_visible_text(html)
+            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html_content)
+            text = extract_visible_text(html_content)
     except requests.RequestException:
         fetch_backend = ""
-        fallback_payload = fetch_page_with_fallback(website, config=load_pipeline_config().enrichment)
+        fallback_payload = fetch_page_with_fallback(website, config=config)
         if fallback_payload:
             status_code = int(fallback_payload.get("status_code", 200))
-            html = str(fallback_payload.get("html", ""))
-            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html)
-            text = str(fallback_payload.get("text", "")) or extract_visible_text(html)
+            html_content = str(fallback_payload.get("html", ""))
+            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html_content)
+            text = str(fallback_payload.get("text", "")) or extract_visible_text(html_content)
             fetch_backend = str(fallback_payload.get("fetch_backend", "fallback"))
         else:
-            html = ""
+            html_content = ""
             text = ""
             status_code = 0
     return {
@@ -74,7 +114,7 @@ def fetch_vendor_homepage(vendor: dict[str, str]) -> dict[str, str | int]:
         "source": vendor.get("source", ""),
         "page_type": "homepage",
         "status_code": status_code,
-        "html": html,
+        "html": html_content,
         "text": text,
         "fetch_backend": fetch_backend,
     }

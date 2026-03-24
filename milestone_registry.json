@@ -93,7 +93,7 @@
       "interaction_targets": [
         "system"
       ],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M37",
         "M38"
@@ -102,7 +102,19 @@
         "python3 scripts/run_pipeline.py --phase enrichment --limit 5",
         "python3 scripts/check_supabase.py",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "completed_at": "2026-03-24T12:10:33.303748+00:00",
+      "evidence": {
+        "changed_files": [
+          "services/enrichment/vendor_fetcher.py",
+          "scripts/prove_m39_apify_enrichment.py"
+        ],
+        "artifact_paths": [
+          "runs/proofs/M39_apify_enrichment.json"
+        ],
+        "proof_summary": "5/5 JS-heavy vendor sites fetched with rendered content. Apify-first path implemented. Gainsight (403 via HTTP) now returns 4776 chars.",
+        "operator_completed": true
+      }
     },
     {
       "id": "M40",
