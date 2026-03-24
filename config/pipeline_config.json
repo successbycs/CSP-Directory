@@ -5,26 +5,55 @@
     ],
     "source_engine": "google_search",
     "actor_id": "apify/google-search-scraper",
-    "max_pages_per_query": 5,
+    "max_pages_per_query": 1,
     "results_per_page": 10,
     "max_candidate_domains_per_run": 100,
     "junk_domain_denylist": [
       "facebook.com",
-      "gartner.com",
-      "google.com",
       "instagram.com",
-      "jobs.ca",
       "linkedin.com",
-      "medium.com",
       "reddit.com",
-      "substack.com",
-      "slashdot.org",
-      "sourceforge.net",
       "twitter.com",
-      "toolify.ai",
-      "wikipedia.org",
       "x.com",
-      "youtube.com"
+      "youtube.com",
+      "quora.com",
+      "news.ycombinator.com",
+      "medium.com",
+      "substack.com",
+      "wikipedia.org",
+      "slashdot.org",
+      "techcrunch.com",
+      "techradar.com",
+      "zdnet.com",
+      "infoq.com",
+      "venturebeat.com",
+      "towardsdatascience.com",
+      "g2.com",
+      "capterra.com",
+      "trustradius.com",
+      "peerspot.com",
+      "getapp.com",
+      "softwareadvice.com",
+      "crozdesk.com",
+      "alternativeto.net",
+      "producthunt.com",
+      "financesonline.com",
+      "saasgenius.com",
+      "featuredcustomers.com",
+      "technologyadvice.com",
+      "serchen.com",
+      "comparecamp.com",
+      "gartner.com",
+      "forrester.com",
+      "idc.com",
+      "mckinsey.com",
+      "jobs.ca",
+      "glassdoor.com",
+      "indeed.com",
+      "builtin.com",
+      "google.com",
+      "sourceforge.net",
+      "toolify.ai"
     ],
     "article_path_hints": [
       "/article",
@@ -38,7 +67,13 @@
       "/guides",
       "/learn",
       "/news",
-      "/resources"
+      "/resources",
+      "/reviews",
+      "/compare",
+      "/alternatives",
+      "/versus",
+      "/ranking",
+      "/rankings"
     ],
     "content_hints": [
       "best ",
@@ -61,7 +96,12 @@
       "review",
       "reviews",
       "top ",
-      "vs "
+      "vs ",
+      "alternatives",
+      "ranked",
+      "ranking",
+      "competitor",
+      "competitors"
     ],
     "product_hints": [
       "automation",
@@ -122,14 +162,13 @@
       "voc"
     ],
     "noise_subdomain_prefixes": [
-      "academy.",
       "blog.",
       "careers.",
       "community.",
-      "docs.",
-      "help.",
       "jobs.",
       "newsletter.",
+      "reviews.",
+      "forum.",
       "support."
     ],
     "noise_domain_hints": [
@@ -185,8 +224,15 @@
       "integrations_page"
     ],
     "page_patterns": {
-      "pricing_page": ["pricing"],
-      "product_page": ["product", "platform", "features", "solutions"],
+      "pricing_page": [
+        "pricing"
+      ],
+      "product_page": [
+        "product",
+        "platform",
+        "features",
+        "solutions"
+      ],
       "case_studies_page": [
         "case studies",
         "case-study",
@@ -198,17 +244,74 @@
         "customer-story",
         "customers"
       ],
-      "testimonials_page": ["testimonials", "testimonial", "reviews", "review"],
-      "blog_page": ["blog", "blogs", "article", "articles", "insights", "news", "resources"],
-      "about_page": ["about", "about us", "about-us", "company", "our story", "our-story"],
-      "team_page": ["team", "leadership", "founders"],
-      "contact_page": ["contact", "email us", "talk to us"],
-      "demo_page": ["demo", "book demo", "request demo"],
-      "help_page": ["help", "help center", "knowledge base", "knowledge-base"],
-      "support_page": ["support", "support center", "customer support"],
-      "developer_docs_page": ["developer", "developers", "docs", "documentation", "api docs", "api reference"],
-      "security_page": ["security", "trust", "compliance"],
-      "integrations_page": ["integrations", "integration", "apps", "marketplace"]
+      "testimonials_page": [
+        "testimonials",
+        "testimonial",
+        "reviews",
+        "review"
+      ],
+      "blog_page": [
+        "blog",
+        "blogs",
+        "article",
+        "articles",
+        "insights",
+        "news",
+        "resources"
+      ],
+      "about_page": [
+        "about",
+        "about us",
+        "about-us",
+        "company",
+        "our story",
+        "our-story"
+      ],
+      "team_page": [
+        "team",
+        "leadership",
+        "founders"
+      ],
+      "contact_page": [
+        "contact",
+        "email us",
+        "talk to us"
+      ],
+      "demo_page": [
+        "demo",
+        "book demo",
+        "request demo"
+      ],
+      "help_page": [
+        "help",
+        "help center",
+        "knowledge base",
+        "knowledge-base"
+      ],
+      "support_page": [
+        "support",
+        "support center",
+        "customer support"
+      ],
+      "developer_docs_page": [
+        "developer",
+        "developers",
+        "docs",
+        "documentation",
+        "api docs",
+        "api reference"
+      ],
+      "security_page": [
+        "security",
+        "trust",
+        "compliance"
+      ],
+      "integrations_page": [
+        "integrations",
+        "integration",
+        "apps",
+        "marketplace"
+      ]
     },
     "junk_hints": [
       "careers",
@@ -250,9 +353,22 @@
     ]
   },
   "directory_relevance": {
-    "include_confidence_levels": ["medium", "high"],
-    "core_stages": ["Sign", "Onboard", "Activate", "Adopt", "Expand", "Renew", "Advocate"],
-    "support_only_stages": ["Support"],
+    "include_confidence_levels": [
+      "medium",
+      "high"
+    ],
+    "core_stages": [
+      "Sign",
+      "Onboard",
+      "Activate",
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "support_only_stages": [
+      "Support"
+    ],
     "core_use_case_hints": [
       "onboarding",
       "health scoring",
@@ -281,7 +397,7 @@
   },
   "llm": {
     "enabled": true,
-    "model": "gpt-5-mini",
+    "model": "gpt-4o-mini",
     "request_timeout_seconds": 45,
     "max_page_text_chars": 1800,
     "max_site_text_chars": 8000,

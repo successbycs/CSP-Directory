@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "updated_for_milestone": "M36",
+  "capabilities": [
+    {
+      "id": "database_persistence",
+      "name": "Database Persistence",
+      "description": "Apply schema changes and upsert vendor records to Supabase cs_vendors table.",
+      "inputs": ["schema definition", "vendor record"],
+      "outputs": ["persisted records", "migration applied"],
+      "preferred_surfaces": ["python"],
+      "disallowed_surfaces": [],
+      "artifact_expectations": ["sql", "json proof"],
+      "verification_patterns": [
+        "run scripts/apply_schema_migration.py and confirm exit 0",
+        "run scripts/check_supabase.py and confirm no missing columns",
+        "run a vendor upsert and confirm HTTP 201 or 200"
+      ]
+    },
+    {
+      "id": "data_pipeline",
+      "name": "Data Pipeline",
+      "description": "Run the CSP vendor discovery, enrichment, and persistence pipeline.",
+      "inputs": ["search query", "vendor seed list"],
+      "outputs": ["enriched vendor records", "Supabase upserts"],
+      "preferred_surfaces": ["python"],
+      "disallowed_surfaces": [],
+      "artifact_expectations": ["json proof", "supabase rows"],
+      "verification_patterns": [
+        "run scripts/run_pipeline.py and confirm vendors in Supabase",
+        "run scripts/check_supabase.py"
+      ]
+    },
+    {
+      "id": "llm_extraction",
+      "name": "LLM Extraction",
+      "description": "Extract structured vendor fields from crawled page text using the OpenAI LLM extractor.",
+      "inputs": ["page text", "vendor context"],
+      "outputs": ["structured vendor fields"],
+      "preferred_surfaces": ["python"],
+      "disallowed_surfaces": [],
+      "artifact_expectations": ["json proof"],
+      "verification_patterns": [
+        "run scripts/run_pipeline.py --limit 5 and confirm lifecycle_stages, use_cases, icp_buyer populated"
+      ]
+    }
+  ]
+}

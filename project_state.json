@@ -1,5 +1,5 @@
 {
-  "current_focus": "M36",
+  "current_focus": "M38",
   "verification_script": "scripts/verify_project.sh",
   "runtime_environment": "local",
   "agent_prompts": {
@@ -69,6 +69,11 @@
       "solution_architect",
       "qa"
     ],
+    "development_review_prompt_paths": {
+      "ai_engineer": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/ai_engineer_review_agent.md",
+      "solution_architect": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/solution_architect_review_agent.md",
+      "qa": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/qa_review_agent.md"
+    },
     "development_review_storage_dir": "runs/development_reviews",
     "required_review_outputs": [
       "problems",

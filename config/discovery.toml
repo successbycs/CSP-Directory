@@ -40,22 +40,57 @@ max_pages_per_query = 5
 results_per_page = 10
 max_candidate_domains_per_run = 100
 denylisted_domains = [
+  # Social / community platforms
   "facebook.com",
-  "gartner.com",
-  "google.com",
   "instagram.com",
-  "jobs.ca",
   "linkedin.com",
-  "medium.com",
   "reddit.com",
-  "substack.com",
-  "slashdot.org",
-  "sourceforge.net",
   "twitter.com",
-  "toolify.ai",
-  "wikipedia.org",
   "x.com",
   "youtube.com",
+  "quora.com",
+  "news.ycombinator.com",
+  # General content / publishing
+  "medium.com",
+  "substack.com",
+  "wikipedia.org",
+  "slashdot.org",
+  "techcrunch.com",
+  "techradar.com",
+  "zdnet.com",
+  "infoq.com",
+  "venturebeat.com",
+  "towardsdatascience.com",
+  # Software review / aggregator sites (non-vendors)
+  "g2.com",
+  "capterra.com",
+  "trustradius.com",
+  "peerspot.com",
+  "getapp.com",
+  "softwareadvice.com",
+  "crozdesk.com",
+  "alternativeto.net",
+  "producthunt.com",
+  "financesonline.com",
+  "saasgenius.com",
+  "featuredcustomers.com",
+  "technologyadvice.com",
+  "serchen.com",
+  "comparecamp.com",
+  # Research / analyst firms
+  "gartner.com",
+  "forrester.com",
+  "idc.com",
+  "mckinsey.com",
+  # Job boards
+  "jobs.ca",
+  "glassdoor.com",
+  "indeed.com",
+  "builtin.com",
+  # Search / misc infrastructure
+  "google.com",
+  "sourceforge.net",
+  "toolify.ai",
 ]
 article_path_hints = [
   "/article",
@@ -70,6 +105,14 @@ article_path_hints = [
   "/learn",
   "/news",
   "/resources",
+  "/reviews",
+  "/compare",
+  "/alternatives",
+  "/versus",
+  "/ranking",
+  "/rankings",
+  "/top-",
+  "/best-",
 ]
 content_hints = [
   "best ",
@@ -93,6 +136,11 @@ content_hints = [
   "reviews",
   "top ",
   "vs ",
+  "alternatives",
+  "ranked",
+  "ranking",
+  "competitor",
+  "competitors",
 ]
 product_hints = [
   "automation",
@@ -158,6 +206,9 @@ noise_subdomain_prefixes = [
   "community.",
   "jobs.",
   "newsletter.",
+  "reviews.",
+  "forum.",
+  "support.",
 ]
 noise_domain_hints = [
   "greenhouse",

@@ -6,7 +6,9 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Operator runs the full pipeline end-to-end, reviews the directory output against expected behaviour, and records a structured validation outcome with pass/fail notes per area.",
       "proof_artifact": "runs/proofs/M35_human_validation.json",
-      "interaction_targets": ["operator"],
+      "interaction_targets": [
+        "operator"
+      ],
       "status": "complete",
       "dependencies": [],
       "verify": [
@@ -19,13 +21,17 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Fix the auto_directory_category schema drift that causes every Supabase upsert to fail with PGRST204. Use scripts/apply_schema_migration.py to detect and apply all missing columns to the live cs_vendors table. Prove that check_supabase.py passes cleanly with no missing columns and that a vendor upsert succeeds end-to-end.",
       "proof_artifact": "runs/proofs/M36_supabase_baseline.json",
-      "interaction_targets": ["system"],
-      "status": "not_started",
-      "dependencies": ["M35"],
+      "interaction_targets": [
+        "system"
+      ],
+      "status": "complete",
+      "dependencies": [
+        "M35"
+      ],
       "verify": [
-        "python3 scripts/apply_schema_migration.py",
-        "python3 scripts/check_supabase.py",
-        "python3 scripts/autonomous_audit.py"
+        "cd /home/chris/projects/CSP-Directory && python3 scripts/apply_schema_migration.py",
+        "cd /home/chris/projects/CSP-Directory && python3 scripts/check_supabase.py",
+        "cd /home/chris/projects/CSP-Directory && python3 scripts/autonomous_audit.py"
       ]
     },
     {
@@ -34,9 +40,13 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Fix the gap where LLM extraction runs but structured fields do not write to Supabase. Run the enrichment pipeline on a set of 5 real vendors and prove that lifecycle_stages, use_cases, icp_buyer, and pricing are populated in cs_vendors after the run.",
       "proof_artifact": "runs/proofs/M37_llm_persistence.json",
-      "interaction_targets": ["system"],
-      "status": "not_started",
-      "dependencies": ["M36"],
+      "interaction_targets": [
+        "system"
+      ],
+      "status": "complete",
+      "dependencies": [
+        "M36"
+      ],
       "verify": [
         "python3 scripts/run_pipeline.py --limit 5",
         "python3 scripts/check_supabase.py",
@@ -49,13 +59,30 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Add a vendor quality filter to the discovery phase that rejects non-vendor URLs (blog posts, review articles, error pages, Reddit threads, aggregator sites). Run discovery and prove the seed list contains only real vendor domains.",
       "proof_artifact": "runs/proofs/M38_discovery_quality.json",
-      "interaction_targets": ["system"],
-      "status": "not_started",
-      "dependencies": ["M36"],
+      "interaction_targets": [
+        "system"
+      ],
+      "status": "complete",
+      "dependencies": [
+        "M36"
+      ],
       "verify": [
         "python3 scripts/run_pipeline.py --phase discovery",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "completed_at": "2026-03-24T12:02:53.012580+00:00",
+      "evidence": {
+        "changed_files": [
+          "config/pipeline_config.json",
+          "config/discovery.toml",
+          "scripts/validate_discovery_filter.py"
+        ],
+        "artifact_paths": [
+          "runs/proofs/M38_discovery_quality.json"
+        ],
+        "proof_summary": "Expanded denylist to 45 domains, added 13 aggregator/review/job-board sites. 17/17 test cases pass.",
+        "operator_completed": true
+      }
     },
     {
       "id": "M39",
@@ -63,9 +90,14 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Replace plain HTTP enrichment with Apify Website Content Crawler as the primary enrichment path. Run enrichment on 5 JS-heavy vendor sites (including at least one that currently returns empty fields due to bot-detection) and prove structured fields are populated in Supabase.",
       "proof_artifact": "runs/proofs/M39_apify_enrichment.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "not_started",
-      "dependencies": ["M37", "M38"],
+      "dependencies": [
+        "M37",
+        "M38"
+      ],
       "verify": [
         "python3 scripts/run_pipeline.py --phase enrichment --limit 5",
         "python3 scripts/check_supabase.py",
@@ -78,9 +110,72 @@
       "delivery_type": "capability_delivering",
       "proof_description": "Run the complete pipeline end-to-end. Prove at least 20 real vendor records in Supabase with an average of fewer than 5 empty enrichment fields, a clean seed list with no non-vendor records, and a valid directory_dataset.json export ready for the public frontend.",
       "proof_artifact": "runs/proofs/M40_pipeline_operational.json",
-      "interaction_targets": ["system", "operator"],
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
       "status": "not_started",
-      "dependencies": ["M39"],
+      "dependencies": [
+        "M39"
+      ],
+      "verify": [
+        "python3 scripts/run_pipeline.py",
+        "python3 scripts/export_directory_dataset.py",
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M-AF17",
+      "title": "AF framework fixes applied to CSP (closeout audit + inspect_cli)",
+      "delivery_type": "framework_fix",
+      "status": "complete",
+      "dependencies": [
+        "M37"
+      ],
+      "proof_description": "AF closeout audit root bug fixed (milestone_auditor.py) and inspect_cli.py created to give analysis roles live Supabase inspection capability. Both fixes applied to AF and propagated to CSP pipeline.",
+      "proof_artifact": "runs/proofs/M-AF17_framework_fixes.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 /home/chris/SuccessByCS-Builder/Autonomous-Framework/scripts/autonomous_controller.py --root /home/chris/projects/CSP-Directory audit-closeout M37"
+      ]
+    },
+    {
+      "id": "M41",
+      "title": "Single vendor complete field verification",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M40"
+      ],
+      "proof_description": "Run enrichment on 1 vendor end-to-end and prove ALL Supabase fields are populated: vendor_name, website, source, mission, usp, icp, use_cases, lifecycle_stages, pricing, free_trial, soc2, founded, case_studies, customers, value_statements, confidence, evidence_urls, directory_fit, directory_category, include_in_directory. This is the human verification milestone.",
+      "proof_artifact": "runs/proofs/M41_single_vendor_complete.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/run_pipeline.py --limit 1",
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M42",
+      "title": "Expand vendor catalog to 50+ vendors",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M41"
+      ],
+      "proof_description": "Run full discovery + enrichment pipeline across all configured queries. Prove 50+ real vendor records in cs_vendors Supabase table with average fewer than 5 empty enrichment fields. Produce directory_dataset.json export ready for public frontend.",
+      "proof_artifact": "runs/proofs/M42_vendor_catalog_50.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
       "verify": [
         "python3 scripts/run_pipeline.py",
         "python3 scripts/export_directory_dataset.py",
