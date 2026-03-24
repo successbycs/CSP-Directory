@@ -14,6 +14,80 @@
         "Perform one human-run validation pass and record the outcome.",
         "python3 scripts/autonomous_audit.py"
       ]
+    },
+    {
+      "id": "M36",
+      "title": "Supabase schema baseline and tool",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Sync the live Supabase schema with core_persistence_schema.sql, wire the CSP-owned Supabase tool, and prove the tool can read and write cs_vendors records.",
+      "proof_artifact": "runs/proofs/M36_supabase_baseline.json",
+      "interaction_targets": ["system"],
+      "status": "not_started",
+      "dependencies": ["M35"],
+      "verify": [
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M37",
+      "title": "LLM extraction persistence fix",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Fix the gap where LLM extraction runs but structured fields do not write to Supabase. Run the enrichment pipeline on a set of 5 real vendors and prove that lifecycle_stages, use_cases, icp_buyer, and pricing are populated in cs_vendors after the run.",
+      "proof_artifact": "runs/proofs/M37_llm_persistence.json",
+      "interaction_targets": ["system"],
+      "status": "not_started",
+      "dependencies": ["M36"],
+      "verify": [
+        "python3 scripts/run_pipeline.py --limit 5",
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M38",
+      "title": "Discovery quality filter",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Add a vendor quality filter to the discovery phase that rejects non-vendor URLs (blog posts, review articles, error pages, Reddit threads, aggregator sites). Run discovery and prove the seed list contains only real vendor domains.",
+      "proof_artifact": "runs/proofs/M38_discovery_quality.json",
+      "interaction_targets": ["system"],
+      "status": "not_started",
+      "dependencies": ["M36"],
+      "verify": [
+        "python3 scripts/run_pipeline.py --phase discovery",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M39",
+      "title": "Apify web scraper enrichment",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Replace plain HTTP enrichment with Apify Website Content Crawler as the primary enrichment path. Run enrichment on 5 JS-heavy vendor sites (including at least one that currently returns empty fields due to bot-detection) and prove structured fields are populated in Supabase.",
+      "proof_artifact": "runs/proofs/M39_apify_enrichment.json",
+      "interaction_targets": ["system"],
+      "status": "not_started",
+      "dependencies": ["M37", "M38"],
+      "verify": [
+        "python3 scripts/run_pipeline.py --phase enrichment --limit 5",
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M40",
+      "title": "Full pipeline operational proof",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Run the complete pipeline end-to-end. Prove at least 20 real vendor records in Supabase with an average of fewer than 5 empty enrichment fields, a clean seed list with no non-vendor records, and a valid directory_dataset.json export ready for the public frontend.",
+      "proof_artifact": "runs/proofs/M40_pipeline_operational.json",
+      "interaction_targets": ["system", "operator"],
+      "status": "not_started",
+      "dependencies": ["M39"],
+      "verify": [
+        "python3 scripts/run_pipeline.py",
+        "python3 scripts/export_directory_dataset.py",
+        "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
     }
   ]
 }
