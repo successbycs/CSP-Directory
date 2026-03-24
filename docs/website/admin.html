@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | SuccessByCS</title>
+  <link rel="stylesheet" href="./admin.css">
+</head>
+<body>
+  <main class="dashboard-shell">
+    <header class="dashboard-header">
+      <div>
+        <p class="eyebrow">Internal operations</p>
+        <h1>Pipeline admin dashboard</h1>
+        <p class="subheadline">Inspect discovery candidates, enriched vendors, captured leads, and recent pipeline runs. Apply lightweight quality-control actions without a full admin UI.</p>
+        <p class="subheadline">
+          <a href="./landing.html">Open public directory</a>
+          ·
+          <a href="../../outputs/vendor_review.html">Open latest vendor review report</a>
+          ·
+          <a href="../../outputs/search_visibility_report.html">Open search visibility report</a>
+          ·
+          <a href="../../outputs/lead_capture_dataset.json">Open lead capture export</a>
+        </p>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Discovery candidates</p>
+          <h2>Newest candidates first</h2>
+        </div>
+        <div class="toolbar">
+          <input id="candidate-search" type="search" placeholder="Search candidate domain">
+          <select id="candidate-status-filter">
+            <option value="">All statuses</option>
+            <option value="new">new</option>
+            <option value="filtered_out">filtered_out</option>
+            <option value="queued_for_enrichment">queued_for_enrichment</option>
+            <option value="enriched">enriched</option>
+            <option value="failed">failed</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>candidate_domain</th>
+              <th>source_query</th>
+              <th>candidate_status</th>
+              <th>discovered_at</th>
+              <th>drop_reason</th>
+            </tr>
+          </thead>
+          <tbody id="candidates-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Enriched vendors</p>
+          <h2>Directory inclusion controls</h2>
+        </div>
+        <div class="toolbar">
+          <input id="vendor-search" type="search" placeholder="Search vendor name">
+          <select id="vendor-category-filter">
+            <option value="">All categories</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>vendor_name</th>
+              <th>lifecycle_stages</th>
+              <th>integrations</th>
+              <th>directory_category</th>
+              <th>decision</th>
+              <th>include_in_directory</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody id="vendors-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Lead capture</p>
+          <h2>Attribution and follow-up queue</h2>
+          <p id="lead-capture-metrics" class="subheadline">Loading captured lead summary.</p>
+        </div>
+        <div class="toolbar">
+          <input id="lead-search" type="search" placeholder="Search lead email or company">
+          <select id="lead-status-filter">
+            <option value="">All statuses</option>
+            <option value="new">new</option>
+            <option value="in_progress">in_progress</option>
+            <option value="contacted">contacted</option>
+            <option value="qualified">qualified</option>
+            <option value="closed">closed</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>created_at</th>
+              <th>lead</th>
+              <th>intent</th>
+              <th>source</th>
+              <th>attribution</th>
+              <th>follow_up</th>
+              <th>actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Pipeline runs</p>
+          <h2>Recent run snapshots</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>run_id</th>
+              <th>start_time</th>
+              <th>queries_executed</th>
+              <th>candidates_found</th>
+              <th>vendors_enriched</th>
+              <th>vendors_dropped</th>
+            </tr>
+          </thead>
+          <tbody id="runs-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Search visibility</p>
+          <h2>Buyer-role ranking review</h2>
+          <p id="search-visibility-metrics" class="subheadline">Loading search visibility summary.</p>
+          <p class="subheadline">
+            <a href="../../outputs/search_visibility_report.html">Open full search visibility report</a>
+          </p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>vendor</th>
+              <th>appearances</th>
+              <th>best_rank</th>
+              <th>average_score</th>
+              <th>buyer_roles</th>
+              <th>channels</th>
+            </tr>
+          </thead>
+          <tbody id="search-visibility-summary-body"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>run_timestamp</th>
+              <th>buyer_role</th>
+              <th>channel</th>
+              <th>query_text</th>
+              <th>observed_rank</th>
+              <th>surfaced_vendor</th>
+              <th>score</th>
+            </tr>
+          </thead>
+          <tbody id="search-visibility-rankings-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="./admin.js"></script>
+</body>
+</html>

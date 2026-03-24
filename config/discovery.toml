@@ -1,0 +1,176 @@
+# Discovery crawling settings for vendor discovery.
+#
+# This file is stored in `config/discovery.toml` so operators can change
+# Google Search discovery behavior without editing Python code.
+#
+# Editing guidance:
+# - `queries` controls which Google searches Apify runs for discovery.
+# - Write one query as a plain string, or multiple queries as a single
+#   comma-separated string.
+# - The pipeline runs query 1, then query 2, then query n, and deduplicates
+#   vendor domains across all of them before enrichment.
+# - Example:
+#   queries = "ai customer success platform, customer success ai software"
+# - `max_pages_per_query` controls how many Google search result pages Apify
+#   crawls for each search query.
+# - Google usually shows about 10 organic results per page, so:
+#   1 page  ~= first 10 results
+#   5 pages ~= first 50 results
+#   20 pages ~= first 200 results
+# - Higher values increase discovery coverage, but they also increase runtime,
+#   duplicate/noisy results, and external API usage.
+# - Keep `results_per_page` at 10 unless the Apify actor changes behavior.
+# - `max_candidate_domains_per_run` caps how many unique vendor domains move
+#   out of discovery and into the enrichment queue in one run.
+# - The code applies simple safety limits, so invalid or extreme values fall
+#   back to a safe range instead of crashing the pipeline.
+# - The hint and denylist arrays below tune result quality. They should only be
+#   changed when you want to broaden or narrow which Google results qualify as
+#   likely vendor candidates.
+#
+# Recommended workflow:
+# 1. Start with a smaller number when testing locally.
+# 2. Increase toward 20 when you want broader discovery coverage.
+# 3. Review output quality regularly because deeper pages are usually noisier.
+
+[google_search]
+actor_id = "apify/google-search-scraper"
+queries = "ai customer success platform"
+max_pages_per_query = 5
+results_per_page = 10
+max_candidate_domains_per_run = 100
+denylisted_domains = [
+  "facebook.com",
+  "gartner.com",
+  "google.com",
+  "instagram.com",
+  "jobs.ca",
+  "linkedin.com",
+  "medium.com",
+  "reddit.com",
+  "substack.com",
+  "slashdot.org",
+  "sourceforge.net",
+  "twitter.com",
+  "toolify.ai",
+  "wikipedia.org",
+  "x.com",
+  "youtube.com",
+]
+article_path_hints = [
+  "/article",
+  "/articles",
+  "/blog",
+  "/blogs",
+  "/community",
+  "/forum",
+  "/forums",
+  "/guide",
+  "/guides",
+  "/learn",
+  "/news",
+  "/resources",
+]
+content_hints = [
+  "best ",
+  "blog",
+  "careers",
+  "case studies",
+  "case study",
+  "community",
+  "compare",
+  "comparison",
+  "forum",
+  "guide",
+  "guides",
+  "how to",
+  "job application",
+  "jobs",
+  "listicle",
+  "newsletter",
+  "reddit",
+  "review",
+  "reviews",
+  "top ",
+  "vs ",
+]
+product_hints = [
+  "automation",
+  "copilot",
+  "platform",
+  "software",
+  "solution",
+  "solutions",
+  "tool",
+  "tools",
+  "workspace",
+]
+customer_success_hints = [
+  "adoption nudge",
+  "adoption nudges",
+  "case study",
+  "case studies",
+  "churn",
+  "conversational intelligence",
+  "cross-sell",
+  "customer health",
+  "customer onboarding",
+  "customer success",
+  "expansion revenue",
+  "forecasting",
+  "handoff",
+  "health score",
+  "implementation portal",
+  "implementation portals",
+  "in-app guidance",
+  "meeting summaries",
+  "meeting summary",
+  "nps",
+  "onboarding automation",
+  "playbook",
+  "product walkthrough",
+  "product walkthroughs",
+  "psa",
+  "reference management",
+  "renewal",
+  "retention",
+  "risk alert",
+  "risk alerts",
+  "sales-to-cs",
+  "support automation",
+  "support platform",
+  "ticket triage",
+  "help desk",
+  "agent assist",
+  "knowledge base",
+  "sentiment analysis",
+  "stakeholder mapping",
+  "time to value",
+  "upsell",
+  "usage analytics",
+  "user education",
+  "voice of customer",
+  "voc",
+]
+noise_subdomain_prefixes = [
+  "blog.",
+  "careers.",
+  "community.",
+  "jobs.",
+  "newsletter.",
+]
+noise_domain_hints = [
+  "greenhouse",
+  "myworkdayjobs",
+]
+job_path_hints = [
+  "/career",
+  "/careers",
+  "/job",
+  "/jobs",
+]
+interstitial_hints = [
+  "403 forbidden",
+  "access denied",
+  "just a moment",
+]

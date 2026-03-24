@@ -1,0 +1,111 @@
+{
+  "id": "supabase",
+  "description": "Repo-owned Supabase execution layer for development-phase schema inspection, schema application, schema verification, and controlled CRUD over vendors, candidates, and runs through direct access.",
+  "development_only": true,
+  "entrypoint": "tools/supabase/cli.py",
+  "applicable_milestones": [
+    "M13C",
+    "M13D",
+    "M15",
+    "M16",
+    "M17"
+  ],
+  "source_of_truth": [
+    "supabase/core_persistence_schema.sql"
+  ],
+  "required_backends": [
+    "direct_repo"
+  ],
+  "backends": [
+    {
+      "id": "direct_repo",
+      "kind": "direct",
+      "environment": "development",
+      "optional": false,
+      "notes": "Preferred path. Repo-owned scripts and SQL remain the source of truth."
+    }
+  ],
+  "role_access": {
+    "controller": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "planner": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "builder": {
+      "operations": [
+        "inspect_schema",
+        "apply_schema",
+        "verify_schema",
+        "read_vendors",
+        "create_vendor",
+        "update_vendor",
+        "delete_vendor",
+        "read_candidates",
+        "create_candidate",
+        "update_candidate",
+        "delete_candidate",
+        "read_runs",
+        "create_run",
+        "update_run",
+        "delete_run"
+      ],
+      "write_allowed": true,
+      "approval_required": true
+    },
+    "reviewer": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema",
+        "read_vendors",
+        "read_candidates",
+        "read_runs"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "qa": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema",
+        "read_vendors",
+        "read_candidates",
+        "read_runs"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "closeout_auditor": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema",
+        "read_vendors",
+        "read_candidates",
+        "read_runs"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "backfill_auditor": {
+      "operations": [
+        "inspect_schema",
+        "verify_schema",
+        "read_vendors",
+        "read_candidates",
+        "read_runs"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    }
+  }
+}

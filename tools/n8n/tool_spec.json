@@ -1,0 +1,85 @@
+{
+  "id": "n8n",
+  "description": "Repo-owned development tool contract for local n8n workflow prototyping, export review, and integration experiments. This tool is development-only and does not authorize product/runtime automation.",
+  "development_only": true,
+  "entrypoint": "tools/n8n/README.md",
+  "applicable_milestones": [
+    "M33"
+  ],
+  "source_of_truth": [
+    "tools/n8n/tool_spec.json",
+    "tools/n8n/README.md",
+    "tools/tool_registry.json"
+  ],
+  "required_backends": [
+    "local_n8n_dev"
+  ],
+  "backends": [
+    {
+      "id": "local_n8n_dev",
+      "kind": "local_dev_service",
+      "environment": "development",
+      "optional": true,
+      "notes": "Use only against a local or explicitly designated development n8n instance. Production/runtime automation remains out of scope."
+    }
+  ],
+  "role_access": {
+    "controller": {
+      "operations": [
+        "inspect_dev_scope",
+        "review_role_access"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "planner": {
+      "operations": [
+        "inspect_dev_scope",
+        "review_role_access"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "builder": {
+      "operations": [
+        "inspect_dev_scope",
+        "export_dev_workflow",
+        "import_dev_workflow",
+        "validate_dev_workflow"
+      ],
+      "write_allowed": true,
+      "approval_required": true
+    },
+    "reviewer": {
+      "operations": [
+        "inspect_dev_scope",
+        "export_dev_workflow"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "qa": {
+      "operations": [
+        "inspect_dev_scope",
+        "export_dev_workflow",
+        "validate_dev_workflow"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "closeout_auditor": {
+      "operations": [
+        "inspect_dev_scope"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "backfill_auditor": {
+      "operations": [
+        "inspect_dev_scope"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "id": "external_enrichment",
+  "description": "Repo-owned development tool contract for staged third-party enrichment connectors and the provenance rules they must satisfy before any live execution is allowed.",
+  "development_only": true,
+  "entrypoint": "tools/external_enrichment/connector_registry.json",
+  "applicable_milestones": [
+    "M30"
+  ],
+  "source_of_truth": [
+    "tools/external_enrichment/tool_spec.json",
+    "tools/external_enrichment/connector_registry.json",
+    "supabase/core_persistence_schema.sql",
+    "services/extraction/vendor_intel.py"
+  ],
+  "required_backends": [
+    "registry_only"
+  ],
+  "backends": [
+    {
+      "id": "registry_only",
+      "kind": "deferred_registry",
+      "environment": "development",
+      "optional": false,
+      "notes": "M30 is staged rollout only. Connectors are declared and reviewable, but live network execution remains disabled until a later milestone adds an explicit execution backend."
+    }
+  ],
+  "role_access": {
+    "controller": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "planner": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "builder": {
+      "operations": [
+        "inspect_connector_registry",
+        "stage_external_enrichment_records",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "reviewer": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "qa": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "closeout_auditor": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    },
+    "backfill_auditor": {
+      "operations": [
+        "inspect_connector_registry",
+        "review_provenance_requirements"
+      ],
+      "write_allowed": false,
+      "approval_required": false
+    }
+  }
+}

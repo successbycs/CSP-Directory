@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "connectors": [
+    {
+      "id": "product_hunt",
+      "name": "Product Hunt",
+      "status": "deferred",
+      "source_type": "launch_directory",
+      "allowed_fields": [
+        "launch_date",
+        "tagline",
+        "topics",
+        "social_proof"
+      ],
+      "freshness_days": 30,
+      "execution_mode": "registry_only",
+      "notes": "Use only for staged provenance and review exports until a later milestone adds a live fetch backend."
+    },
+    {
+      "id": "g2",
+      "name": "G2",
+      "status": "deferred",
+      "source_type": "review_directory",
+      "allowed_fields": [
+        "category_labels",
+        "review_count",
+        "rating",
+        "proof_snippets"
+      ],
+      "freshness_days": 14,
+      "execution_mode": "registry_only",
+      "notes": "Structured review-signal provenance only. Do not scrape or execute directly from the autonomous loop in M30."
+    },
+    {
+      "id": "funding_news",
+      "name": "Funding and News",
+      "status": "deferred",
+      "source_type": "news_signal",
+      "allowed_fields": [
+        "funding_stage",
+        "funding_date",
+        "news_headline",
+        "news_summary"
+      ],
+      "freshness_days": 7,
+      "execution_mode": "registry_only",
+      "notes": "Represents external company momentum signals for staged rollout and operator review."
+    }
+  ]
+}

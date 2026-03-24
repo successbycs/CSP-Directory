@@ -1,0 +1,31 @@
+[
+  {
+    "request_id": "enh-20260321T023638Z",
+    "recorded_at": "2026-03-21T02:36:38.579629+00:00",
+    "title": "Human test and operator validation",
+    "summary": "Add an explicit milestone for a human-run validation pass of the autonomous system and its operator-facing workflow.",
+    "route": "new_milestone",
+    "status": "accepted",
+    "target_milestone": "M35",
+    "note": "User requested an explicit human test milestone.",
+    "new_milestone": {
+      "id": "M35",
+      "title": "Human test and operator validation",
+      "objective": "Run a human-operated validation pass against the autonomous development system, capture the operator experience, and record concrete findings before declaring the workflow fully production-ready.",
+      "acceptance": [
+        "A repo-defined human test plan exists with explicit scope, steps, and pass/fail criteria.",
+        "The human test exercises the autonomous workflow from an operator perspective rather than only automated verification.",
+        "Human test results are captured in repo-owned evidence or audit surfaces.",
+        "Follow-up issues or gaps discovered during the human test are routed back into the milestone system explicitly."
+      ],
+      "verify": [
+        "Review the human test plan and operator instructions.",
+        "Perform one human-run validation pass and record the outcome.",
+        ".venv/bin/python scripts/autonomous_audit.py"
+      ],
+      "dependencies": [
+        "M33"
+      ]
+    }
+  }
+]

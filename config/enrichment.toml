@@ -1,0 +1,105 @@
+# Enrichment settings for homepage-driven site exploration.
+#
+# Editing guidance:
+# - `max_non_homepage_pages` is the legacy non-homepage cap and now mirrors `max_pages_total`.
+# - `max_crawl_depth` controls how many same-domain hops are explored from the homepage.
+# - `max_pages_total` caps how many non-homepage pages are fetched in total.
+# - `request_timeout_seconds` controls how long the explorer waits for each
+#   discovered page before skipping it.
+# - `discovery_mode` controls fallback discovery for blocked/JS-heavy sites:
+#   `auto`, `html_only`, `structured`, or `browser`.
+# - `sparse_link_threshold` is the minimum homepage link count before fallback discovery kicks in.
+# - `browser_discovery_timeout_ms` controls Playwright page timeouts when discovery mode uses a browser.
+# - `browser_nav_labels` are nav/menu labels the browser discovery pass tries to open before link capture.
+# - `external_fetch_backend` controls the last-resort rendered fetch backend after requests and local browser fail.
+# - `external_fetch_actor_id` is the Apify actor used for that rendered fetch.
+# - `external_fetch_max_pages` caps the external actor crawl to a tiny page budget.
+# - `external_fetch_use_proxy` enables the provider proxy for blocked sites.
+# - `page_priority` controls the order in which page types are fetched.
+# - `page_patterns` match both URLs and anchor text on the homepage.
+# - `junk_hints` are path/text hints for pages that should usually be skipped.
+# - `blocklist_hints` are hard-ignore hints such as legal/privacy paths.
+# - `seed_paths` are fallback paths to probe even when homepage links are missing or blocked.
+# - `trusted_subdomains` are first-party subdomains allowed during same-site exploration.
+
+[site_explorer]
+max_non_homepage_pages = 100
+max_crawl_depth = 3
+max_pages_total = 100
+request_timeout_seconds = 10
+discovery_mode = "auto"
+sparse_link_threshold = 3
+browser_discovery_timeout_ms = 12000
+browser_nav_labels = ["Products", "Solutions", "Platform", "Resources", "Customers", "Company"]
+external_fetch_backend = "apify"
+external_fetch_actor_id = "apify/website-content-crawler"
+external_fetch_max_pages = 1
+external_fetch_use_proxy = true
+page_priority = [
+  "pricing_page",
+  "product_page",
+  "case_studies_page",
+  "testimonials_page",
+  "blog_page",
+  "security_page",
+  "about_page",
+  "team_page",
+  "contact_page",
+  "demo_page",
+  "help_page",
+  "support_page",
+  "integrations_page",
+]
+junk_hints = [
+  "careers",
+  "career",
+  "job",
+  "jobs",
+  "login",
+  "signin",
+  "sign-in",
+]
+blocklist_hints = ["/legal", "privacy", "terms", "cookie"]
+seed_paths = [
+  "/about",
+  "/about-us",
+  "/our-story",
+  "/contact",
+  "/contact-us",
+  "/pricing",
+  "/blog",
+  "/resources",
+  "/documentation",
+  "/docs",
+  "/security",
+  "/trust",
+  "/customers",
+  "/case-studies",
+  "/testimonials",
+]
+trusted_subdomains = ["docs", "help", "support", "blog"]
+
+[site_explorer.page_patterns]
+pricing_page = ["pricing"]
+product_page = ["product", "platform", "features", "solutions"]
+case_studies_page = [
+  "case studies",
+  "case-study",
+  "case-studies",
+  "use cases",
+  "use-case",
+  "use-cases",
+  "customer stories",
+  "customer-story",
+  "customers",
+]
+testimonials_page = ["testimonials", "testimonial", "reviews", "review"]
+blog_page = ["blog", "blogs", "article", "articles", "insights", "news", "resources"]
+about_page = ["about", "about us", "about-us", "company", "our story", "our-story"]
+team_page = ["team", "leadership", "founders"]
+contact_page = ["contact", "email us", "talk to us"]
+demo_page = ["demo", "book demo", "request demo"]
+help_page = ["help", "help center", "knowledge base", "knowledge-base"]
+support_page = ["support", "support center", "customer support"]
+security_page = ["security", "trust", "compliance"]
+integrations_page = ["integrations", "integration", "apps", "marketplace"]

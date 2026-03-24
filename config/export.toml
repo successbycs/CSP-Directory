@@ -1,0 +1,27 @@
+# Export settings for CSV and Google Sheets output.
+#
+# Editing guidance:
+# - `worksheet_name` selects the Google Sheets tab used for vendor rows.
+# - `columns` controls header order for CSV output and Google Sheets appends.
+# - Keep these aligned with the vendor profile contract used by the directory.
+
+[google_sheets]
+worksheet_name = "vendors"
+columns = [
+  "vendor_name",
+  "website",
+  "mission",
+  "usp",
+  "icp",
+  "use_cases",
+  "lifecycle_stages",
+  "pricing",
+  "free_trial",
+  "soc2",
+  "founded",
+  "case_studies",
+  "customers",
+  "value_statements",
+  "confidence",
+  "evidence_urls",
+]

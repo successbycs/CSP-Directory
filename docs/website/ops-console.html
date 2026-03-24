@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuccessByCS Ops Console</title>
+  <meta
+    name="description"
+    content="Internal operations console for monitoring runs, reviewing vendors, inspecting logs, and understanding pipeline configuration."
+  >
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="./ops-console.css">
+</head>
+<body>
+  <div class="console-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <a class="brand" href="#dashboard">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span>
+            <strong>SuccessByCS</strong>
+            <span class="brand-subtitle">Operator Console</span>
+          </span>
+        </a>
+        <div class="environment-strip" aria-label="Environment status">
+          <span class="env-pill env-pill-live">Production</span>
+          <span class="env-pill">Daily pipeline active</span>
+          <span class="env-pill">LLM fallback safe</span>
+        </div>
+      </div>
+      <nav class="topnav" aria-label="Sections">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#runs">Run history</a>
+        <a href="#run-detail">Run detail</a>
+        <a href="#vendors">Vendor review</a>
+        <a href="#settings">Settings</a>
+      </nav>
+    </header>
+
+    <main class="console-main">
+      <section class="hero-panel" id="dashboard">
+        <div class="hero-copy">
+          <p class="eyebrow">System management</p>
+          <h1>Operate the vendor intelligence pipeline with enough context to trust it.</h1>
+          <p class="hero-text">
+            This internal console is designed to help operators understand what the pipeline ran,
+            what changed, what failed, why vendors were dropped, and where to investigate next.
+          </p>
+          <div class="action-row">
+            <a class="button button-primary" href="#runs">Run discovery now</a>
+            <a class="button button-secondary" href="#run-detail">Inspect latest run</a>
+            <a class="button button-secondary" href="#vendors">Review dropped vendors</a>
+            <a class="button button-secondary" href="#settings">Check config</a>
+          </div>
+        </div>
+        <aside class="status-rail" aria-label="Current system state">
+          <article class="status-card status-card-healthy">
+            <span class="status-label">Current pipeline status</span>
+            <strong>Completed with warnings</strong>
+            <p>Discovery, enrichment, persistence, and export completed. LLM extraction failed closed and deterministic fallback carried the run.</p>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Last successful run</span>
+            <strong>March 16, 2026 at 07:22 UTC</strong>
+            <p>1 vendor exported, 24 skipped as existing, 4 low-confidence drops.</p>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Next scheduled run</span>
+            <strong>March 17, 2026 at 07:00 UTC</strong>
+            <p>Daily discovery run via APScheduler using schedule settings from <code>config/scheduler.toml</code> and discovery runtime settings from <code>config/pipeline_config.json</code>.</p>
+          </article>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Dashboard</p>
+            <h2>What ran, what succeeded, what failed, what needs attention</h2>
+          </div>
+          <div class="inline-note">
+            <span class="note-pill note-pill-warn">1 actionable warning</span>
+            <span class="note-pill">0 blocking failures</span>
+          </div>
+        </div>
+
+        <div class="metric-grid" aria-label="Pipeline metrics">
+          <article class="metric-card">
+            <span>Vendors discovered</span>
+            <strong>29</strong>
+            <p>Unique domains remaining after discovery filtering and normalization.</p>
+          </article>
+          <article class="metric-card">
+            <span>Skipped as duplicates</span>
+            <strong>24</strong>
+            <p>Known vendors already present in Supabase.</p>
+          </article>
+          <article class="metric-card">
+            <span>Vendors enriched</span>
+            <strong>5</strong>
+            <p>Homepage fetched, site explored, and profile extraction attempted.</p>
+          </article>
+          <article class="metric-card metric-card-attention">
+            <span>Vendors dropped</span>
+            <strong>4</strong>
+            <p>Most drops came from low-confidence or non-vendor signals.</p>
+          </article>
+          <article class="metric-card">
+            <span>Persisted to Supabase</span>
+            <strong>1</strong>
+            <p>Structured vendor profile stored as the canonical dataset row.</p>
+          </article>
+          <article class="metric-card">
+            <span>Rows exported</span>
+            <strong>1</strong>
+            <p>Google Sheets append completed for the same persisted vendor.</p>
+          </article>
+          <article class="metric-card metric-card-attention">
+            <span>LLM extraction</span>
+            <strong>Fallback active</strong>
+            <p><code>gpt-5-mini</code> rejected a request parameter and the run continued with deterministic extraction.</p>
+          </article>
+          <article class="metric-card">
+            <span>Weekly digest status</span>
+            <strong>Scheduled</strong>
+            <p>Next digest posts Monday 08:00 UTC and groups new vendors by lifecycle stage.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="runs">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Run history</p>
+            <h2>Recent pipeline runs with outcomes worth investigating</h2>
+          </div>
+          <p class="section-summary">Static examples for the first console shell. The layout is designed to map directly to future run-level data.</p>
+        </div>
+
+        <div class="table-panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Trigger</th>
+                <th>Start time</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Discovered</th>
+                <th>Persisted</th>
+                <th>Dropped</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>run_2026_03_16_0722</code></td>
+                <td>Scheduled</td>
+                <td>2026-03-16 07:22 UTC</td>
+                <td>2m 41s</td>
+                <td><span class="status-chip status-chip-warn">Completed with warnings</span></td>
+                <td>29</td>
+                <td>1</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>manual_2026_03_15_1810</code></td>
+                <td>Manual</td>
+                <td>2026-03-15 18:10 UTC</td>
+                <td>4m 18s</td>
+                <td><span class="status-chip status-chip-ok">Completed</span></td>
+                <td>41</td>
+                <td>6</td>
+                <td>7</td>
+              </tr>
+              <tr>
+                <td><code>run_2026_03_15_0700</code></td>
+                <td>Scheduled</td>
+                <td>2026-03-15 07:00 UTC</td>
+                <td>3m 06s</td>
+                <td><span class="status-chip status-chip-ok">Completed</span></td>
+                <td>32</td>
+                <td>4</td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>run_2026_03_14_0700</code></td>
+                <td>Scheduled</td>
+                <td>2026-03-14 07:00 UTC</td>
+                <td>1m 54s</td>
+                <td><span class="status-chip status-chip-fail">Partial failure</span></td>
+                <td>25</td>
+                <td>0</td>
+                <td>3</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="run-detail">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Run detail</p>
+            <h2>Stage-by-stage context for the latest pipeline run</h2>
+          </div>
+          <div class="run-meta">
+            <span><strong>Run ID</strong> <code>run_2026_03_16_0722</code></span>
+            <span><strong>Query</strong> ai customer success platform</span>
+            <span><strong>Mode</strong> scheduled</span>
+          </div>
+        </div>
+
+        <div class="stage-grid">
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Vendor Discovery</span>
+            <strong>49 raw / 37 filtered / 29 unique</strong>
+            <p>5 Google result pages crawled using the current discovery config.</p>
+          </article>
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Homepage Fetch</span>
+            <strong>5 attempted</strong>
+            <p>Unreachable and blocked pages skipped safely before extraction.</p>
+          </article>
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Website Exploration</span>
+            <strong>Up to 5 pages per vendor</strong>
+            <p>Pricing, product, about, case study, and security pages explored where available.</p>
+          </article>
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Page Text Extraction</span>
+            <strong>Clean visible text generated</strong>
+            <p>Scripts, navigation, footer noise, and menus removed before analysis.</p>
+          </article>
+          <article class="stage-card stage-card-warn">
+            <span class="stage-name">Vendor Intelligence Extraction</span>
+            <strong>LLM failed closed, deterministic carried</strong>
+            <p>OpenAI returned a parameter error, then the run continued safely with baseline extraction.</p>
+          </article>
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Vendor Profile Builder</span>
+            <strong>1 final profile retained</strong>
+            <p>Profiles merged, lifecycle stages classified, and low-confidence rows dropped.</p>
+          </article>
+          <article class="stage-card stage-card-ok">
+            <span class="stage-name">Dataset Export</span>
+            <strong>Supabase + Google Sheets succeeded</strong>
+            <p>1 canonical row persisted and 1 export row appended.</p>
+          </article>
+        </div>
+
+        <div class="detail-grid">
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>Warnings and errors</h3>
+              <span class="status-chip status-chip-warn">1 warning</span>
+            </div>
+            <ul class="signal-list">
+              <li><strong>OpenAI warning:</strong> model rejected <code>temperature</code>; LLM disabled for the rest of the process.</li>
+              <li><strong>No persistence errors:</strong> Supabase upsert completed for the retained vendor.</li>
+              <li><strong>No export errors:</strong> Google Sheets append completed successfully.</li>
+            </ul>
+          </article>
+
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>Drop reasons</h3>
+              <span class="status-chip status-chip-neutral">4 dropped</span>
+            </div>
+            <ul class="signal-list">
+              <li><strong>low_confidence</strong> <span>3 vendors</span></li>
+              <li><strong>newsletter/content result</strong> <span>1 vendor-like candidate</span></li>
+              <li><strong>llm_marked_non_cs_relevant</strong> <span>0 in this run</span></li>
+            </ul>
+          </article>
+
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>Active config snapshot</h3>
+              <span class="status-chip status-chip-neutral">Read-only</span>
+            </div>
+            <dl class="config-list">
+              <div><dt>Discovery query</dt><dd>ai customer success platform</dd></div>
+              <div><dt>Max pages per query</dt><dd>5</dd></div>
+              <div><dt>Results per page</dt><dd>10</dd></div>
+              <div><dt>Vendor page cap</dt><dd>5 pages per vendor</dd></div>
+              <div><dt>Homepage timeout</dt><dd>10 seconds</dd></div>
+            </dl>
+          </article>
+
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>LLM stage</h3>
+              <span class="status-chip status-chip-warn">Fallback active</span>
+            </div>
+            <dl class="config-list">
+              <div><dt>Endpoint</dt><dd><code>https://api.openai.com/v1/responses</code></dd></div>
+              <div><dt>Model</dt><dd><code>gpt-5-mini</code></dd></div>
+              <div><dt>LLM successes</dt><dd>0</dd></div>
+              <div><dt>Fallback or skipped</dt><dd>5</dd></div>
+              <div><dt>Fail-closed behavior</dt><dd>Enabled after first non-retryable 4xx</dd></div>
+            </dl>
+          </article>
+        </div>
+
+        <article class="log-panel">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">Logging and debugging</p>
+              <h3>Structured logs for investigating warnings, skips, and drops</h3>
+            </div>
+            <div class="filter-row" aria-label="Log filters">
+              <span class="filter-pill filter-pill-active">Run: run_2026_03_16_0722</span>
+              <span class="filter-pill">Vendor: all</span>
+              <span class="filter-pill">Stage: all</span>
+              <span class="filter-pill">Severity: warnings and errors</span>
+            </div>
+          </div>
+
+          <div class="table-panel">
+            <table class="data-table data-table-logs">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Stage</th>
+                  <th>Severity</th>
+                  <th>Vendor</th>
+                  <th>Message</th>
+                  <th>Metadata</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>07:22:06</code></td>
+                  <td>Startup</td>
+                  <td><span class="severity severity-info">INFO</span></td>
+                  <td>system</td>
+                  <td>OpenAI LLM extraction config logged for this run.</td>
+                  <td><code>{"enabled": true, "model": "gpt-5-mini"}</code></td>
+                </tr>
+                <tr>
+                  <td><code>07:22:45</code></td>
+                  <td>Discovery</td>
+                  <td><span class="severity severity-info">INFO</span></td>
+                  <td>system</td>
+                  <td>Google Search query completed and candidates were normalized.</td>
+                  <td><code>{"raw_results": 49, "filtered": 37, "unique_domains": 29}</code></td>
+                </tr>
+                <tr>
+                  <td><code>07:24:18</code></td>
+                  <td>LLM Extraction</td>
+                  <td><span class="severity severity-warn">WARN</span></td>
+                  <td>Plivo</td>
+                  <td>OpenAI returned a non-retryable 400; LLM extraction disabled for the rest of the process.</td>
+                  <td><code>{"param": "temperature", "model": "gpt-5-mini"}</code></td>
+                </tr>
+                <tr>
+                  <td><code>07:24:20</code></td>
+                  <td>Profile Drop</td>
+                  <td><span class="severity severity-warn">WARN</span></td>
+                  <td>The CS Cafe Newsletter</td>
+                  <td>Vendor dropped due to low confidence after deterministic extraction.</td>
+                  <td><code>{"reason": "low_confidence", "source": "google_search"}</code></td>
+                </tr>
+                <tr>
+                  <td><code>07:24:41</code></td>
+                  <td>Persistence</td>
+                  <td><span class="severity severity-info">INFO</span></td>
+                  <td>Sprinklr</td>
+                  <td>Canonical vendor profile upserted successfully.</td>
+                  <td><code>{"destination": "supabase", "website": "https://sprinklr.com"}</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="section" id="vendors">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Vendor review</p>
+            <h2>Inspect final profiles and understand why a vendor was retained or dropped</h2>
+          </div>
+          <div class="filter-row">
+            <span class="filter-pill filter-pill-active">Status: needs review</span>
+            <span class="filter-pill">Confidence: medium or high</span>
+            <span class="filter-pill">Lifecycle: Support</span>
+          </div>
+        </div>
+
+        <div class="review-grid">
+          <div class="table-panel">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Vendor</th>
+                  <th>Website</th>
+                  <th>Confidence</th>
+                  <th>Lifecycle stages</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>First seen</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-selected">
+                  <td>Sprinklr</td>
+                  <td>sprinklr.com</td>
+                  <td><span class="status-chip status-chip-ok">high</span></td>
+                  <td>Adopt, Support, Renew, Advocate</td>
+                  <td>google_search</td>
+                  <td>New</td>
+                  <td>2026-03-16</td>
+                  <td>2026-03-16</td>
+                </tr>
+                <tr>
+                  <td>The CS Cafe Newsletter</td>
+                  <td>thecscafe.com</td>
+                  <td><span class="status-chip status-chip-warn">low</span></td>
+                  <td>None retained</td>
+                  <td>google_search</td>
+                  <td>Dropped</td>
+                  <td>2026-03-16</td>
+                  <td>2026-03-16</td>
+                </tr>
+                <tr>
+                  <td>Plivo</td>
+                  <td>plivo.com</td>
+                  <td><span class="status-chip status-chip-warn">low</span></td>
+                  <td>Support</td>
+                  <td>google_search</td>
+                  <td>Dropped</td>
+                  <td>2026-03-16</td>
+                  <td>2026-03-16</td>
+                </tr>
+                <tr>
+                  <td>Rocketlane</td>
+                  <td>rocketlane.com</td>
+                  <td><span class="status-chip status-chip-neutral">existing</span></td>
+                  <td>Onboard, Activate</td>
+                  <td>google_search</td>
+                  <td>Skipped</td>
+                  <td>2026-03-09</td>
+                  <td>2026-03-15</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <aside class="vendor-detail-card" aria-label="Vendor detail">
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">Selected vendor</p>
+                <h3>Sprinklr</h3>
+              </div>
+              <span class="status-chip status-chip-ok">Ready for approval</span>
+            </div>
+
+            <dl class="vendor-detail-list">
+              <div><dt>Website</dt><dd>https://sprinklr.com</dd></div>
+              <div><dt>Mission</dt><dd>The definitive AI-native platform for extraordinary customer experiences.</dd></div>
+              <div><dt>USP</dt><dd>Reduce support workload through AI-enabled service and experience orchestration.</dd></div>
+              <div><dt>ICP</dt><dd>Support teams, enterprise service organizations, and customer experience leaders.</dd></div>
+              <div><dt>Use cases</dt><dd>Sentiment analysis, support automation, knowledge base, churn prevention, voice of customer, customer advocacy.</dd></div>
+              <div><dt>Lifecycle stages</dt><dd>Adopt, Support, Renew, Advocate</dd></div>
+              <div><dt>Pricing</dt><dd>Per year signal detected</dd></div>
+              <div><dt>Proof signals</dt><dd>Case-study style stories and customer experience proof messaging</dd></div>
+              <div><dt>Security signals</dt><dd>SOC2 detected</dd></div>
+              <div><dt>Customers</dt><dd>Not extracted in this run</dd></div>
+              <div><dt>Case studies</dt><dd>Stories page detected, no named customer extracted</dd></div>
+              <div><dt>Evidence URLs</dt><dd>Homepage, product page, stories page, trust page</dd></div>
+              <div><dt>Drop reason</dt><dd>None</dd></div>
+            </dl>
+
+            <div class="action-row action-row-compact">
+              <a class="button button-primary" href="#vendors">Approve</a>
+              <a class="button button-secondary" href="#vendors">Suppress</a>
+              <a class="button button-secondary" href="#vendors">Mark irrelevant</a>
+              <a class="button button-secondary" href="#vendors">Re-run enrichment</a>
+              <a class="button button-secondary" href="#vendors">Re-run extraction</a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="settings">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Settings and config</p>
+            <h2>Inspect the runtime inputs that shape system behavior</h2>
+          </div>
+          <p class="section-summary">Read-only shell for the first version. Designed so future live config and health data can be slotted into the same cards.</p>
+        </div>
+
+        <div class="settings-grid">
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>Discovery config</h3>
+              <span class="status-chip status-chip-neutral">config/pipeline_config.json</span>
+            </div>
+            <dl class="config-list">
+              <div><dt>Query set</dt><dd>ai customer success platform</dd></div>
+              <div><dt>Max pages per query</dt><dd>5</dd></div>
+              <div><dt>Results per page</dt><dd>10</dd></div>
+              <div><dt>Source toggles</dt><dd>Google Search enabled, other discovery sources pending</dd></div>
+            </dl>
+          </article>
+
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>LLM config</h3>
+              <span class="status-chip status-chip-warn">Needs attention</span>
+            </div>
+            <dl class="config-list">
+              <div><dt>Model</dt><dd><code>gpt-5-mini</code></dd></div>
+              <div><dt>LLM enabled</dt><dd>Yes, when <code>OPENAI_API_KEY</code> is present</dd></div>
+              <div><dt>Fallback mode</dt><dd>Deterministic extraction remains active if the LLM fails</dd></div>
+              <div><dt>Current concern</dt><dd>Unsupported request parameter caused fail-closed behavior in the latest run</dd></div>
+            </dl>
+          </article>
+
+          <article class="detail-card">
+            <div class="card-heading">
+              <h3>Storage and export health</h3>
+              <span class="status-chip status-chip-ok">Healthy</span>
+            </div>
+            <dl class="config-list">
+              <div><dt>Supabase status</dt><dd>Reachable and accepting upserts</dd></div>
+              <div><dt>Google Sheets export</dt><dd>Reachable and append-safe</dd></div>
+              <div><dt>Scheduler status</dt><dd>Daily discovery and weekly digest both scheduled</dd></div>
+              <div><dt>Observability</dt><dd>Structured pipeline logging enabled</dd></div>
+            </dl>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>SuccessByCS internal system management shell for pipeline operators and reviewers.</p>
+      <a href="./landing.html">View public directory landing page</a>
+    </footer>
+  </div>
+</body>
+</html>

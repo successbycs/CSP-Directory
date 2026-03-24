@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "tools": [
+    {
+      "id": "agent_cli",
+      "name": "Agent CLI",
+      "enabled": true,
+      "spec_path": "tools/agent_cli/tool_spec.json",
+      "description": "Repo-owned autonomous role backend for OpenAI evaluator roles and Codex-driven agentic execution."
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "enabled": true,
+      "spec_path": "tools/supabase/tool_spec.json",
+      "description": "Development-phase database tool for schema inspection, schema application, verification, and controlled CRUD operations through direct access."
+    },
+    {
+      "id": "external_enrichment",
+      "name": "External Enrichment",
+      "enabled": true,
+      "spec_path": "tools/external_enrichment/tool_spec.json",
+      "description": "Repo-owned registry for staged third-party enrichment connectors, provenance requirements, and deferred rollout guardrails."
+    },
+    {
+      "id": "n8n",
+      "name": "n8n",
+      "enabled": true,
+      "spec_path": "tools/n8n/tool_spec.json",
+      "description": "Repo-owned development tool contract for local n8n workflow prototyping and automation experiments under explicit safety boundaries."
+    }
+  ]
+}

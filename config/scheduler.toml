@@ -1,0 +1,17 @@
+# Scheduler settings for automated discovery and digest jobs.
+#
+# Editing guidance:
+# - `discovery_schedule` controls the daily discovery job.
+# - `digest_schedule` controls the weekly Slack digest.
+# - Times are passed directly into APScheduler cron fields.
+
+[discovery_schedule]
+hour = 7
+minute = 0
+
+[digest_schedule]
+day_of_week = "mon"
+hour = 8
+minute = 0
+lookback_days = 7
+slack_timeout_seconds = 30

@@ -1,0 +1,14 @@
+# Optional Level 2 LLM extraction settings.
+#
+# Editing guidance:
+# - `model` is the default model when `OPENAI_MODEL` is not set in the env.
+# - The text limits bound request size to control cost and runtime.
+# - Keep `max_site_text_chars` larger than `max_page_text_chars`.
+
+[openai]
+enabled = true
+model = "gpt-5-mini"
+request_timeout_seconds = 45
+max_page_text_chars = 1800
+max_site_text_chars = 8000
+max_error_body_chars = 300

@@ -1,0 +1,116 @@
+name: Weekly Digest
+
+on:
+  workflow_dispatch:
+
+jobs:
+  weekly-digest:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+      GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build and post weekly digest
+        run: |
+          python - <<'PY'
+          import os
+          from datetime import date, timedelta
+          import requests
+          from supabase import create_client
+
+          stage_order = [
+              "Sign",
+              "Onboard",
+              "Activate",
+              "Adopt",
+              "Support",
+              "Expand",
+              "Renew",
+              "Advocate",
+          ]
+
+          supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
+          cutoff = (date.today() - timedelta(days=7)).isoformat()
+
+          response = (
+              supabase.table("cs_vendors")
+              .select("name,website,mission,lifecycle_stages,first_seen,is_new")
+              .gte("first_seen", cutoff)
+              .eq("is_new", True)
+              .execute()
+          )
+
+          vendors = response.data or []
+          grouped = {stage: [] for stage in stage_order}
+
+          for vendor in vendors:
+              for stage in vendor.get("lifecycle_stages") or []:
+                  if stage in grouped:
+                      grouped[stage].append(vendor)
+
+          total_vendors = len(vendors)
+          week_of = date.today().isoformat()
+          lines = [f"*CS AI Vendor Weekly Digest* — {total_vendors} new vendors found", f"Week of {week_of}", ""]
+
+          for stage in stage_order:
+              lines.append(f"*{stage.upper()}*")
+              stage_vendors = grouped[stage]
+              if not stage_vendors:
+                  lines.append("- None")
+              else:
+                  for vendor in stage_vendors:
+                      name = vendor.get("name") or "Unknown Vendor"
+                      website = vendor.get("website") or ""
+                      mission = vendor.get("mission") or "No mission statement captured."
+                      lines.append(f"- {name} | {website}")
+                      lines.append(f"  _{mission}_")
+              lines.append("")
+
+          sheet_link = f"https://docs.google.com/spreadsheets/d/{os.environ['GOOGLE_SHEETS_ID']}"
+          lines.append(sheet_link)
+          message = "\n".join(lines)
+
+          slack_response = requests.post(
+              "https://slack.com/api/chat.postMessage",
+              headers={
+                  "Authorization": f"Bearer {os.environ['SLACK_BOT_TOKEN']}",
+                  "Content-Type": "application/json; charset=utf-8",
+              },
+              json={
+                  "channel": os.environ["SLACK_CHANNEL_ID"],
+                  "text": message,
+                  "mrkdwn": True,
+              },
+              timeout=30,
+          )
+          slack_response.raise_for_status()
+
+          slack_payload = slack_response.json()
+          if not slack_payload.get("ok"):
+              raise RuntimeError(f"Slack API error: {slack_payload}")
+
+          for vendor in vendors:
+              website = vendor.get("website")
+              if website:
+                  (
+                      supabase.table("cs_vendors")
+                      .update({"is_new": False})
+                      .eq("website", website)
+                      .execute()
+                  )
+          PY
