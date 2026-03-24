@@ -1,0 +1,19 @@
+{
+  "milestones": [
+    {
+      "id": "M35",
+      "title": "Human test and operator validation",
+      "delivery_type": "capability_delivering",
+      "proof_description": "Operator runs the full pipeline end-to-end, reviews the directory output against expected behaviour, and records a structured validation outcome with pass/fail notes per area.",
+      "proof_artifact": "runs/proofs/M35_human_validation.json",
+      "interaction_targets": ["operator"],
+      "status": "not_started",
+      "dependencies": [],
+      "verify": [
+        "Review the human test plan and operator instructions.",
+        "Perform one human-run validation pass and record the outcome.",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    }
+  ]
+}

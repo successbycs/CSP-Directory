@@ -1,0 +1,66 @@
+{
+  "current_focus": "M35",
+  "verification_script": "scripts/verify_project.sh",
+  "runtime_environment": "local",
+  "controller_policy": {
+    "execution_owner": "controller",
+    "out_of_band_role_execution_valid": false,
+    "solution_discovery_owner": "approach_assessor",
+    "architectural_separation_required": true,
+    "max_same_milestone_retries": 2,
+    "retry_on_actionable_failures": true,
+    "stop_on_external_blockers": true,
+    "runtime_execution_priority": true,
+    "analysis_only_progress_counts_as_complete": false,
+    "live_output_required_for_meaningful_progress": true,
+    "controller_must_chain_follow_on_actions_when_resolvable": true
+  },
+  "architectural_directives": {
+    "capability_first_solution_discovery": true,
+    "preferred_workflow_surface": "python",
+    "implementation_rule": "Fix milestones target the CSP Directory pipeline directly. Keep changes scoped to the failing area identified in the human review."
+  },
+  "delegation_policy": {
+    "enabled": true,
+    "record_task_contracts": true,
+    "max_parallel_tasks": 1,
+    "require_declared_write_scope": true,
+    "stop_on_scope_violation": true,
+    "mutating_roles": [
+      "controller",
+      "builder",
+      "closeout_auditor",
+      "backfill_auditor"
+    ]
+  },
+  "repair_policy": {
+    "enabled": true,
+    "role": "fixer_engineer",
+    "triad_required": true,
+    "repair_storage_dir": "runs/repair_cycles",
+    "max_repair_attempts": 5,
+    "repairable_gate_actions": [
+      "verify",
+      "review",
+      "qa",
+      "contract_gate"
+    ]
+  },
+  "framework_development_policy": {
+    "post_incomplete_milestone_review_required": true,
+    "post_incomplete_milestone_review_roles": [
+      "ai_engineer",
+      "solution_architect",
+      "qa"
+    ],
+    "development_review_storage_dir": "runs/development_reviews",
+    "required_review_outputs": [
+      "problems",
+      "root_cause_class",
+      "severity",
+      "recommended_fixes",
+      "suggested_next_steps",
+      "operator_blockers"
+    ]
+  }
+}
