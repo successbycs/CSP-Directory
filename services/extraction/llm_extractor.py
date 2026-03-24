@@ -230,7 +230,7 @@ LLM_RESULT_SCHEMA = {
                     "metric": {"type": "string"},
                     "source_url": {"type": "string"},
                 },
-                "required": ["client", "title", "use_case", "value_realized", "source_url"],
+                "required": ["client", "title", "use_case", "value_realized", "metric", "source_url"],
                 "additionalProperties": False,
             },
         },

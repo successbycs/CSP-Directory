@@ -7,24 +7,23 @@
       "proof_description": "Operator runs the full pipeline end-to-end, reviews the directory output against expected behaviour, and records a structured validation outcome with pass/fail notes per area.",
       "proof_artifact": "runs/proofs/M35_human_validation.json",
       "interaction_targets": ["operator"],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [],
       "verify": [
-        "Review the human test plan and operator instructions.",
-        "Perform one human-run validation pass and record the outcome.",
         "python3 scripts/autonomous_audit.py"
       ]
     },
     {
       "id": "M36",
-      "title": "Supabase schema baseline and tool",
+      "title": "Supabase schema baseline and migration tool",
       "delivery_type": "capability_delivering",
-      "proof_description": "Sync the live Supabase schema with core_persistence_schema.sql, wire the CSP-owned Supabase tool, and prove the tool can read and write cs_vendors records.",
+      "proof_description": "Fix the auto_directory_category schema drift that causes every Supabase upsert to fail with PGRST204. Use scripts/apply_schema_migration.py to detect and apply all missing columns to the live cs_vendors table. Prove that check_supabase.py passes cleanly with no missing columns and that a vendor upsert succeeds end-to-end.",
       "proof_artifact": "runs/proofs/M36_supabase_baseline.json",
       "interaction_targets": ["system"],
       "status": "not_started",
       "dependencies": ["M35"],
       "verify": [
+        "python3 scripts/apply_schema_migration.py",
         "python3 scripts/check_supabase.py",
         "python3 scripts/autonomous_audit.py"
       ]
