@@ -1,7 +1,23 @@
 {
-  "current_focus": "M35",
+  "current_focus": "M36",
   "verification_script": "scripts/verify_project.sh",
   "runtime_environment": "local",
+  "agent_prompts": {
+    "controller": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/controller_agent.md",
+    "prework": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/prework_agent.md",
+    "planner": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/planner_agent.md",
+    "approach_assessor": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/approach_assessor_agent.md",
+    "builder": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/builder_agent.md",
+    "fixer_engineer": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/fixer_engineer_agent.md",
+    "reviewer": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/reviewer_agent.md",
+    "qa": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/qa_agent.md",
+    "closeout_auditor": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/closeout_auditor_agent.md",
+    "backfill_auditor": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/docs/agents/backfill_auditor_agent.md"
+  },
+  "agent_runner": {
+    "enabled": true,
+    "command": "python3 /home/chris/SuccessByCS-Builder/Autonomous-Framework/tools/agent_cli/cli.py --model auto"
+  },
   "controller_policy": {
     "execution_owner": "controller",
     "out_of_band_role_execution_valid": false,
