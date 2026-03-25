@@ -376,7 +376,10 @@ async function handleVendorAction(event) {
     return;
   }
 
+  const originalText = button.textContent;
   button.disabled = true;
+  button.classList.add("action-active");
+  button.textContent = originalText + "…";
   try {
     await fetchJson(`/admin/vendor/${action}`, {
       method: "POST",
@@ -387,9 +390,10 @@ async function handleVendorAction(event) {
     state.vendors = vendors.items || [];
     renderVendors();
   } catch (error) {
-    window.alert(`Admin action failed: ${error.message}`);
-  } finally {
     button.disabled = false;
+    button.classList.remove("action-active");
+    button.textContent = originalText;
+    window.alert(`Admin action failed: ${error.message}`);
   }
 }
 
@@ -401,7 +405,10 @@ async function handleLeadFollowUpAction(event) {
     return;
   }
 
+  const originalText = button.textContent;
   button.disabled = true;
+  button.classList.add("action-active");
+  button.textContent = originalText + "…";
   try {
     await fetchJson("/admin/lead/follow-up", {
       method: "POST",
@@ -415,9 +422,10 @@ async function handleLeadFollowUpAction(event) {
     };
     renderLeads();
   } catch (error) {
-    window.alert(`Lead follow-up update failed: ${error.message}`);
-  } finally {
     button.disabled = false;
+    button.classList.remove("action-active");
+    button.textContent = originalText;
+    window.alert(`Lead follow-up update failed: ${error.message}`);
   }
 }
 
