@@ -677,6 +677,77 @@
         "docker compose up -d && curl http://localhost:8787/admin/vendors",
         "python3 scripts/autonomous_audit.py"
       ]
+    },
+    {
+      "id": "M53",
+      "title": "Vercel production deployment: vendors.successbycs.com live",
+      "delivery_type": "capability_delivering",
+      "status": "in_progress",
+      "dependencies": [
+        "M43B"
+      ],
+      "proof_description": "CSP Directory is publicly accessible at vendors.successbycs.com. Static site serves directory_dataset.json. Lead capture POST /api/lead-capture writes to Supabase. Verify by submitting a test lead and confirming it appears in Supabase lead_captures table.",
+      "acceptance_criteria": [
+        "vendors.successbycs.com returns 200 and renders vendor listings",
+        "directory_dataset.json loads and populates the directory",
+        "POST /api/lead-capture with valid payload returns ok:true and writes to Supabase",
+        "Custom domain vendors.successbycs.com is assigned in Vercel project"
+      ],
+      "proof_artifact": "runs/proofs/M53_vercel_deployment.json",
+      "interaction_targets": [
+        "operator",
+        "system"
+      ],
+      "verify": [
+        "curl -f https://vendors.successbycs.com",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M54",
+      "title": "AF execution sub-pipeline: decomposer role + controller chunking (Solution B)",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M53"
+      ],
+      "proof_description": "AF controller detects complex milestones (4+ acceptance criteria) via prework complexity_class output. Decomposer role generates runs/execution_plans/<milestone_id>_plan.json. Controller runs builder once per sub-task with prior_work_summary context. Parent milestone completes when all sub-tasks pass. Prove by running a complex milestone end-to-end through the sub-pipeline.",
+      "acceptance_criteria": [
+        "Prework agent outputs complexity_class (simple/moderate/complex) and acceptance_criteria_count",
+        "Decomposer role produces execution_plan.json with sub-tasks, each capped at 3 acceptance criteria and declared file write scope",
+        "Controller sub-pipeline loop: gates sub-task N on sub-task N-1 proof, passes prior_work_summary context",
+        "Execution plan cached with milestone definition hash \u2014 invalidated on milestone change"
+      ],
+      "proof_artifact": "runs/proofs/M54_af_sub_pipeline.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M55",
+      "title": "AF tiered model routing: Ollama for analysis roles, frontier model for builder",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M54"
+      ],
+      "proof_description": "AF model_router.py routes prework/planner/approach_assessor to Ollama (local) and builder/reviewer/qa/fixer to configured frontier model. Prove by running a full cycle and confirming analysis roles use Ollama endpoint and builder uses OpenAI/Claude.",
+      "acceptance_criteria": [
+        "OLLAMA_BASE_URL env var added to agentic_cli.py and model_router.py",
+        "Analysis roles (prework, planner, approach_assessor) route to Ollama when OLLAMA_BASE_URL is set",
+        "Builder, reviewer, qa, fixer continue to use frontier model",
+        "Graceful fallback to frontier model if Ollama is unavailable"
+      ],
+      "proof_artifact": "runs/proofs/M55_af_ollama_routing.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
     }
   ]
 }
