@@ -175,6 +175,12 @@ tbody tr.is-excluded {
   background: var(--forest);
 }
 
+.action-button.action-active {
+  color: white;
+  border-color: transparent;
+  background: var(--forest);
+}
+
 .action-button.action-danger {
   color: var(--danger);
 }
@@ -199,6 +205,100 @@ a {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ── Vendor record modal ─────────────────────────────────────── */
+.record-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 16px;
+  overflow-y: auto;
+}
+
+.record-modal.hidden {
+  display: none;
+}
+
+.record-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 33, 28, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.record-modal-panel {
+  position: relative;
+  width: min(860px, 100%);
+  background: var(--surface);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+
+.record-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.record-modal-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.record-modal-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 24px;
+}
+
+.record-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.record-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.record-field-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.record-field-value {
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.record-field-value.is-empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── End vendor record modal ─────────────────────────────────── */
 
 @media (max-width: 960px) {
   .dashboard-shell {

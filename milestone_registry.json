@@ -748,6 +748,28 @@
       "verify": [
         "python3 scripts/autonomous_audit.py"
       ]
+    },
+    {
+      "id": "M-OPS2",
+      "title": "Admin vendor table: active state on Include/Exclude buttons + See full record",
+      "delivery_type": "capability_delivering",
+      "status": "complete",
+      "dependencies": [
+        "M43B"
+      ],
+      "proof_description": "Include button shows green (action-active) when vendor is included, Exclude shows green when excluded. Buttons toggle state on click. Show Record renamed to See full record.",
+      "acceptance_criteria": [
+        "Include button is green when include_in_directory=true, plain when false",
+        "Exclude button is green when include_in_directory=false, plain when true",
+        "Button labelled See full record opens the vendor detail modal"
+      ],
+      "proof_artifact": "runs/proofs/M-OPS2_admin_vendor_buttons.json",
+      "interaction_targets": [
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
     }
   ]
 }

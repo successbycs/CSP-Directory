@@ -178,10 +178,10 @@ function renderVendors() {
         <td>${escapeHtml(includeValue ? "true" : "false")}</td>
         <td>
           <div class="actions">
-            <button class="action-button action-primary" data-action="include" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Include</button>
-            <button class="action-button action-danger" data-action="exclude" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Exclude</button>
+            <button class="action-button ${includeValue ? 'action-active' : 'action-secondary'}" data-action="include" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Include</button>
+            <button class="action-button ${!includeValue ? 'action-active' : 'action-secondary'}" data-action="exclude" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Exclude</button>
             <button class="action-button action-secondary" data-action="rerun-enrichment" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Rerun Enrichment</button>
-            <button class="action-button action-secondary" data-action="show-record" data-vendor-index="${escapeAttribute(String(rows.indexOf(vendor)))}">Show Record</button>
+            <button class="action-button action-secondary" data-action="show-record" data-vendor-index="${escapeAttribute(String(rows.indexOf(vendor)))}">See full record</button>
           </div>
         </td>
       </tr>
