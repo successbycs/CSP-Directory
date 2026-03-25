@@ -4,6 +4,36 @@ Quick-reference commands for running and monitoring the pipeline.
 
 ---
 
+## Start the admin panel
+
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 -m services.admin.admin_api
+```
+
+Open `http://127.0.0.1:8787` in your browser.
+
+---
+
+## Restart the admin panel (pick up code changes)
+
+The admin panel serves static files (including `admin.js`) directly from disk. If you've pulled new code or made local edits, the running process must be restarted to serve the updated files — a browser refresh alone is not enough.
+
+```bash
+pkill -f "services.admin.admin_api" && \
+cd /home/chris/projects/CSP-Directory && \
+source .venv/bin/activate && \
+python3 -m services.admin.admin_api
+```
+
+Then hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`).
+
+**When to restart:**
+- After pulling changes from GitHub that include `admin.js`, `admin.css`, or `admin.html`
+- After any local edit to the admin UI files
+- If buttons or features described in the docs are not appearing on the page
+
+---
+
 ## Run the pipeline directly (with live logs)
 
 ```bash
