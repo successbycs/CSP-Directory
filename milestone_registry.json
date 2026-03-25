@@ -263,7 +263,7 @@
       "proof_description": "Enrich_vendors_deterministic.py must detect and overwrite any stored vendor name that fails the name quality check: contains title separators (|, \u2014, -, >), is longer than 60 chars, or starts with article words (what, how, best, top, guide, the, a, an). The canonical name must be derived from og:site_name (if \u226440 chars and clean) or domain-name fallback via company_name_from_website().",
       "acceptance_criteria": [
         "Zero vendors in cs_vendors where name contains | or \u2014 or starts with article words",
-        "Gainsight row name passes quality check (og:site_name='Gainsight Software' — clean and canonical)",
+        "Gainsight row name passes quality check (og:site_name='Gainsight Software' \u2014 clean and canonical)",
         "Outreach row name = 'Outreach'",
         "Unit tests pass: 20 tests covering quality check and canonical name derivation"
       ],
@@ -289,6 +289,32 @@
         "proof_summary": "20 unit tests pass. Zero name violations in cs_vendors post-fix. Mixmax fixed from 'The AI Sales Execution Platform' to 'Mixmax'. Gainsight='Gainsight Software' (clean). Outreach='Outreach'.",
         "operator_completed": true
       }
+    },
+    {
+      "id": "M43B",
+      "title": "Admin publish endpoint: review-then-export workflow",
+      "delivery_type": "capability_delivering",
+      "status": "in_progress",
+      "dependencies": [
+        "M43"
+      ],
+      "proof_description": "Add POST /admin/publish to admin_api.py that calls export_directory_dataset() and returns the exported vendor count and output path. The admin panel workflow must be: (1) run enrichment, (2) review vendors in admin panel at http://127.0.0.1:8787, (3) use Include/Exclude buttons to curate, (4) click Publish to regenerate directory_dataset.json from current include_in_directory=true vendors. Prove by calling the endpoint and asserting directory_dataset.json is written with only included vendors.",
+      "acceptance_criteria": [
+        "POST /admin/publish calls export_directory_dataset() and writes outputs/directory_dataset.json",
+        "Response includes vendor_count and output_path",
+        "Only vendors with include_in_directory=true appear in the exported dataset",
+        "Unit tests cover the publish endpoint: success path and export-failure path",
+        "Admin UI has a Publish button that calls POST /admin/publish and shows vendor count"
+      ],
+      "proof_artifact": "runs/proofs/M43B_admin_publish.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_admin_api.py -v -k publish",
+        "python3 scripts/autonomous_audit.py"
+      ]
     },
     {
       "id": "M44",
