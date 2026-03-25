@@ -673,27 +673,26 @@ function showRawRecordModal(vendor) {
   let modal = document.getElementById("raw-record-modal");
   if (!modal) {
     document.body.insertAdjacentHTML("beforeend", `
-      <div class="record-modal-backdrop hidden" id="raw-record-modal">
-        <div class="record-modal" role="dialog" aria-modal="true" style="max-width:800px">
+      <div class="record-modal hidden" id="raw-record-modal">
+        <div class="record-modal-backdrop" id="raw-record-modal-backdrop"></div>
+        <div class="record-modal-panel" style="width:fit-content;min-width:340px;max-width:min(860px,95vw);max-height:80vh;overflow-y:auto" role="dialog" aria-modal="true">
           <div class="record-modal-header">
             <h2 class="record-modal-title" id="raw-record-title"></h2>
             <button class="record-modal-close" id="raw-record-close" type="button" aria-label="Close">✕</button>
           </div>
-          <div class="record-modal-body" id="raw-record-body" style="padding:1rem"></div>
+          <div id="raw-record-body"></div>
         </div>
       </div>
     `);
     document.getElementById("raw-record-close").addEventListener("click", hideRawRecordModal);
-    document.getElementById("raw-record-modal").addEventListener("click", (e) => {
-      if (e.target === e.currentTarget) hideRawRecordModal();
-    });
+    document.getElementById("raw-record-modal-backdrop").addEventListener("click", hideRawRecordModal);
     modal = document.getElementById("raw-record-modal");
   }
 
   const vendorName = vendor.name || vendor.vendor_name || vendor.website || "Unknown vendor";
   document.getElementById("raw-record-title").textContent = vendorName + " — raw record";
   document.getElementById("raw-record-body").innerHTML =
-    `<pre style="white-space:pre-wrap;word-break:break-all;font-size:0.78rem;line-height:1.5">${escapeHtml(JSON.stringify(vendor, null, 2))}</pre>`;
+    `<pre style="margin:0;padding:14px 16px;background:#fff;color:#1d2522;border-radius:12px;font-size:0.78rem;line-height:1.6;white-space:pre-wrap;word-break:break-all">${escapeHtml(JSON.stringify(vendor, null, 2))}</pre>`;
 
   modal.classList.remove("hidden");
   document.body.style.overflow = "hidden";
