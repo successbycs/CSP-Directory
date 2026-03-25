@@ -141,7 +141,16 @@ def _list_value(value: object) -> list[str]:
     if isinstance(value, list):
         return [str(item).strip() for item in value if str(item).strip()]
     if isinstance(value, str):
-        separators_normalized = value.replace("\n", "|").replace(",", "|")
+        stripped = value.strip()
+        if stripped.startswith("["):
+            try:
+                import json as _json
+                parsed = _json.loads(stripped)
+                if isinstance(parsed, list):
+                    return [str(item).strip() for item in parsed if str(item).strip()]
+            except (ValueError, TypeError):
+                pass
+        separators_normalized = stripped.replace("\n", "|").replace(",", "|")
         return [segment.strip() for segment in separators_normalized.split("|") if segment.strip()]
     return []
 

@@ -182,6 +182,7 @@ function renderVendors() {
             <button class="action-button ${!includeValue ? 'action-active' : 'action-secondary'}" data-action="exclude" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Exclude</button>
             <button class="action-button action-secondary" data-action="rerun-enrichment" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Rerun Enrichment</button>
             <button class="action-button action-secondary" data-action="show-record" data-vendor-index="${escapeAttribute(String(rows.indexOf(vendor)))}">See full record</button>
+            <button class="action-button action-secondary" data-action="view-raw" data-vendor-index="${escapeAttribute(String(rows.indexOf(vendor)))}">View record</button>
           </div>
         </td>
       </tr>
@@ -193,6 +194,11 @@ function renderVendors() {
       button.addEventListener("click", (event) => {
         const index = parseInt(event.currentTarget.dataset.vendorIndex, 10);
         showVendorModal(rows[index]);
+      });
+    } else if (button.dataset.action === "view-raw") {
+      button.addEventListener("click", (event) => {
+        const index = parseInt(event.currentTarget.dataset.vendorIndex, 10);
+        showRawRecordModal(rows[index]);
       });
     } else {
       button.addEventListener("click", handleVendorAction);
@@ -663,11 +669,47 @@ function hideVendorModal() {
   document.body.style.overflow = "";
 }
 
+function showRawRecordModal(vendor) {
+  let modal = document.getElementById("raw-record-modal");
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="record-modal-backdrop hidden" id="raw-record-modal">
+        <div class="record-modal" role="dialog" aria-modal="true" style="max-width:800px">
+          <div class="record-modal-header">
+            <h2 class="record-modal-title" id="raw-record-title"></h2>
+            <button class="record-modal-close" id="raw-record-close" type="button" aria-label="Close">✕</button>
+          </div>
+          <div class="record-modal-body" id="raw-record-body" style="padding:1rem"></div>
+        </div>
+      </div>
+    `);
+    document.getElementById("raw-record-close").addEventListener("click", hideRawRecordModal);
+    document.getElementById("raw-record-modal").addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) hideRawRecordModal();
+    });
+    modal = document.getElementById("raw-record-modal");
+  }
+
+  const vendorName = vendor.name || vendor.vendor_name || vendor.website || "Unknown vendor";
+  document.getElementById("raw-record-title").textContent = vendorName + " — raw record";
+  document.getElementById("raw-record-body").innerHTML =
+    `<pre style="white-space:pre-wrap;word-break:break-all;font-size:0.78rem;line-height:1.5">${escapeHtml(JSON.stringify(vendor, null, 2))}</pre>`;
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function hideRawRecordModal() {
+  const modal = document.getElementById("raw-record-modal");
+  if (modal) modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("vendor-record-modal")?.querySelector(".record-modal-close")?.addEventListener("click", hideVendorModal);
   document.getElementById("vendor-record-modal")?.querySelector(".record-modal-backdrop")?.addEventListener("click", hideVendorModal);
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") hideVendorModal();
+    if (event.key === "Escape") { hideVendorModal(); hideRawRecordModal(); }
   });
 
   const publishBtn = document.getElementById("publish-btn");
