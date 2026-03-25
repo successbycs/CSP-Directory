@@ -1,7 +1,28 @@
 {
   "discovery": {
     "queries": [
-      "ai customer success platform"
+      "AI CSP software",
+      "AI customer success platform",
+      "AI-powered customer success",
+      "customer success software SaaS",
+      "customer success management platform",
+      "customer success management CSM tool",
+      "digital customer success platform",
+      "customer health score platform",
+      "customer health score software",
+      "customer onboarding automation software",
+      "customer onboarding platform B2B",
+      "churn prevention software B2B",
+      "churn prediction software SaaS",
+      "renewal management software SaaS",
+      "customer expansion revenue software",
+      "customer lifecycle management software",
+      "B2B customer engagement platform",
+      "product adoption analytics platform",
+      "product adoption software B2B",
+      "customer retention software SaaS",
+      "voice of customer software B2B",
+      "customer advocacy software platform"
     ],
     "source_engine": "google_search",
     "actor_id": "apify/google-search-scraper",
