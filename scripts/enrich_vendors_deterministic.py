@@ -62,6 +62,32 @@ JUNK_DOMAINS = {
 HTTP_TIMEOUT = 12
 HTTP_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; CSP-enrichment/1.0)"}
 
+# Name quality enforcement (M43)
+_ARTICLE_WORDS = frozenset({"what", "how", "best", "top", "guide", "the", "a", "an"})
+_TITLE_SEPARATORS = ("|", "—", " - ", " > ")
+
+
+def _name_fails_quality_check(name: str) -> bool:
+    """Return True if name contains title separators, is too long, or starts with an article word."""
+    if not name:
+        return True
+    if len(name) > 60:
+        return True
+    if any(sep in name for sep in _TITLE_SEPARATORS):
+        return True
+    first_word = name.strip().split()[0].lower().rstrip(",:") if name.strip() else ""
+    if first_word in _ARTICLE_WORDS:
+        return True
+    return False
+
+
+def _derive_canonical_name(meta_name: str, website: str) -> str:
+    """Canonical name = og:site_name if ≤40 chars and clean, else domain-name fallback."""
+    domain_name = company_name_from_website(website)
+    if meta_name and len(meta_name) <= 40 and not _name_fails_quality_check(meta_name):
+        return meta_name
+    return domain_name
+
 
 def get_supabase():
     return create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_KEY"])
@@ -152,13 +178,12 @@ def enrich_vendor(vendor: dict) -> dict | None:
     meta_name = structured.get("name", "")
     founded = structured.get("founded", "")
 
-    # Derive canonical name: og:site_name if short/clean, else domain-based
-    # Reject meta_name that looks like a page title (contains |, —, >, or is long)
-    domain_name = company_name_from_website(website)
-    if meta_name and len(meta_name) <= 40 and not any(c in meta_name for c in ("|", "—", ">", "·", " - ")):
-        canonical_name = meta_name
-    else:
-        canonical_name = domain_name
+    # Derive canonical name: og:site_name if ≤40 chars and clean, else domain-name fallback
+    canonical_name = _derive_canonical_name(meta_name, website)
+    # Safety net: domain fallback can still fail quality check in rare edge cases
+    if _name_fails_quality_check(canonical_name):
+        logger.warning("Name still fails quality check after derivation for %s: '%s'", website, canonical_name)
+        canonical_name = company_name_from_website(website)
 
     # Step 2: n8n markdown for keyword classification
     markdown_text = fetch_markdown(website)

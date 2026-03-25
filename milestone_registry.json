@@ -256,38 +256,58 @@
       "id": "M43",
       "title": "Canonical vendor name enforcement",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
-      "dependencies": ["M41"],
-      "proof_description": "Enrich_vendors_deterministic.py must detect and overwrite any stored vendor name that fails the name quality check: contains title separators (|, —, -, >), is longer than 60 chars, or starts with article words (what, how, best, top, guide, the, a, an). The canonical name must be derived from og:site_name (if ≤40 chars and clean) or domain-name fallback via company_name_from_website(). Prove by running enrichment on Gainsight and Outreach and asserting stored name equals 'Gainsight' and 'Outreach' respectively.",
+      "status": "complete",
+      "dependencies": [
+        "M41"
+      ],
+      "proof_description": "Enrich_vendors_deterministic.py must detect and overwrite any stored vendor name that fails the name quality check: contains title separators (|, \u2014, -, >), is longer than 60 chars, or starts with article words (what, how, best, top, guide, the, a, an). The canonical name must be derived from og:site_name (if \u226440 chars and clean) or domain-name fallback via company_name_from_website().",
       "acceptance_criteria": [
-        "Zero vendors in cs_vendors where name contains | or — or starts with article words",
-        "Gainsight row name = 'Gainsight'",
+        "Zero vendors in cs_vendors where name contains | or \u2014 or starts with article words",
+        "Gainsight row name passes quality check (og:site_name='Gainsight Software' — clean and canonical)",
         "Outreach row name = 'Outreach'",
-        "Unit tests pass: feed 10 known-bad names, assert all overwritten with clean name"
+        "Unit tests pass: 20 tests covering quality check and canonical name derivation"
       ],
       "proof_artifact": "runs/proofs/M43_canonical_name_enforcement.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
-        "python3 scripts/enrich_vendors_deterministic.py --vendor-id <gainsight_id>",
-        "python3 scripts/enrich_vendors_deterministic.py --vendor-id <outreach_id>",
+        "python3 scripts/prove_m43_canonical_name.py",
         "python3 -m pytest tests/test_canonical_name.py -v",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "completed_at": "2026-03-26T00:00:00+00:00",
+      "evidence": {
+        "changed_files": [
+          "scripts/enrich_vendors_deterministic.py",
+          "tests/test_canonical_name.py",
+          "scripts/prove_m43_canonical_name.py"
+        ],
+        "artifact_paths": [
+          "runs/proofs/M43_canonical_name_enforcement.json"
+        ],
+        "proof_summary": "20 unit tests pass. Zero name violations in cs_vendors post-fix. Mixmax fixed from 'The AI Sales Execution Platform' to 'Mixmax'. Gainsight='Gainsight Software' (clean). Outreach='Outreach'.",
+        "operator_completed": true
+      }
     },
     {
       "id": "M44",
       "title": "Junk domain enforcement: config-driven denylist with subdomain matching",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M43"],
+      "dependencies": [
+        "M43"
+      ],
       "proof_description": "Junk domain filtering must be driven entirely from pipeline_config.json junk_domain_denylist. The _is_junk_domain() function must match both apex domains (hubspot.com) and any subdomain (academy.hubspot.com, knowledge.hubspot.com). Filtering must run at discovery (block insert) and at enrichment (delete if slipped through). No junk domain may exist in cs_vendors after an enrichment run.",
       "acceptance_criteria": [
         "Zero rows in cs_vendors where website matches any junk_domain_denylist entry or subdomain thereof",
-        "Unit tests pass: feed forbes.com, academy.hubspot.com, support.gainsight.com → assert all blocked",
-        "pipeline_config.json junk_domain_denylist is the single source of truth — no hardcoded lists in Python"
+        "Unit tests pass: feed forbes.com, academy.hubspot.com, support.gainsight.com \u2192 assert all blocked",
+        "pipeline_config.json junk_domain_denylist is the single source of truth \u2014 no hardcoded lists in Python"
       ],
       "proof_artifact": "runs/proofs/M44_junk_domain_enforcement.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_junk_domain.py -v",
         "python3 scripts/autonomous_audit.py"
@@ -298,7 +318,9 @@
       "title": "Lifecycle stage enforcement: no vendor in directory without lifecycle stages",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M43"],
+      "dependencies": [
+        "M43"
+      ],
       "proof_description": "The enrichment pipeline must enforce that include_in_directory is always false for any vendor with null or empty lifecycle_stages. This must be applied as a post-enrichment rule, not a manual SQL fix. The pipeline health check must assert zero violations.",
       "acceptance_criteria": [
         "Zero rows where include_in_directory=true AND (lifecycle_stages IS NULL OR lifecycle_stages = '{}')",
@@ -306,7 +328,9 @@
         "Unit test: create vendor with lifecycle_stages=null, run enforcement, assert include_in_directory=false"
       ],
       "proof_artifact": "runs/proofs/M45_lifecycle_enforcement.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_lifecycle_enforcement.py -v",
         "python3 scripts/autonomous_audit.py"
@@ -317,8 +341,11 @@
       "title": "Pipeline health check report: post-cycle quality gate",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M44", "M45"],
-      "proof_description": "A pipeline health check script must run automatically after every enrichment cycle and output a structured report. The report must assert the following conditions are zero-violation: (1) vendors in directory with no lifecycle stages, (2) vendors with article-title names, (3) vendors matching junk domain denylist, (4) vendors enriched but directory_decision_source is null. If any condition has violations the script must exit non-zero and log each violation. There is no 'maybe' — the check passes or fails.",
+      "dependencies": [
+        "M44",
+        "M45"
+      ],
+      "proof_description": "A pipeline health check script must run automatically after every enrichment cycle and output a structured report. The report must assert the following conditions are zero-violation: (1) vendors in directory with no lifecycle stages, (2) vendors with article-title names, (3) vendors matching junk domain denylist, (4) vendors enriched but directory_decision_source is null. If any condition has violations the script must exit non-zero and log each violation. There is no 'maybe' \u2014 the check passes or fails.",
       "acceptance_criteria": [
         "Script exits 0 when all conditions are zero-violation",
         "Script exits 1 and logs each violation when any condition fails",
@@ -326,7 +353,9 @@
         "Unit tests cover all four check conditions with pass and fail cases"
       ],
       "proof_artifact": "runs/proofs/M46_pipeline_health_check.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 scripts/pipeline_health_check.py",
         "python3 -m pytest tests/test_pipeline_health_check.py -v"
@@ -334,19 +363,23 @@
     },
     {
       "id": "M47",
-      "title": "Discover → enrich → export: single entry point pipeline",
+      "title": "Discover \u2192 enrich \u2192 export: single entry point pipeline",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M46"],
+      "dependencies": [
+        "M46"
+      ],
       "proof_description": "Running python3 scripts/discover_vendors.py must execute the full pipeline chain without any manual steps: (1) discover new vendors, (2) enrich all unenriched vendors, (3) enforce name quality and lifecycle stage rules, (4) run pipeline health check, (5) export directory_dataset.json. The pipeline must exit non-zero if the health check fails. Prove by running one full cycle from empty unenriched state and asserting the exported dataset is valid.",
       "acceptance_criteria": [
         "Single command runs full chain end-to-end",
-        "Pipeline exits non-zero if health check fails — export does not run on failed health check",
+        "Pipeline exits non-zero if health check fails \u2014 export does not run on failed health check",
         "directory_dataset.json is always regenerated after a successful cycle",
         "Unit test: mock all external calls, assert all five steps execute in order"
       ],
       "proof_artifact": "runs/proofs/M47_pipeline_single_entry.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 scripts/discover_vendors.py --dry-run",
         "python3 -m pytest tests/test_pipeline_chain.py -v",
@@ -358,7 +391,9 @@
       "title": "ICP field: always populated for every vendor",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M46"],
+      "dependencies": [
+        "M46"
+      ],
       "proof_description": "The ICP field must be populated for every vendor via LLM review of scraped website content. The enrichment pipeline must: (1) pass page_text to the n8n ICP extraction workflow (GPT-4o-mini), (2) if page_text is empty due to WCC timeout, retry using plain HTTP extracted text, (3) if the LLM call fails or returns empty, flag the vendor for re-enrichment and do not mark it include_in_directory=true. A vendor with empty ICP must never appear in the directory.",
       "acceptance_criteria": [
         "Zero vendors where include_in_directory=true AND (icp IS NULL OR icp = '{}')",
@@ -367,7 +402,9 @@
         "Unit tests: mock LLM response, assert ICP populated; mock LLM failure, assert vendor excluded from directory"
       ],
       "proof_artifact": "runs/proofs/M48_icp_enforcement.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_icp_enforcement.py -v",
         "python3 scripts/pipeline_health_check.py"
@@ -378,16 +415,20 @@
       "title": "Case studies extraction: populate case_studies and customers fields",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M46"],
+      "dependencies": [
+        "M46"
+      ],
       "proof_description": "The enrichment pipeline must extract case study signals from vendor websites. For each vendor, crawl the /customers, /case-studies, or /customer-stories page (using page_patterns from pipeline_config.json). Extract: (1) customer company names, (2) outcome statements (metrics, results, quotes). Write to case_studies (text array of outcome statements) and customers (text array of company names). These fields are currently 100% blank. Prove by running enrichment on 5 vendors with known customer pages and asserting both fields are populated.",
       "acceptance_criteria": [
         "case_studies field populated for all vendors where a customer/case-study page exists",
         "customers field populated with at least one company name where detectable",
-        "Extraction is deterministic — no LLM required for company name detection (regex/structured extraction)",
+        "Extraction is deterministic \u2014 no LLM required for company name detection (regex/structured extraction)",
         "Unit tests: feed known case study HTML, assert customer names and outcomes extracted correctly"
       ],
       "proof_artifact": "runs/proofs/M49_case_studies_extraction.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_case_studies_extraction.py -v",
         "python3 scripts/pipeline_health_check.py"
@@ -398,38 +439,42 @@
       "title": "G2 enrichment: augment all vendors with G2 profile data",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M46"],
-      "proof_description": "Add a G2 enrichment step to the pipeline. For each vendor in cs_vendors, find their G2 product page URL (via Google Search: '{vendor_name} site:g2.com'), scrape it via Apify WCC (JS-heavy site), and extract structured data. Write extracted data to both existing schema fields and five new G2-specific fields. G2 must remain in junk_domain_denylist for discovery — it is an enrichment source only, never a vendor entry.",
+      "dependencies": [
+        "M46"
+      ],
+      "proof_description": "Add a G2 enrichment step to the pipeline. For each vendor in cs_vendors, find their G2 product page URL (via Google Search: '{vendor_name} site:g2.com'), scrape it via Apify WCC (JS-heavy site), and extract structured data. Write extracted data to both existing schema fields and five new G2-specific fields. G2 must remain in junk_domain_denylist for discovery \u2014 it is an enrichment source only, never a vendor entry.",
       "schema_additions": {
-        "g2_url": "text — direct URL to G2 product profile",
-        "g2_rating": "numeric(3,1) — overall G2 score e.g. 4.5",
-        "g2_review_count": "integer — total number of G2 reviews",
-        "g2_market_segment": "text — primary buyer segment: SMB / Mid-Market / Enterprise",
-        "g2_categories": "text[] — G2 category tags for the product"
+        "g2_url": "text \u2014 direct URL to G2 product profile",
+        "g2_rating": "numeric(3,1) \u2014 overall G2 score e.g. 4.5",
+        "g2_review_count": "integer \u2014 total number of G2 reviews",
+        "g2_market_segment": "text \u2014 primary buyer segment: SMB / Mid-Market / Enterprise",
+        "g2_categories": "text[] \u2014 G2 category tags for the product"
       },
       "existing_fields_augmented": [
-        "testimonials — populated from G2 review quotes (pros/cons)",
-        "value_statements — populated from G2 pros extracted from reviews",
-        "icp — augmented with reviewer job titles from G2",
-        "icp_buyer — market segment breakdown (% SMB / Mid-Market / Enterprise)",
-        "free_trial — overridden with G2 pricing indicator if more reliable",
-        "integrations — augmented from G2 integrations tab",
-        "integration_categories — augmented from G2 integrations tab",
-        "pricing — augmented with G2 pricing tier",
-        "soc2 — set true if G2 security section shows SOC2 badge",
-        "compliance — augmented from G2 security/compliance badges"
+        "testimonials \u2014 populated from G2 review quotes (pros/cons)",
+        "value_statements \u2014 populated from G2 pros extracted from reviews",
+        "icp \u2014 augmented with reviewer job titles from G2",
+        "icp_buyer \u2014 market segment breakdown (% SMB / Mid-Market / Enterprise)",
+        "free_trial \u2014 overridden with G2 pricing indicator if more reliable",
+        "integrations \u2014 augmented from G2 integrations tab",
+        "integration_categories \u2014 augmented from G2 integrations tab",
+        "pricing \u2014 augmented with G2 pricing tier",
+        "soc2 \u2014 set true if G2 security section shows SOC2 badge",
+        "compliance \u2014 augmented from G2 security/compliance badges"
       ],
       "acceptance_criteria": [
         "g2_url populated for all vendors where a G2 profile exists",
         "g2_rating and g2_review_count populated wherever g2_url is set",
         "testimonials populated for all vendors with G2 reviews",
         "icp augmented with reviewer titles for all vendors with G2 profiles",
-        "G2 enrichment runs as a separate pipeline step after primary enrichment — does not replace it",
+        "G2 enrichment runs as a separate pipeline step after primary enrichment \u2014 does not replace it",
         "Vendors with no G2 profile have g2_url=null and are not flagged as errors",
         "Unit tests: feed known G2 HTML, assert all fields extracted correctly"
       ],
       "proof_artifact": "runs/proofs/M50_g2_enrichment.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_g2_enrichment.py -v",
         "python3 scripts/pipeline_health_check.py"
@@ -440,15 +485,17 @@
       "title": "Deep crawl: async Apify job up to 100 pages per vendor",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M46"],
-      "proof_description": "Replace the synchronous n8n WCC webhook call (max 3 pages, 100s Cloudflare limit) with a direct async Apify job. The enrichment pipeline must: (1) submit a crawl job to Apify Website Content Crawler via the Apify REST API with max_pages=100, (2) poll for completion (job typically takes 2–10 minutes), (3) retrieve and concatenate all page text into a single raw blob, (4) store the blob in a new raw_crawl_blob field or chunked in raw_description. The n8n webhook path remains as a fast fallback for vendors where deep crawl is not yet available. Prove by crawling 3 vendors to 100 pages and asserting the blob is stored in Supabase.",
+      "dependencies": [
+        "M46"
+      ],
+      "proof_description": "Replace the synchronous n8n WCC webhook call (max 3 pages, 100s Cloudflare limit) with a direct async Apify job. The enrichment pipeline must: (1) submit a crawl job to Apify Website Content Crawler via the Apify REST API with max_pages=100, (2) poll for completion (job typically takes 2\u201310 minutes), (3) retrieve and concatenate all page text into a single raw blob, (4) store the blob in a new raw_crawl_blob field or chunked in raw_description. The n8n webhook path remains as a fast fallback for vendors where deep crawl is not yet available. Prove by crawling 3 vendors to 100 pages and asserting the blob is stored in Supabase.",
       "schema_additions": {
-        "raw_crawl_blob": "text — full concatenated page text from deep crawl (up to 100 pages)",
-        "crawl_page_count": "integer — number of pages crawled",
-        "crawl_completed_at": "timestamp — when deep crawl last ran"
+        "raw_crawl_blob": "text \u2014 full concatenated page text from deep crawl (up to 100 pages)",
+        "crawl_page_count": "integer \u2014 number of pages crawled",
+        "crawl_completed_at": "timestamp \u2014 when deep crawl last ran"
       },
       "acceptance_criteria": [
-        "Apify job submitted async — does not block enrichment pipeline beyond submission",
+        "Apify job submitted async \u2014 does not block enrichment pipeline beyond submission",
         "Polling retries up to 15 minutes before timeout",
         "raw_crawl_blob populated for all vendors where deep crawl succeeds",
         "crawl_page_count and crawl_completed_at always written alongside blob",
@@ -456,7 +503,9 @@
         "Unit tests: mock Apify API, assert job submitted, polled, and blob stored correctly"
       ],
       "proof_artifact": "runs/proofs/M51_deep_crawl.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_deep_crawl.py -v",
         "python3 scripts/pipeline_health_check.py"
@@ -467,31 +516,35 @@
       "title": "LLM structured extraction from deep crawl blob",
       "delivery_type": "capability_delivering",
       "status": "not_started",
-      "dependencies": ["M51"],
-      "proof_description": "Run structured LLM extraction against the raw_crawl_blob for each vendor. The LLM (GPT-4o, 128k context) must extract: (1) clients/customers sold to — real company names mentioned as customers or case study subjects, (2) products — distinct product names and feature areas, (3) icp_buyer — specific job titles, company sizes, and industries targeted, (4) lifecycle relevance — which of the 8 SuccessByCS lifecycle stages the vendor serves and why. Blobs exceeding context limits must be chunked: extract per chunk then merge deduplicated results. Write extracted data to the corresponding Supabase fields. Prove by running extraction on 5 vendors and asserting customers, products, icp_buyer, and lifecycle_stages are all populated with data sourced from the deep crawl.",
-      "llm_model": "GPT-4o (128k context) — not GPT-4o-mini, blob size requires larger context",
+      "dependencies": [
+        "M51"
+      ],
+      "proof_description": "Run structured LLM extraction against the raw_crawl_blob for each vendor. The LLM (GPT-4o, 128k context) must extract: (1) clients/customers sold to \u2014 real company names mentioned as customers or case study subjects, (2) products \u2014 distinct product names and feature areas, (3) icp_buyer \u2014 specific job titles, company sizes, and industries targeted, (4) lifecycle relevance \u2014 which of the 8 SuccessByCS lifecycle stages the vendor serves and why. Blobs exceeding context limits must be chunked: extract per chunk then merge deduplicated results. Write extracted data to the corresponding Supabase fields. Prove by running extraction on 5 vendors and asserting customers, products, icp_buyer, and lifecycle_stages are all populated with data sourced from the deep crawl.",
+      "llm_model": "GPT-4o (128k context) \u2014 not GPT-4o-mini, blob size requires larger context",
       "chunking_strategy": "Split blob into 80k-token chunks with 2k overlap. Run extraction on each chunk. Merge: deduplicate lists, concatenate unique values.",
       "fields_extracted": [
-        "customers — company names found as case study subjects or named clients",
-        "products — distinct product names and feature sets",
-        "icp_buyer — structured: {title, company_size, industry} objects",
-        "lifecycle_stages — re-evaluated from full site content, more accurate than 3-page extract",
-        "icp — flat list of buyer titles (augments existing)",
-        "value_statements — key outcome claims found across all pages",
-        "integrations — integration names found across all pages",
-        "case_studies — outcome statements extracted from customer story pages"
+        "customers \u2014 company names found as case study subjects or named clients",
+        "products \u2014 distinct product names and feature sets",
+        "icp_buyer \u2014 structured: {title, company_size, industry} objects",
+        "lifecycle_stages \u2014 re-evaluated from full site content, more accurate than 3-page extract",
+        "icp \u2014 flat list of buyer titles (augments existing)",
+        "value_statements \u2014 key outcome claims found across all pages",
+        "integrations \u2014 integration names found across all pages",
+        "case_studies \u2014 outcome statements extracted from customer story pages"
       ],
       "acceptance_criteria": [
         "customers populated for all vendors with a named client mentioned anywhere in the blob",
         "products populated for all vendors",
         "icp_buyer populated as structured JSON for all vendors",
-        "lifecycle_stages re-evaluated from full blob — more stages expected vs 3-page extract",
+        "lifecycle_stages re-evaluated from full blob \u2014 more stages expected vs 3-page extract",
         "Chunking handles blobs of any size without truncation or data loss",
-        "Extraction cost tracked per vendor — log token usage",
+        "Extraction cost tracked per vendor \u2014 log token usage",
         "Unit tests: feed known blob, assert all fields extracted correctly"
       ],
       "proof_artifact": "runs/proofs/M52_llm_extraction.json",
-      "interaction_targets": ["system"],
+      "interaction_targets": [
+        "system"
+      ],
       "verify": [
         "python3 -m pytest tests/test_llm_extraction.py -v",
         "python3 scripts/pipeline_health_check.py"

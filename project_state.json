@@ -1,5 +1,5 @@
 {
-  "current_focus": "M38",
+  "current_focus": "M44",
   "verification_script": "scripts/verify_project.sh",
   "runtime_environment": "local",
   "agent_prompts": {
