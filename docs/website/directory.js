@@ -1,4 +1,4 @@
-const DATASET_URL = "../../outputs/directory_dataset.json";
+const DATASET_URL = "./data/directory_dataset.json";
 const STAGE_ORDER = ["Sign", "Onboard", "Activate", "Adopt", "Support", "Expand", "Renew", "Advocate"];
 
 const state = {

@@ -1,0 +1,1893 @@
+[
+  {
+    "vendor_name": "Abloomify",
+    "website": "https://abloomify.com",
+    "mission": "AI-powered workforce analytics to improve delivery, quality, and engagement. Boost productivity up to 40% with privacy-first decisions.",
+    "usp": "speed time to value",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "knowledge base",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per seat\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://abloomify.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "AI Revenue Workflow Platform",
+    "website": "https://outreach.io",
+    "mission": "Outreach helps sales, marketing, RevOps, and GTM teams win with AI-powered workflows. Discover the platform driving revenue success today.",
+    "usp": "improve customer health",
+    "icp": [
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "renewal management"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Renew"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "2014",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://outreach.io"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Berry",
+    "website": "https://berryapp.io",
+    "mission": "Our AI CSM onboards, trains, supports, renews, and upsell customers on auto-pilot, accelerating time to value and increasing revenue. It\u2019s a 10x hire to your team - at a fraction of the cost.",
+    "usp": "speed time to value",
+    "icp": [
+      "SaaS companies"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "adoption guidance",
+      "knowledge base"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Activate",
+      "Support"
+    ],
+    "pricing": [
+      "[\"contact sales\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://berryapp.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Chattermill Ltd",
+    "website": "https://chattermill.com",
+    "mission": "Chattermill is the CX intelligence platform that unifies all your fragmented feedback and turns it into precise AI-powered insights\u2014so your CX, Product and Insights teams know exactly what to act on first.",
+    "usp": "strengthen customer advocacy",
+    "icp": [
+      "Head of Customer Experience",
+      "VP of Marketing",
+      "Product Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per user\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://chattermill.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Chevron",
+    "website": "https://contentsquare.com",
+    "mission": "The AI-powered Contentsquare platform unlocks insights to engage, convert, and retain with Experience and Product Analytics and Voice of Customer tools.",
+    "usp": "strengthen customer advocacy",
+    "icp": [
+      "Director of Ecommerce",
+      "Head of Customer Experience",
+      "Digital Marketing Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per user\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "2014",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://contentsquare.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Churn Assassin",
+    "website": "https://churnassassin.com",
+    "mission": "Churn Assassin is customer retention, success, and churn prevention software for B2B SaaS. Monitor account health, predict churn, and grow renewals.",
+    "usp": "reduce churn",
+    "icp": [
+      "C-Level Executive",
+      "Customer Success Manager",
+      "Product Manager",
+      "SaaS companies",
+      "B2B startups",
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "renewal management",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per year\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://churnassassin.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Cleverbridge",
+    "website": "https://grow.cleverbridge.com",
+    "mission": "Manage payments, subscriptions, tax, and compliance through a single Merchant of Record (MoR) solution. Talk to a Cleverbridge expert today.",
+    "usp": "reduce churn",
+    "icp": [
+      "Head of Finance",
+      "VP of Sales",
+      "Product Manager",
+      "SaaS companies"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "expansion",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Expand",
+      "Renew"
+    ],
+    "pricing": [
+      "[\"per user\"",
+      "\"per month\"",
+      "\"per year\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://grow.cleverbridge.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "ClientSuccess",
+    "website": "https://clientsuccess.com",
+    "mission": "Your top rated CSM software platform. The easiest to use, fastest to implement software to reduce churn & increase customer revenue.",
+    "usp": "reduce churn",
+    "icp": [
+      "Director of Customer Success",
+      "VP of Customer Experience",
+      "Customer Success Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per month\"",
+      "\"per year\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://clientsuccess.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Cloud Coach",
+    "website": "https://cloudcoach.com",
+    "mission": "Project Management, Customer Onboarding, Professional Services Automation (PSA) and PPM solutions native to Salesforce.",
+    "usp": "increase retention",
+    "icp": [
+      "Head of Professional Services",
+      "Project Manager",
+      "Finance Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Renew"
+    ],
+    "pricing": [
+      "[\"per year\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://cloudcoach.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Comm100",
+    "website": "https://comm100.com",
+    "mission": "# AI-Powered Omnichannel Customer Service Platform ## Human Centered Service, Powered by AI Level up your self-serve and human-assisted customer service with AI-driven speed & efficiency.",
+    "usp": "From automated, context-aware support to real-time human assistance, onboarding, and evaluation, Comm100 solutions are d",
+    "icp": [
+      "Customer Relations Manager",
+      "Communications & Systems Coordinator",
+      "Customer Success Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "sentiment analysis",
+      "knowledge base"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Adopt",
+      "Support"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "2016",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://comm100.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Cotera: AI Agents that do things",
+    "website": "https://cotera.co",
+    "mission": "AI agents that anyone can build.",
+    "usp": "improve handoff",
+    "icp": [
+      "VP, Client Solutions",
+      "Operations Manager",
+      "Product Manager",
+      "SaaS companies",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "sales-to-cs handoff",
+      "meeting intelligence",
+      "health scoring",
+      "sentiment analysis",
+      "support automation",
+      "knowledge base",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Activate",
+      "Adopt",
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per seat\"",
+      "\"per month\"",
+      "\"per year\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://cotera.co"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Customer Success AI",
+    "website": "https://churnzero.com",
+    "mission": "Deliver digital first customer success with ChurnZero software that helps businesses improve the customer experience and drive revenue.",
+    "usp": "improve customer health",
+    "icp": [
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://churnzero.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Customer Success Collective",
+    "website": "https://customersuccesscollective.com",
+    "mission": "We're driving excellence in the customer success field. You're in the right place if you want to learn, develop, and scale with customer advocates worldwide.",
+    "usp": "improve customer health",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://customersuccesscollective.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Customer Success Software for SaaS",
+    "website": "https://custify.com",
+    "mission": "Custify's customer success software helps CS teams reduce churn, refine onboarding, and spur SaaS growth with a smart platform designed for CS pros.",
+    "usp": "reduce churn",
+    "icp": [
+      "Head of Customer Success",
+      "VP Revenue",
+      "SaaS Founder"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://custify.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Customerly",
+    "website": "https://customerly.io",
+    "mission": "Resolve tickets faster with AI. Automate replies, run NPS & email campaigns \u2014 all in one powerful support suite.",
+    "usp": "speed time to value",
+    "icp": [
+      "SaaS companies",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "sentiment analysis",
+      "support automation",
+      "knowledge base",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Adopt",
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per seat\"",
+      "\"per month\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://customerly.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Decagon",
+    "website": "https://decagon.ai",
+    "mission": "The AI concierge concierge for every customer.",
+    "usp": "speed time to value",
+    "icp": [
+      "Senior Operations Manager",
+      "Director, CX Operations Strategy and AI",
+      "Head of Customer Experience"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value"
+    ],
+    "lifecycle_stages": [
+      "Onboard"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://decagon.ai"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Dock",
+    "website": "https://dock.us",
+    "mission": "Dock is the Al revenue enablement platform built for the way people buy today. Collaborate with customers, share content, and enable reps in real time.",
+    "usp": "improve handoff",
+    "icp": [
+      "Sales Enablement Manager",
+      "Content Manager",
+      "Chief Revenue Officer"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "sales-to-cs handoff",
+      "renewal management",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per month\"",
+      "\"per year\"]"
+    ],
+    "free_trial": null,
+    "soc2": true,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://dock.us"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "eesel AI",
+    "website": "https://eesel.ai",
+    "mission": "Create an AI that knows about your company knowledge and can instantly answer any question. Add it to your help desk, team chat, or website. Try for free.",
+    "usp": "reduce support workload",
+    "icp": [
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "support automation",
+      "knowledge base",
+      "renewal management",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://eesel.ai"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "EverAfter",
+    "website": "https://everafter.ai",
+    "mission": "EverAfter's AI-powered digital customer success platform personalizes at scale, builds dynamic success plans, automates onboarding, cuts churn by 25%, and speeds time-to-value by 50%. See our intelligent customer interface builder.",
+    "usp": "speed time to value",
+    "icp": [
+      "Director of Global Scaled Success",
+      "Customer Success Manager",
+      "VP of Customer Experience",
+      "SaaS companies",
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "expansion",
+      "renewal management"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Expand",
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "2020",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://everafter.ai"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Flexera",
+    "website": "https://flexera.com",
+    "mission": "Flexera specializes in IT management software, optimization & solutions. Let Flexera help control & manage your software & IT costs so your business can grow.",
+    "usp": "strengthen customer advocacy",
+    "icp": [
+      "Senior License and Asset Management Specialist",
+      "IT Operations Manager",
+      "Chief Financial Officer"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://flexera.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Gong",
+    "website": "https://gong.io",
+    "mission": "Gong Revenue AI OS helps your entire GTM organization win. Drive growth with multimodal revenue signal processing, specialized AI agents, and purpose-built applications.",
+    "usp": "* Unify customer insights with the **Gong Revenue Graph** * Deliver actionable **intelligence** through advanced AI * **",
+    "icp": [
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "meeting intelligence"
+    ],
+    "lifecycle_stages": [
+      "Sign"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://gong.io"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "HubSpot Blog",
+    "website": "https://blog.hubspot.com",
+    "mission": "HubSpot\u2019s Marketing Blog covers everything you need to know to master inbound marketing.",
+    "usp": "strengthen customer advocacy",
+    "icp": [
+      "Head of Marketing",
+      "Chief Information Officer (CIO)",
+      "Operations Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "knowledge base",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per year\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://blog.hubspot.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Hyperengage",
+    "website": "https://hyperengage.io",
+    "mission": "The GTM Intelligence layer for post-sales Hyperengage unifies CRM, product usage, and customer comms into one model. Trigger the right signals, answer hard questions with your copilot, and let your AI sidekick watch every account for you. Book a Demo See How signal works Value pillars Unified Truth",
+    "usp": "improve customer health",
+    "icp": [
+      "SaaS companies"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per user\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [
+      "Unified Truth For Post Sales",
+      "Signal That Matters with real-time alerts",
+      "Copilot with context for natural-language questions",
+      "Account Sidekick that monitors, summarizes, and suggests next steps",
+      "Qualitative + Quantitative context by combining communications and usage",
+      "Field-level permissions and full audit trails for governance"
+    ],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://hyperengage.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Journeyz",
+    "website": "https://journeyz.io",
+    "mission": "Prevent churn and drive expansions with Journeyz. Enhance understanding of client business objectives and personalize actions for better retention.",
+    "usp": "reduce churn",
+    "icp": [
+      "Customer Success Leader",
+      "Chief Revenue Officer (CRO)",
+      "Product Manager",
+      "customer success teams",
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Expand",
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://journeyz.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Kommunicate",
+    "website": "https://kommunicate.io",
+    "mission": "Automate customer conversations with Kommunicate \u2014 unified support automation with smart AI agents, seamless human handoff, and omnichannel deployment across web, WhatsApp, email, and apps.",
+    "usp": "speed time to value",
+    "icp": [
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "support automation",
+      "churn prevention",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://kommunicate.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Lucidly",
+    "website": "https://lucidlyhq.com",
+    "mission": "Lucidly is an AI-powered customer success platform that helps SaaS companies predict churn 90 days in advance, identify expansion opportunities, and automate retention workflows. 96% accurate NRR forecasting.",
+    "usp": "improve handoff",
+    "icp": [
+      "SaaS companies",
+      "customer success teams",
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "sales-to-cs handoff",
+      "onboarding",
+      "time to value",
+      "health scoring",
+      "sentiment analysis",
+      "support automation",
+      "knowledge base",
+      "expansion",
+      "stakeholder mapping",
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Adopt",
+      "Support",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per month\"",
+      "\"per year\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://lucidlyhq.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Magnify",
+    "website": "https://magnify.io",
+    "mission": "Discover the future of customer success with Magnify.io. Leverage AI-powered Customer Growth Automation to scale post-sales engagement, reduce churn, and drive revenue growth. Learn more today!",
+    "usp": "speed time to value",
+    "icp": [
+      "Head of Customer Success",
+      "VP Revenue",
+      "Product Manager",
+      "customer success teams",
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Adopt",
+      "Expand",
+      "Renew"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://magnify.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Metasource",
+    "website": "https://metasource.com",
+    "mission": "Unlock streamlined operations with MetaSource, trusted subject matter experts in business process automation services and IDP solutions.",
+    "usp": "automate onboarding",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "onboarding"
+    ],
+    "lifecycle_stages": [
+      "Onboard"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://metasource.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "nailab",
+    "website": "https://nailab.co",
+    "mission": "The convergence of expanding regulatory frameworks, catastrophic financial penalties, reputational destruction, and \\[\u2026\\] Posted on: [December 26, 2025](https://nailab.co/why-ai-powered-saas-products-",
+    "usp": "speed time to value",
+    "icp": [
+      "Chief Compliance Officer",
+      "VP of Product Management",
+      "Startup Founder"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "expansion",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per user\"",
+      "\"per month\"",
+      "\"per year\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://nailab.co"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Nurix",
+    "website": "https://nurix.ai",
+    "mission": "Build and deploy human-like enterprise-grade voice and chat AI Agents, to transform the way you onboard, interact, and engage with customers",
+    "usp": "reduce support workload",
+    "icp": [
+      "Head of Customer Support",
+      "VP of Sales",
+      "Operations Manager",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "meeting intelligence",
+      "support automation",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://nurix.ai"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "OnRamp",
+    "website": "https://onramp.us",
+    "mission": "OnRamp's customer onboarding and engagement platform trusted by enterprise teams to streamline workflows, delight customers and retain revenue at scale.",
+    "usp": "reduce churn",
+    "icp": [
+      "Customer Success Manager",
+      "VP of Revenue",
+      "Product Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://onramp.us"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Pendo",
+    "website": "https://pendo.io",
+    "mission": "Pendo helps product teams understand and guide users to create product experiences that customers love.",
+    "usp": "in-app guidance and product analytics",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "product analytics",
+      "in-app guidance",
+      "onboarding checklists",
+      "feature adoption"
+    ],
+    "lifecycle_stages": [
+      "Activate",
+      "Adopt"
+    ],
+    "pricing": [],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Planhat",
+    "website": "https://planhat.com",
+    "mission": "A customer platform where commercial teams work better. We build and deploy frontier technologies\u00e2\u0080\u0094integrating data, AI and collaboration\u00e2\u0080\u0094that empower industry leaders to acquire and grow lifelong revenue.",
+    "usp": "That's unprecedented for us.\u201d ![](https://framerusercontent.com/images/Mg09y2Y7IkKnGyMRBLRfrjuehX0.jpg?width=1920&height",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://planhat.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Refiner.io",
+    "website": "https://refiner.io",
+    "mission": "Refiner helps collect invaluable user feedback with in-app surveys, web app surveys, mobile and SDK surveys, and more.",
+    "usp": "reduce churn",
+    "icp": [
+      "Head of Product",
+      "Head of Customer Success",
+      "Marketing Manager",
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "expansion",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Activate",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://refiner.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Relevance AI",
+    "website": "https://relevanceai.com",
+    "mission": "Build AI agents that run your GTM playbooks on autopilot. From BDR outreach to customer success \u2014 scale results without scaling headcount.",
+    "usp": "strengthen customer advocacy",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "support automation",
+      "knowledge base",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": null,
+    "soc2": true,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://relevanceai.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Renewtrak",
+    "website": "https://renewtrak.com",
+    "mission": "AI Powered Renewal Automation",
+    "usp": "reduce churn",
+    "icp": [
+      "Director of After Point of Sales Services",
+      "Customer Success Manager",
+      "Sales Operations Manager",
+      "SaaS companies",
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "expansion",
+      "renewal management",
+      "churn prevention",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://renewtrak.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Revenera",
+    "website": "https://revenera.com",
+    "mission": "Grow your business with Revenera\u2019s flexible software licensing and entitlement management platform\u2014gain insights, boost efficiency, and ensure compliance.",
+    "usp": "Reduce Risk.",
+    "icp": [
+      "Product and Pricing Leader",
+      "SaaS Product Manager",
+      "IoT Device Manufacturer"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "usage analytics"
+    ],
+    "lifecycle_stages": [
+      "Adopt"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per year\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://revenera.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Skalin",
+    "website": "https://skalin.io",
+    "mission": "Skalin helps growing SaaS better onboard, engage and grow their customers with powerful Health Scores, smart automations and project management capabilities.",
+    "usp": "improve customer health",
+    "icp": [
+      "Head of Customer Success",
+      "VP of Customer Success",
+      "Customer Success Manager",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "renewal management"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://skalin.io"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Sobot",
+    "website": "https://sobot.io",
+    "mission": "Sobot leads in omnichannel & AI contact center solutions. Sobot customer service software includes AI Agent, Live Chat, Chatbot, Voice, Ticketing, WhatsApp API.",
+    "usp": "strengthen customer advocacy",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "support automation",
+      "knowledge base",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "2014",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://sobot.io"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Staircase AI",
+    "website": "https://staircase.ai",
+    "mission": "# Staircase AI | Customer Intelligence and Analytics Platform ![bg](https://staircase.ai/wp-content/uploads/2022/05/figure-1.svg) ## Staircase has been acquired by Gainsight!",
+    "usp": "improve customer health",
+    "icp": [
+      "SVP Sales & Partnerships",
+      "Head of Customer Success",
+      "Revenue Operations Manager",
+      "customer success teams",
+      "support teams",
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "sentiment analysis",
+      "expansion",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://staircase.ai"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Survicate",
+    "website": "https://survicate.com",
+    "mission": "A customer feedback platform that lets you survey every channel, automate feedback flows, and uncover customer insights from multiple sources",
+    "usp": "strengthen customer advocacy",
+    "icp": [
+      "Head of Customer Success",
+      "Marketing Manager",
+      "Operations Manager"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://survicate.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "The AI Sales Execution Platform",
+    "website": "https://mixmax.com",
+    "mission": "Mixmax helps sellers fight the overwhelm. Always focus on the most important accounts, and turn signals into action. Mixmax make sure you never drop the ball and keeps your deals moving forward.",
+    "usp": "automate workflows",
+    "icp": [
+      "Sales Manager",
+      "Customer Success Manager",
+      "Sales Operations Manager",
+      "customer success teams",
+      "revenue teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "expansion",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Expand",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per year\"]"
+    ],
+    "free_trial": true,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://mixmax.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "The Essential Guide to Leveraging AI as a Customer ...",
+    "website": "https://gainsight.com",
+    "mission": "Gainsight's Customer Success and Prod",
+    "usp": "speed time to value",
+    "icp": [
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "health scoring",
+      "expansion",
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Adopt",
+      "Expand",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://gainsight.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Tidio",
+    "website": "https://tidio.com",
+    "mission": "Scale customer service without losing the human touch. Align a trustworthy AI agent with live chat and helpdesk tools, trusted by 300k+ businesses worldwide",
+    "usp": "reduce support workload",
+    "icp": [
+      "Head of Customer Support",
+      "Customer Experience Manager",
+      "SaaS Founder",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "support automation",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "medium",
+    "evidence_urls": [
+      "https://tidio.com"
+    ],
+    "directory_fit": "medium",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Totango",
+    "website": "https://totango.com",
+    "mission": "Totango is an agile Customer Success Software that helps you design, run, measure, and scale your SaaS customer journey to retain and grow customers.",
+    "usp": "speed time to value",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "expansion",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Expand",
+      "Renew"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://totango.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Trainn",
+    "website": "https://trainn.co",
+    "mission": "Trainn is the leading Customer Education Platform for SaaS businesses to accelerate product adoption, onboarding, and customer retention. It enables SMBs to deliver consistent customer education and training programs at scale.",
+    "usp": "speed time to value",
+    "icp": [],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "knowledge base",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Activate",
+      "Support",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://trainn.co"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Userpilot",
+    "website": "https://userpilot.com",
+    "mission": "Userpilot helps product teams deliver personalized in-app experiences to increase growth metrics at every stage of the user journey.",
+    "usp": "speed time to value",
+    "icp": [
+      "SaaS companies",
+      "customer success teams",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "time to value",
+      "product activation",
+      "adoption guidance",
+      "sentiment analysis",
+      "knowledge base",
+      "churn prevention",
+      "voice of customer",
+      "customer advocacy"
+    ],
+    "lifecycle_stages": [
+      "Onboard",
+      "Activate",
+      "Adopt",
+      "Support",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"",
+      "\"per seat\"",
+      "\"per user\"",
+      "\"per month\"",
+      "\"per year\"",
+      "\"contact sales\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://userpilot.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Velaris",
+    "website": "https://velaris.io",
+    "mission": "Get complete visibility of every customer and process. Predict churn and expansion with AI-enriched intelligence. Orchestrate personalized customer journeys. All from one AI platform.",
+    "usp": "improve customer health",
+    "icp": [
+      "Head of Customer Success",
+      "Director of Onboarding",
+      "Customer Success Manager",
+      "support teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "meeting intelligence",
+      "health scoring",
+      "renewal management",
+      "churn prevention",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Adopt",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[]"
+    ],
+    "free_trial": null,
+    "soc2": true,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://velaris.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Vitally",
+    "website": "https://vitally.io",
+    "mission": "Vitally's all-in-one Customer Success Platform (CSP) helps teams deliver the clarity, automation, and AI-driven insights needed to move faster, stay aligned, and drive customer outcomes at scale \u2014 all powered by real-time data.",
+    "usp": "reduce churn",
+    "icp": [
+      "Global Head of Customer Success",
+      "Director of Customer Success",
+      "Customer Success Operations Lead",
+      "customer success teams"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "health scoring",
+      "renewal management",
+      "churn prevention"
+    ],
+    "lifecycle_stages": [
+      "Adopt",
+      "Renew"
+    ],
+    "pricing": [
+      "[\"per month\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://vitally.io"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  },
+  {
+    "vendor_name": "Zendesk",
+    "website": "https://zendesk.com",
+    "mission": "Transform customer and employee service with Zendesk AI Agents\u2014trusted by 200,000+ companies. Deliver fast, personalized support across chat, email, voice, and more.",
+    "usp": "speed time to value",
+    "icp": [
+      "Vice President of Global Services",
+      "Director of Customer Experience (CX)",
+      "Head of Community Support"
+    ],
+    "icp_buyer": [],
+    "use_cases": [
+      "meeting intelligence",
+      "time to value",
+      "voice of customer"
+    ],
+    "lifecycle_stages": [
+      "Sign",
+      "Onboard",
+      "Renew",
+      "Advocate"
+    ],
+    "pricing": [
+      "[\"$\"]"
+    ],
+    "free_trial": null,
+    "soc2": null,
+    "founded": "",
+    "case_studies": [],
+    "customers": [],
+    "value_statements": [],
+    "confidence": "high",
+    "evidence_urls": [
+      "https://zendesk.com"
+    ],
+    "directory_fit": "high",
+    "directory_category": "cs_core"
+  }
+]

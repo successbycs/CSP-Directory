@@ -70,6 +70,8 @@
           <select id="vendor-category-filter">
             <option value="">All categories</option>
           </select>
+          <button id="publish-btn" class="action-btn">Publish</button>
+          <span id="publish-status" style="font-size:0.85em;margin-left:0.5em;"></span>
         </div>
       </div>
       <div class="table-wrap">
@@ -195,6 +197,21 @@
       </div>
     </section>
   </main>
+  <!-- Vendor record detail modal -->
+  <div id="vendor-record-modal" class="record-modal hidden" role="dialog" aria-modal="true" aria-labelledby="record-modal-title">
+    <div class="record-modal-backdrop"></div>
+    <div class="record-modal-panel">
+      <div class="record-modal-header">
+        <div>
+          <p class="eyebrow">Vendor record</p>
+          <h2 id="record-modal-title"></h2>
+        </div>
+        <button class="record-modal-close" aria-label="Close record">&#x2715;</button>
+      </div>
+      <div id="record-modal-body" class="record-modal-body"></div>
+    </div>
+  </div>
+
   <script src="./admin.js"></script>
 </body>
 </html>

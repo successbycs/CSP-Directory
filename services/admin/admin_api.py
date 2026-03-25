@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 from services.admin import admin_actions
 from services.discovery import discovery_store
+from services.export import directory_dataset as directory_dataset_export
 from services.export import search_visibility_report
 from services.persistence import lead_capture_store
 from services.persistence import search_visibility_store
@@ -42,6 +43,7 @@ def build_admin_app(
     include_vendor_fn: Callable[[str], dict[str, Any]] | None = None,
     exclude_vendor_fn: Callable[[str], dict[str, Any]] | None = None,
     rerun_vendor_enrichment_fn: Callable[[str], dict[str, Any]] | None = None,
+    publish_directory_fn: Callable[[], dict[str, Any]] | None = None,
 ):
     """Return a small WSGI app exposing admin JSON endpoints and public capture intake."""
     list_candidates_fn = list_candidates_fn or list_candidate_records
@@ -54,6 +56,7 @@ def build_admin_app(
     include_vendor_fn = include_vendor_fn or admin_actions.include_vendor
     exclude_vendor_fn = exclude_vendor_fn or admin_actions.exclude_vendor
     rerun_vendor_enrichment_fn = rerun_vendor_enrichment_fn or admin_actions.rerun_vendor_enrichment
+    publish_directory_fn = publish_directory_fn or _run_publish_directory
 
     def app(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -94,6 +97,8 @@ def build_admin_app(
         if method == "POST" and path == "/admin/vendor/rerun-enrichment":
             payload = _parse_action_payload(environ)
             return _action_response(start_response, rerun_vendor_enrichment_fn, payload)
+        if method == "POST" and path == "/admin/publish":
+            return _publish_response(start_response, publish_directory_fn)
         if method == "POST" and path == "/admin/lead/follow-up":
             payload = _parse_action_payload(environ)
             return _lead_follow_up_response(start_response, update_lead_follow_up_fn, payload)
@@ -356,6 +361,25 @@ def _lead_follow_up_response(
         logger.exception("Lead follow-up update failed")
         return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
     return _json_response(start_response, {"ok": True, "lead": result})
+
+
+def _run_publish_directory() -> dict[str, Any]:
+    """Call export_directory_dataset() and return vendor count and output path."""
+    dataset = directory_dataset_export.export_directory_dataset()
+    output_path = directory_dataset_export.DEFAULT_DIRECTORY_DATASET_PATH
+    # Keep the static site dataset in sync so a git push deploys updated data
+    web_data_path = PROJECT_ROOT / "docs" / "website" / "data" / "directory_dataset.json"
+    directory_dataset_export.write_directory_dataset(dataset, web_data_path)
+    return {"ok": True, "vendor_count": len(dataset), "output_path": str(output_path)}
+
+
+def _publish_response(start_response, publish_fn: Callable[[], dict[str, Any]]):
+    try:
+        result = publish_fn()
+    except Exception as error:  # pragma: no cover - defensive error surface
+        logger.exception("Publish directory failed")
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
+    return _json_response(start_response, result)
 
 
 def _static_response(path: str):

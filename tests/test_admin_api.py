@@ -1,5 +1,6 @@
 """Tests for the read-only admin API."""
 
+import json
 from io import BytesIO
 from pathlib import Path
 
@@ -307,3 +308,64 @@ def test_list_search_visibility_data_falls_back_to_local_report_output(monkeypat
 
     assert result["metrics"]["vendor_count"] == 1
     assert result["role_query_rankings"][0]["surfaced_vendor_name"] == "Gainsight"
+
+
+def _make_wsgi_environ(method="POST", path="/admin/publish"):
+    return {
+        "REQUEST_METHOD": method,
+        "PATH_INFO": path,
+        "QUERY_STRING": "",
+        "CONTENT_LENGTH": "0",
+        "wsgi.input": BytesIO(b""),
+    }
+
+
+def test_admin_publish_endpoint_success():
+    published = []
+
+    def fake_publish():
+        published.append(True)
+        return {"ok": True, "vendor_count": 5, "output_path": "/tmp/directory_dataset.json"}
+
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        publish_directory_fn=fake_publish,
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+
+    body = b"".join(app(_make_wsgi_environ(), start_response))
+    data = json.loads(body)
+
+    assert status_headers["status"] == "200 OK"
+    assert data["ok"] is True
+    assert data["vendor_count"] == 5
+    assert data["output_path"] == "/tmp/directory_dataset.json"
+    assert published  # publish function was called
+
+
+def test_admin_publish_endpoint_export_failure():
+    def failing_publish():
+        raise RuntimeError("Supabase unavailable")
+
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        publish_directory_fn=failing_publish,
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+
+    body = b"".join(app(_make_wsgi_environ(), start_response))
+    data = json.loads(body)
+
+    assert status_headers["status"] == "500 Internal Server Error"
+    assert data["ok"] is False
+    assert "Supabase unavailable" in data["error"]

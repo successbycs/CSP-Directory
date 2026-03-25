@@ -181,6 +181,7 @@ function renderVendors() {
             <button class="action-button action-primary" data-action="include" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Include</button>
             <button class="action-button action-danger" data-action="exclude" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Exclude</button>
             <button class="action-button action-secondary" data-action="rerun-enrichment" data-vendor="${escapeAttribute(vendor.website || vendorName)}">Rerun Enrichment</button>
+            <button class="action-button action-secondary" data-action="show-record" data-vendor-index="${escapeAttribute(String(rows.indexOf(vendor)))}">Show Record</button>
           </div>
         </td>
       </tr>
@@ -188,7 +189,14 @@ function renderVendors() {
   }).join("") || '<tr><td colspan="7" class="message">No enriched vendors found.</td></tr>';
 
   body.querySelectorAll("[data-action]").forEach((button) => {
-    button.addEventListener("click", handleVendorAction);
+    if (button.dataset.action === "show-record") {
+      button.addEventListener("click", (event) => {
+        const index = parseInt(event.currentTarget.dataset.vendorIndex, 10);
+        showVendorModal(rows[index]);
+      });
+    } else {
+      button.addEventListener("click", handleVendorAction);
+    }
   });
 }
 
@@ -579,3 +587,109 @@ function escapeHtml(value) {
 function escapeAttribute(value) {
   return escapeHtml(value);
 }
+
+// ── Vendor record modal ───────────────────────────────────────
+
+const VENDOR_FIELDS = [
+  { key: "name", label: "Vendor name" },
+  { key: "website", label: "Website" },
+  { key: "mission", label: "Mission / description", wide: true },
+  { key: "usp", label: "USP", wide: true },
+  { key: "icp", label: "ICP" },
+  { key: "icp_buyer", label: "ICP buyer" },
+  { key: "use_cases", label: "Use cases", wide: true },
+  { key: "lifecycle_stages", label: "Lifecycle stages" },
+  { key: "pricing", label: "Pricing" },
+  { key: "free_trial", label: "Free trial" },
+  { key: "soc2", label: "SOC 2" },
+  { key: "founded", label: "Founded" },
+  { key: "directory_fit", label: "Directory fit" },
+  { key: "directory_category", label: "Directory category" },
+  { key: "include_in_directory", label: "Include in directory" },
+  { key: "directory_decision_source", label: "Decision source" },
+  { key: "confidence", label: "Confidence" },
+  { key: "directory_reasoning", label: "Directory reasoning", wide: true },
+  { key: "value_statements", label: "Value statements", wide: true },
+  { key: "case_studies", label: "Case studies", wide: true },
+  { key: "customers", label: "Customers", wide: true },
+  { key: "integrations", label: "Integrations", wide: true },
+  { key: "evidence_urls", label: "Evidence URLs", wide: true },
+  { key: "source", label: "Source" },
+];
+
+function formatFieldValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return { text: "—", empty: true };
+  }
+  if (typeof value === "boolean") {
+    return { text: String(value), empty: false };
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return { text: "—", empty: true };
+    return { text: value.map((v) => (typeof v === "object" ? JSON.stringify(v) : String(v))).join("\n"), empty: false };
+  }
+  if (typeof value === "object") {
+    return { text: JSON.stringify(value, null, 2), empty: false };
+  }
+  return { text: String(value), empty: false };
+}
+
+function showVendorModal(vendor) {
+  const modal = document.getElementById("vendor-record-modal");
+  const title = document.getElementById("record-modal-title");
+  const body = document.getElementById("record-modal-body");
+  if (!modal || !title || !body) return;
+
+  const vendorName = vendor.name || vendor.vendor_name || vendor.website || "Unknown vendor";
+  title.textContent = vendorName;
+
+  body.innerHTML = VENDOR_FIELDS.map(({ key, label, wide }) => {
+    const { text, empty } = formatFieldValue(vendor[key]);
+    return `
+      <div class="record-field${wide ? " full-width" : ""}">
+        <span class="record-field-label">${escapeHtml(label)}</span>
+        <span class="record-field-value${empty ? " is-empty" : ""}">${escapeHtml(text)}</span>
+      </div>
+    `;
+  }).join("");
+
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function hideVendorModal() {
+  const modal = document.getElementById("vendor-record-modal");
+  if (modal) modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("vendor-record-modal")?.querySelector(".record-modal-close")?.addEventListener("click", hideVendorModal);
+  document.getElementById("vendor-record-modal")?.querySelector(".record-modal-backdrop")?.addEventListener("click", hideVendorModal);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hideVendorModal();
+  });
+
+  const publishBtn = document.getElementById("publish-btn");
+  const publishStatus = document.getElementById("publish-status");
+  if (publishBtn) {
+    publishBtn.addEventListener("click", async () => {
+      publishBtn.disabled = true;
+      publishStatus.textContent = "Publishing…";
+      try {
+        const base = state.apiBase || API_FALLBACK_BASE;
+        const res = await fetch(`${base}/admin/publish`, { method: "POST" });
+        const data = await res.json();
+        if (data.ok) {
+          publishStatus.textContent = `Published ${data.vendor_count} vendors.`;
+        } else {
+          publishStatus.textContent = `Error: ${data.error}`;
+        }
+      } catch (err) {
+        publishStatus.textContent = `Failed: ${err.message}`;
+      } finally {
+        publishBtn.disabled = false;
+      }
+    });
+  }
+});

@@ -294,7 +294,7 @@
       "id": "M43B",
       "title": "Admin publish endpoint: review-then-export workflow",
       "delivery_type": "capability_delivering",
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M43"
       ],
@@ -632,10 +632,10 @@
         "M47",
         "M43B"
       ],
-      "proof_description": "After POST /admin/publish writes directory_dataset.json, a publish_to_github.py script must commit and push the file to a dedicated GitHub repo (e.g. successbycs/directory-data). Cloudflare Pages must be configured to serve from that repo so vendors.successbycs.com serves the latest dataset automatically. The script must be callable from the admin publish endpoint as a post-export step. Prove by running publish end-to-end: local pipeline → admin publish → GitHub commit → Cloudflare Pages serves updated JSON.",
+      "proof_description": "After POST /admin/publish writes directory_dataset.json, a publish_to_github.py script must commit and push the file to a dedicated GitHub repo (e.g. successbycs/directory-data). Cloudflare Pages must be configured to serve from that repo so vendors.successbycs.com serves the latest dataset automatically. The script must be callable from the admin publish endpoint as a post-export step. Prove by running publish end-to-end: local pipeline \u2192 admin publish \u2192 GitHub commit \u2192 Cloudflare Pages serves updated JSON.",
       "acceptance_criteria": [
         "scripts/publish_to_github.py commits directory_dataset.json to the configured GitHub repo",
-        "Script uses GITHUB_TOKEN env var — no hardcoded credentials",
+        "Script uses GITHUB_TOKEN env var \u2014 no hardcoded credentials",
         "Cloudflare Pages is connected to that repo and auto-deploys on push",
         "vendors.successbycs.com/directory_dataset.json returns the latest published data",
         "POST /admin/publish optionally calls publish_to_github.py when GITHUB_PUBLISH=true env var is set",
