@@ -1,13 +1,48 @@
-# Lead Capture Architecture
+# Lead Capture — User Guide & Architecture
 
 **Status:** Live at vendors.successbycs.com
 **Last updated:** 2026-03-26
 
 ---
 
-## What it does
+## How to use it (operator instructions)
 
-Every "Get the market map", "Request shortlist brief", and "Talk to SuccessByCS" button on the landing page opens a modal form. When a visitor submits it, their details are captured and written directly to Supabase. You see them immediately in the admin panel at `/admin/leads`.
+### Viewing leads
+
+1. Start the admin panel on your laptop: `python3 -m services.admin.admin_api`
+2. Open `http://127.0.0.1:8787`
+3. Go to the **Lead capture** section
+4. Every form submission appears here with name, email, company, intent, and full attribution context
+
+### What the visitor sees
+
+When any CTA button is clicked on the live site, a modal opens with:
+- **Name** — free text
+- **Work email** — required, validated
+- **Company** — free text
+- **What do you want?** — dropdown: The market map / A shortlist brief / An advisory intro
+- **Notes** — optional, what are they evaluating right now?
+
+Visitor submits → row lands in Supabase → visible immediately in `/admin/leads`.
+
+### Updating live vendor data
+
+1. Run the enrichment pipeline on your laptop
+2. Open the admin panel → **Enriched vendors** section → click **Publish**
+3. This writes the updated dataset to `docs/website/data/directory_dataset.json`
+4. `git add docs/website/data/directory_dataset.json && git push`
+5. Vercel auto-deploys within ~30 seconds — vendors.successbycs.com is updated
+
+### Following up on a lead
+
+In the admin panel leads table, use the follow-up status dropdown to mark leads as:
+`new` → `in_progress` → `contacted` → `qualified` → `closed`
+
+High-priority leads (shortlist / advisory intent) are automatically flagged with `follow_up_priority: high`.
+
+---
+
+## What it does (technical)
 
 ---
 
