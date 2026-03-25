@@ -37,3 +37,20 @@ Milestone M37 focused on fixing the persistence issue where structured fields fr
 
 ## Conclusion
 Milestone M37 meets all acceptance criteria and is certified complete.
+
+## Audit Entry for Milestone M43
+
+### Title: Canonical vendor name enforcement
+
+### Status: In Progress
+
+### Summary:
+The milestone aims to ensure that the vendor names stored in the database meet specific quality checks. The proof artifact is expected to validate that the names for Gainsight and Outreach are correctly set. However, the verification commands have not yet succeeded due to issues with Supabase API access.
+
+### Issues Identified:
+- Supabase REST API rejected the provided credential.
+- Consistency issues with other milestones in the project.
+
+### Next Steps:
+- Resolve the Supabase API credential issue to proceed with verification.
+- Address the consistency issues in the project related to other milestones.

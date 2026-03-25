@@ -370,7 +370,9 @@
       "docs",
       "help",
       "support",
-      "blog"
+      "blog",
+      "trust",
+      "security"
     ]
   },
   "directory_relevance": {

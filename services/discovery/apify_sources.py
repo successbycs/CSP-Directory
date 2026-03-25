@@ -1,10 +1,17 @@
-"""Thin Apify Google Search discovery adapter."""
+"""Apify-backed discovery and enrichment adapter.
+
+All Apify calls are routed through n8n workflows (not direct SDK calls) so the
+underlying Apify actors can be swapped without changing application code.
+
+Required env vars (read by services.n8n_client):
+    N8N_BASE_URL      — e.g. http://localhost:5678
+    APIFY_API_TOKEN   — forwarded to n8n workflows at call time
+"""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 import logging
-import os
 import re
 from urllib.parse import urlparse
 
@@ -15,14 +22,19 @@ from services.extraction.identity import (
     normalize_vendor_website,
     normalize_website_url,
 )
+from services import n8n_client
 
 logger = logging.getLogger(__name__)
 GOOGLE_SEARCH_ACTOR = "apify/google-search-scraper"
 WEBSITE_CONTENT_CRAWLER_ACTOR = "apify/website-content-crawler"
 
+# n8n webhook paths (must match the deployed workflow webhook node paths)
+_N8N_WEBHOOK_GOOGLE_SEARCH = "framework-web-research"
+_N8N_WEBHOOK_CONTENT_CRAWL = "framework-website-content-crawl"
+
 
 def fetch_google_search(queries: list[str]) -> list[dict[str, str]]:
-    """Fetch and normalize vendor candidates from Apify Google Search."""
+    """Fetch and normalize vendor candidates via n8n Google Search workflow."""
     candidate_records = fetch_google_search_candidate_records(queries)
     unique_candidates: list[dict[str, str]] = []
     seen_domains: set[str] = set()
@@ -51,36 +63,40 @@ def fetch_google_search(queries: list[str]) -> list[dict[str, str]]:
 
 
 def fetch_google_search_candidate_records(queries: list[str]) -> list[dict[str, object]]:
-    """Fetch structured candidate records from Apify Google Search."""
+    """Fetch structured candidate records via the n8n Google Search workflow."""
     if not queries:
         return []
 
-    client = get_apify_client()
     google_search_config = load_pipeline_config().discovery
     candidate_records: list[dict[str, object]] = []
     logger.info(
-        "Using Google Search config: actor_id=%s, max_pages_per_query=%s, results_per_page=%s",
+        "Using Google Search config via n8n: actor_id=%s, results_per_page=%s",
         google_search_config.actor_id,
-        google_search_config.max_pages_per_query,
         google_search_config.results_per_page,
     )
 
     for query in queries:
-        run = client.actor(google_search_config.actor_id).call(
-            run_input={
-                "queries": query,
-                "maxPagesPerQuery": google_search_config.max_pages_per_query,
-                "resultsPerPage": google_search_config.results_per_page,
-            }
+        response = n8n_client.post_webhook(
+            _N8N_WEBHOOK_GOOGLE_SEARCH,
+            {
+                "query": query,
+                "max_results": google_search_config.results_per_page,
+                "actor_id": google_search_config.actor_id,
+            },
         )
-        items = client.dataset(run["defaultDatasetId"]).list_items().items
-        raw_results = _extract_google_search_results(items)
+        # n8n response: { query, source_count, sources: [{title, url, snippet, rank}] }
+        sources = response.get("sources") or []
+        raw_results = [
+            {"title": s.get("title", ""), "url": s.get("url", ""), "description": s.get("snippet", "")}
+            for s in sources
+            if isinstance(s, dict)
+        ]
         query_candidates = _normalize_google_search_results(raw_results, google_search_config)
         query_candidate_records = _build_candidate_records(query, query_candidates)
         logger.info(
-            'Google Search query "%s" returned %s raw results and %s filtered candidates',
+            'Google Search query "%s" returned %s sources, %s filtered candidates',
             query,
-            len(raw_results),
+            len(sources),
             len(query_candidates),
         )
         candidate_records.extend(query_candidate_records)
@@ -93,17 +109,6 @@ def discover_vendor_candidates(query: str) -> list[dict[str, str]]:
     return fetch_google_search([query])
 
 
-def get_apify_client():
-    """Create an Apify client from APIFY_API_TOKEN."""
-    api_token = os.getenv("APIFY_API_TOKEN")
-    if not api_token:
-        raise RuntimeError("APIFY_API_TOKEN must be set")
-
-    from apify_client import ApifyClient
-
-    return ApifyClient(api_token)
-
-
 def fetch_rendered_page(
     url: str,
     *,
@@ -111,70 +116,51 @@ def fetch_rendered_page(
     max_pages: int = 1,
     use_proxy: bool = True,
 ) -> dict[str, object] | None:
-    """Fetch one rendered page through Apify and normalize the first matching result."""
+    """Fetch one rendered page via the n8n Website Content Crawler workflow."""
     normalized_url = normalize_website_url(url)
     if not normalized_url:
         return None
 
-    client = get_apify_client()
-    run = client.actor(actor_id).call(
-        run_input={
-            "startUrls": [{"url": normalized_url}],
-            "includeUrlGlobs": [normalized_url, f"{normalized_url}/"],
-            "maxCrawlPages": max(1, max_pages),
-            "saveHtml": True,
-            "saveMarkdown": True,
-            "removeCookieWarnings": True,
-            "proxyConfiguration": {"useApifyProxy": bool(use_proxy)},
-        }
+    response = n8n_client.post_webhook(
+        _N8N_WEBHOOK_CONTENT_CRAWL,
+        {
+            "start_url": normalized_url,
+            "actor_id": actor_id,
+            "max_crawl_pages": max(1, max_pages),
+            "include_full_content": True,
+        },
     )
-    dataset_items = client.dataset(run["defaultDatasetId"]).list_items().items
-    normalized_items = _normalize_rendered_page_items(dataset_items, actor_id=actor_id)
+    # n8n response: { start_url, page_count, pages: [{url, title, description, content_length, text_excerpt, content?}] }
+    pages = response.get("pages") or []
+    if not pages:
+        return None
+
+    normalized_items = _normalize_n8n_crawl_pages(pages, actor_id=actor_id)
     if not normalized_items:
         return None
     return _select_rendered_page_result(normalized_url, normalized_items)
 
 
-def _extract_google_search_results(
-    items: list[dict[str, object]],
-) -> list[dict[str, object]]:
-    """Extract raw Google Search result records from dataset items."""
-    results: list[dict[str, object]] = []
-
-    for item in items:
-        organic_results = item.get("organicResults")
-        if isinstance(organic_results, list) and organic_results:
-            for organic_result in organic_results:
-                if isinstance(organic_result, dict):
-                    results.append(organic_result)
-            continue
-
-        results.append(item)
-
-    return results
-
-
-def _normalize_rendered_page_items(
-    items: list[dict[str, object]],
+def _normalize_n8n_crawl_pages(
+    pages: list[dict[str, object]],
     *,
     actor_id: str,
 ) -> list[dict[str, object]]:
-    """Normalize Website Content Crawler dataset items into page payloads."""
+    """Normalize n8n Website Content Crawl response pages into page payloads."""
     normalized_items: list[dict[str, object]] = []
-    for item in items:
-        normalized_url = normalize_website_url(item.get("url"))
+    for page in pages:
+        raw_url = _clean_text(page.get("url"))
+        normalized_url = normalize_website_url(raw_url) if raw_url else ""
         if not normalized_url:
             continue
 
-        status_code = item.get("statusCode", item.get("httpStatusCode", 200))
-        text = _clean_text(item.get("text")) or _clean_text(item.get("markdown"))
-        html = _clean_text(item.get("html"))
-        if not html and text:
-            html = f"<html><body>{text}</body></html>"
+        # n8n workflow returns `content` when include_full_content=True, else `text_excerpt`
+        text = _clean_text(page.get("content")) or _clean_text(page.get("text_excerpt"))
+        html = f"<html><body>{text}</body></html>" if text else ""
         normalized_items.append(
             {
                 "url": normalized_url,
-                "status_code": int(status_code) if isinstance(status_code, int) else 200,
+                "status_code": 200,
                 "html": html,
                 "text": text,
                 "fetch_backend": "apify",

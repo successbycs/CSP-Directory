@@ -32,20 +32,27 @@ from services.persistence import supabase_client  # noqa: E402
 # Columns required by the codebase that may be missing from the live DB.
 # Each entry: (column_name, sql_type, nullable)
 REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
+    # Directory classification columns
     ("auto_directory_fit", "text", True),
     ("auto_directory_category", "text", True),
     ("auto_include_in_directory", "boolean", True),
     ("directory_decision_source", "text", True),
     ("directory_reasoning", "text[]", True),
+    # Vendor profile columns
     ("hq_address", "text", True),
     ("source_urls", "text[]", True),
+    ("compliance", "text[]", True),
+    ("ceo_name", "text", True),
+    ("phone_numbers", "text[]", True),
+    ("contact_emails", "text[]", True),
+    ("developer_docs_url", "text", True),
+    ("integration_taxonomy", "jsonb", True),
+    ("external_enrichment", "jsonb", True),
+    ("testimonials", "jsonb", True),
+    ("blog_posts", "jsonb", True),
 ]
 
-# Columns present in core_persistence_schema.sql that should NOT be in the
-# live DB (schema drift to remove rather than add).
-COLUMNS_TO_DROP: list[str] = [
-    "ceo_name",
-]
+COLUMNS_TO_DROP: list[str] = []
 
 
 def check_column_exists(client, table: str, column: str) -> bool:

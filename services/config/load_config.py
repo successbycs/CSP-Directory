@@ -262,7 +262,7 @@ def _load_llm_config(raw_config: dict[str, object], config_path: Path) -> LLMCon
         raise RuntimeError(f"Pipeline config at {config_path} has invalid llm.enabled")
     return LLMConfig(
         enabled=enabled,
-        model=_get_string(llm_config, "model", "gpt-5-mini", config_path),
+        model=_get_string(llm_config, "model", "gpt-4o-mini", config_path),
         request_timeout_seconds=_get_int(llm_config, "request_timeout_seconds", 45, config_path),
         max_page_text_chars=_get_int(llm_config, "max_page_text_chars", 1800, config_path),
         max_site_text_chars=_get_int(llm_config, "max_site_text_chars", 8000, config_path),

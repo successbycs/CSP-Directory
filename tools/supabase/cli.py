@@ -92,6 +92,10 @@ def resolve_backend(operation: str, backend: str) -> str:
     """Choose the execution backend."""
     if backend == "direct":
         return backend
+    if operation == "apply_migration":
+        if supabase_client.is_configured():
+            return "direct"
+        raise RuntimeError("apply_migration requires configured Supabase access")
     if operation == "apply_schema":
         if _has_direct_schema_access():
             return "direct"
@@ -119,6 +123,8 @@ def run_direct_operation(
         if operation == "verify_schema" and not schema["schema_ok"]:
             raise RuntimeError(schema["summary"])
         return schema
+    if operation == "apply_migration":
+        return apply_migration_direct()
     if operation == "apply_schema":
         return apply_schema_direct(sql_file)
     if operation == "read_vendors":
@@ -210,6 +216,84 @@ def inspect_schema_direct() -> dict[str, Any]:
             if schema_ok
             else f"Supabase schema check failed: {missing_tables} missing table(s), {missing_columns} missing column(s), {other_errors} connectivity/unknown error(s)."
         ),
+    }
+
+
+def apply_migration_direct() -> dict[str, Any]:
+    """Detect and apply missing cs_vendors columns using REQUIRED_COLUMNS from apply_schema_migration.py.
+
+    Uses DATABASE_URL + psycopg when available, otherwise falls back to the REST API
+    probe-and-detect approach (read-only — column adds require a DB connection).
+    Returns a result dict with ok, columns_added, and summary.
+    """
+    from scripts.apply_schema_migration import REQUIRED_COLUMNS, check_column_exists
+
+    try:
+        client = supabase_client.get_supabase_client()
+    except Exception as error:
+        return {"ok": False, "error": f"Could not connect to Supabase: {error}"}
+
+    table = "cs_vendors"
+    missing = [(col, sql_type, nullable) for col, sql_type, nullable in REQUIRED_COLUMNS
+               if not check_column_exists(client, table, col)]
+    present = [col for col, _, _ in REQUIRED_COLUMNS if col not in [m[0] for m in missing]]
+
+    if not missing:
+        return {
+            "ok": True,
+            "columns_added": [],
+            "columns_present": present,
+            "summary": "Schema is up to date — no migrations needed.",
+        }
+
+    database_url = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
+    if not database_url:
+        ddl_lines = []
+        for col, sql_type, nullable in missing:
+            null_clause = "" if nullable else " NOT NULL"
+            ddl_lines.append(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {sql_type}{null_clause};")
+        pending_path = PROJECT_ROOT / "supabase" / "pending_migration.sql"
+        pending_path.write_text("\n".join(ddl_lines) + "\n", encoding="utf-8")
+        return {
+            "ok": False,
+            "columns_added": [],
+            "columns_missing": [col for col, _, _ in missing],
+            "summary": f"DATABASE_URL not set — DDL written to {pending_path.relative_to(PROJECT_ROOT)}. Apply manually.",
+        }
+
+    ddl_statements = []
+    for col, sql_type, nullable in missing:
+        null_clause = "" if nullable else " NOT NULL"
+        ddl_statements.append(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {sql_type}{null_clause};")
+    combined_sql = "\n".join(ddl_statements)
+
+    psql_path = shutil.which("psql")
+    if psql_path is not None:
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".sql", delete=False) as tmp:
+            tmp.write(combined_sql)
+            tmp_path = tmp.name
+        completed = subprocess.run(
+            [psql_path, database_url, "-v", "ON_ERROR_STOP=1", "-f", tmp_path],
+            capture_output=True, text=True, check=False,
+        )
+        Path(tmp_path).unlink(missing_ok=True)
+        if completed.returncode != 0:
+            return {"ok": False, "error": completed.stderr.strip() or completed.stdout.strip()}
+    else:
+        try:
+            import psycopg
+        except ImportError as error:
+            return {"ok": False, "error": f"psql not found and psycopg not installed: {error}"}
+        with psycopg.connect(database_url, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                cur.execute(combined_sql)
+
+    return {
+        "ok": True,
+        "columns_added": [col for col, _, _ in missing],
+        "columns_present": present,
+        "summary": f"Added {len(missing)} column(s): {', '.join(col for col, _, _ in missing)}",
     }
 
 

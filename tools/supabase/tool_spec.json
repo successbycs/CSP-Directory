@@ -1,15 +1,9 @@
 {
   "id": "supabase",
-  "description": "Repo-owned Supabase execution layer for development-phase schema inspection, schema application, schema verification, and controlled CRUD over vendors, candidates, and runs through direct access.",
+  "description": "Repo-owned Supabase execution layer for development-phase schema inspection, schema migration, schema verification, and controlled CRUD over vendors, candidates, and runs through direct access.",
   "development_only": true,
   "entrypoint": "tools/supabase/cli.py",
-  "applicable_milestones": [
-    "M13C",
-    "M13D",
-    "M15",
-    "M16",
-    "M17"
-  ],
+  "applicable_milestones": "*",
   "source_of_truth": [
     "supabase/core_persistence_schema.sql"
   ],
@@ -42,9 +36,21 @@
       "write_allowed": false,
       "approval_required": false
     },
+    "fixer_engineer": {
+      "operations": [
+        "inspect_schema",
+        "apply_migration",
+        "verify_schema",
+        "read_vendors",
+        "update_vendor"
+      ],
+      "write_allowed": true,
+      "approval_required": false
+    },
     "builder": {
       "operations": [
         "inspect_schema",
+        "apply_migration",
         "apply_schema",
         "verify_schema",
         "read_vendors",
