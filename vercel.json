@@ -1,8 +1,3 @@
 {
-  "outputDirectory": "docs/website",
-  "functions": {
-    "api/lead-capture.py": {
-      "runtime": "python3.12"
-    }
-  }
+  "outputDirectory": "docs/website"
 }
