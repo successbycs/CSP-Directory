@@ -582,7 +582,8 @@
       "delivery_type": "capability_delivering",
       "status": "not_started",
       "dependencies": [
-        "M41"
+        "M44",
+        "M45"
       ],
       "proof_description": "Run full discovery + enrichment pipeline across all configured queries. Prove 50+ real vendor records in cs_vendors Supabase table with average fewer than 5 empty enrichment fields. Produce directory_dataset.json export ready for public frontend.",
       "proof_artifact": "runs/proofs/M42_vendor_catalog_50.json",
@@ -594,6 +595,86 @@
         "python3 scripts/run_pipeline.py",
         "python3 scripts/export_directory_dataset.py",
         "python3 scripts/check_supabase.py",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M-OPS1",
+      "title": "Live pipeline log panel in admin dashboard",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M47"
+      ],
+      "proof_description": "Add a live log panel to the admin dashboard at http://127.0.0.1:8787 that auto-refreshes every 3 seconds and shows the last 50 lines of AF cycle activity (phase transitions, file writes, bash commands, role completions). The panel must read from runs/run_history.json via a new GET /admin/pipeline-log endpoint. Prove by running a pipeline cycle and confirming log lines appear in the browser within 5 seconds.",
+      "acceptance_criteria": [
+        "GET /admin/pipeline-log returns last N run_history entries as structured log lines",
+        "Admin dashboard has a Log panel that polls /admin/pipeline-log every 3s",
+        "Log panel shows: timestamp, phase, role, message for each entry",
+        "Auto-scrolls to latest entry",
+        "Unit tests cover the /admin/pipeline-log endpoint"
+      ],
+      "proof_artifact": "runs/proofs/M-OPS1_live_log_panel.json",
+      "interaction_targets": [
+        "operator"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_admin_api.py -v -k log",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M53",
+      "title": "Publish directory_dataset.json to GitHub for Cloudflare Pages deployment",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M47",
+        "M43B"
+      ],
+      "proof_description": "After POST /admin/publish writes directory_dataset.json, a publish_to_github.py script must commit and push the file to a dedicated GitHub repo (e.g. successbycs/directory-data). Cloudflare Pages must be configured to serve from that repo so vendors.successbycs.com serves the latest dataset automatically. The script must be callable from the admin publish endpoint as a post-export step. Prove by running publish end-to-end: local pipeline → admin publish → GitHub commit → Cloudflare Pages serves updated JSON.",
+      "acceptance_criteria": [
+        "scripts/publish_to_github.py commits directory_dataset.json to the configured GitHub repo",
+        "Script uses GITHUB_TOKEN env var — no hardcoded credentials",
+        "Cloudflare Pages is connected to that repo and auto-deploys on push",
+        "vendors.successbycs.com/directory_dataset.json returns the latest published data",
+        "POST /admin/publish optionally calls publish_to_github.py when GITHUB_PUBLISH=true env var is set",
+        "Unit tests cover the script with a mocked GitHub API call"
+      ],
+      "proof_artifact": "runs/proofs/M53_github_publish.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/publish_to_github.py --dry-run",
+        "python3 -m pytest tests/test_publish_github.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M54",
+      "title": "Home laptop Docker runbook: end-to-end pipeline on local machine",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M53"
+      ],
+      "proof_description": "Document and verify the full end-to-end workflow for running the CSP pipeline on a home laptop using Docker. The runbook must cover: (1) prerequisites (Docker Desktop, .env setup with Supabase/OpenAI/GitHub tokens), (2) starting the stack with docker compose up, (3) running the enrichment pipeline inside Docker, (4) reviewing and curating vendors in the admin panel, (5) clicking Publish to push directory_dataset.json to GitHub. Prove by following the runbook on a clean Docker environment and confirming the full flow completes without errors.",
+      "acceptance_criteria": [
+        "docs/runbook_home_laptop.md exists with step-by-step instructions",
+        "docker compose up starts admin API on port 8787 with all env vars loaded from .env",
+        "Enrichment pipeline is runnable inside Docker with a single command",
+        "Admin panel accessible at http://localhost:8787 from host machine",
+        "Publish button triggers GitHub push from inside Docker",
+        "Runbook tested end-to-end on a clean Docker environment"
+      ],
+      "proof_artifact": "runs/proofs/M54_docker_runbook.json",
+      "interaction_targets": [
+        "operator"
+      ],
+      "verify": [
+        "docker compose up -d && curl http://localhost:8787/admin/vendors",
         "python3 scripts/autonomous_audit.py"
       ]
     }
