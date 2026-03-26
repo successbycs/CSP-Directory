@@ -99,6 +99,7 @@ def test_vendor_intelligence_schema_fields_and_types():
         {
             "name": "Jane Doe",
             "title": "CEO",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         }
     ]

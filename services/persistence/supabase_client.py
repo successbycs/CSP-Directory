@@ -40,6 +40,7 @@ VENDOR_PROFILE_SELECT = ",".join(
         "products",
         "leadership",
         "ceo_name",
+        "ceo_linkedin",
         "hq_address",
         "phone_numbers",
         "contact_emails",
@@ -97,6 +98,7 @@ VENDOR_WRITE_COLUMNS = (
     "products",
     "leadership",
     "ceo_name",
+    "ceo_linkedin",
     "hq_address",
     "phone_numbers",
     "contact_emails",
@@ -490,6 +492,7 @@ def build_vendor_row(
         "products": intelligence.products or [],
         "leadership": intelligence.leadership or [],
         "ceo_name": intelligence.ceo_name or None,
+        "ceo_linkedin": intelligence.ceo_linkedin or None,
         "hq_address": intelligence.hq_address or intelligence.company_hq or None,
         "phone_numbers": normalize_phone_numbers(intelligence.phone_numbers) or [],
         "contact_emails": normalize_email_list(

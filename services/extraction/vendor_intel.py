@@ -404,6 +404,7 @@ class VendorIntelligence:
     products: list[dict[str, Any]] = field(default_factory=list)
     leadership: list[dict[str, Any]] = field(default_factory=list)
     ceo_name: str = ""
+    ceo_linkedin: str = ""
     hq_address: str = ""
     phone_numbers: list[str] = field(default_factory=list)
     contact_emails: list[str] = field(default_factory=list)
@@ -447,6 +448,7 @@ class VendorIntelligence:
         self.products = normalize_product_profiles(self.products)
         self.leadership = normalize_leadership_profiles(self.leadership)
         self.ceo_name = self.ceo_name.strip() or _extract_ceo_name(self.leadership)
+        self.ceo_linkedin = self.ceo_linkedin.strip() or _extract_ceo_linkedin_from_leadership(self.leadership)
         self.hq_address = self.hq_address.strip() or self.company_hq.strip()
         self.company_hq = self.company_hq.strip() or self.hq_address
         self.phone_numbers = normalize_phone_numbers(self.phone_numbers)
@@ -513,6 +515,7 @@ class VendorIntelligence:
             "llm_directory_category",
             "directory_decision_source",
             "ceo_name",
+            "ceo_linkedin",
             "hq_address",
             "company_hq",
             "contact_email",
@@ -862,6 +865,7 @@ def normalize_leadership_profiles(value: object) -> list[dict[str, Any]]:
             {
                 "name": name,
                 "title": title,
+                "linkedin": _normalize_linkedin_url(raw_item.get("linkedin")),
                 "source_url": normalize_website_url(raw_item.get("source_url")),
             }
         )
@@ -1196,6 +1200,7 @@ def extract_vendor_intelligence(
         ),
         leadership=leadership,
         ceo_name=_extract_ceo_name(leadership, f"{about_text} {team_text}".strip()),
+        ceo_linkedin=_extract_ceo_linkedin_from_leadership(leadership) or _extract_ceo_linkedin(f"{about_text} {team_text}".strip()),
         hq_address=hq_address,
         phone_numbers=_extract_phone_numbers(contact_text or combined_text),
         contact_emails=contact_emails,
@@ -1476,18 +1481,29 @@ def _extract_products(text: str, *, source_url: str) -> list[dict[str, Any]]:
 
 
 def _extract_leadership(text: str, *, source_url: str) -> list[dict[str, str]]:
-    """Return structured founder and executive evidence."""
+    """Return structured founder and executive evidence including LinkedIn URLs."""
     normalized_text = re.sub(r"\s+", " ", text).strip()
     if not normalized_text:
         return []
 
+    # Build a name->linkedin map from LinkedIn URLs near name+title patterns
+    linkedin_pattern = re.compile(
+        r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)[^.]{0,100}(https?://(?:www\.)?linkedin\.com/in/[A-Za-z0-9\-_.%]+/?)",
+        re.IGNORECASE,
+    )
+    name_linkedin_map: dict[str, str] = {}
+    for lm in linkedin_pattern.finditer(normalized_text):
+        candidate_name = lm.group(1).strip()
+        linkedin_url = lm.group(2).rstrip("/")
+        name_linkedin_map[candidate_name.lower()] = linkedin_url
+
     profiles: list[dict[str, str]] = []
     patterns = [
         re.compile(
-            r"(?P<name>[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+),\s*(?P<title>CEO|Founder|Co-Founder|Chief Executive Officer|Chief Customer Officer)",
+            r"(?P<name>[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+),\s*(?P<title>CEO|Founder|Co-Founder|Chief Executive Officer|Chief Customer Officer|CTO|COO|CPO)",
         ),
         re.compile(
-            r"(?P<title>CEO|Founder|Co-Founder|Chief Executive Officer|Chief Customer Officer)\s+(?P<name>[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)",
+            r"(?P<title>CEO|Founder|Co-Founder|Chief Executive Officer|Chief Customer Officer|CTO|COO|CPO)\s+(?P<name>[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)",
         ),
         re.compile(
             r"founded by\s+(?P<name>[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)",
@@ -1501,10 +1517,12 @@ def _extract_leadership(text: str, *, source_url: str) -> list[dict[str, str]]:
             name = str(match.groupdict().get("name") or "").strip()
             if not name:
                 continue
+            linkedin = name_linkedin_map.get(name.lower(), "")
             profiles.append(
                 {
                     "name": name,
                     "title": title,
+                    "linkedin": linkedin,
                     "source_url": normalize_website_url(source_url),
                 }
             )
@@ -1577,6 +1595,57 @@ def _extract_ceo_name(leadership: list[dict[str, Any]], text: str = "") -> str:
     )
     if match:
         return match.group(1).strip()
+    return ""
+
+
+def _normalize_linkedin_url(value: object) -> str:
+    """Return a canonical LinkedIn profile URL or empty string."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    match = re.search(r"https?://(?:www\.)?linkedin\.com/in/[A-Za-z0-9\-_.%]+/?", raw, re.IGNORECASE)
+    if match:
+        url = match.group(0).rstrip("/")
+        return url
+    return ""
+
+
+def _extract_ceo_linkedin(text: str) -> str:
+    """Return a LinkedIn profile URL associated with a CEO in the supplied text.
+
+    Looks for a LinkedIn profile URL that appears within a short window of a
+    CEO/Founder title mention.
+    """
+    if not text:
+        return ""
+    # Find all LinkedIn URLs in text
+    linkedin_pattern = re.compile(
+        r"https?://(?:www\.)?linkedin\.com/in/([A-Za-z0-9\-_.%]+)/?",
+        re.IGNORECASE,
+    )
+    # Check if a CEO/founder keyword appears near a LinkedIn URL
+    ceo_keywords = re.compile(
+        r"\b(?:CEO|Chief Executive Officer|Founder|Co-Founder|cofounder)\b",
+        re.IGNORECASE,
+    )
+    for match in linkedin_pattern.finditer(text):
+        # Look in a 300-character window around the URL for CEO keywords
+        start = max(0, match.start() - 300)
+        end = min(len(text), match.end() + 300)
+        window = text[start:end]
+        if ceo_keywords.search(window):
+            return match.group(0).rstrip("/")
+    return ""
+
+
+def _extract_ceo_linkedin_from_leadership(leadership: list[dict[str, Any]]) -> str:
+    """Return the LinkedIn URL of the first CEO/founder in a leadership list."""
+    for profile in leadership:
+        title = str(profile.get("title") or "").strip().lower()
+        if "ceo" in title or "chief executive officer" in title or "founder" in title:
+            linkedin = str(profile.get("linkedin") or "").strip()
+            if linkedin:
+                return linkedin
     return ""
 
 

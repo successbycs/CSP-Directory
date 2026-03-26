@@ -356,11 +356,13 @@ def test_extract_vendor_intelligence_captures_richer_company_contact_and_case_st
         {
             "name": "Jane Doe",
             "title": "CEO",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         },
         {
             "name": "Jane Doe",
             "title": "Founder",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         },
     ]
