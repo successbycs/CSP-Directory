@@ -1873,7 +1873,7 @@ def _determine_confidence(
     strong_cs_relevance: bool,
 ) -> str:
     """Return a simple deterministic confidence label."""
-    if not strong_cs_relevance:
+    if not strong_cs_relevance and len(lifecycle_stages) < 2:
         return "low"
 
     signal_score = (

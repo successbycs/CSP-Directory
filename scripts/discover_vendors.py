@@ -22,6 +22,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from supabase import create_client
 from services.discovery.apify_sources import fetch_google_search
 from services.config.load_config import load_pipeline_config
