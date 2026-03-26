@@ -34,19 +34,64 @@ Then hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`).
 
 ---
 
-## Run the pipeline directly (with live logs)
+## Run the full pipeline (discover → enrich → health check → export)
+
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 scripts/discover_vendors.py
+```
+
+**Flags:**
+- `--skip-discover` — skip Google Search, go straight to enrich (use when vendors already exist)
+- `--enrich-all` — re-enrich all vendors, not just new/unenriched ones
+- `--dry-run` — print discovered candidates without writing to Supabase
+
+Re-enrich all without discovering new vendors:
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 scripts/discover_vendors.py --skip-discover --enrich-all
+```
+
+---
+
+## Check vendor count
+
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 -c "
+from dotenv import load_dotenv; load_dotenv('.env')
+import os
+from supabase import create_client
+client = create_client(os.environ['SUPABASE_URL'], os.environ['SUPABASE_KEY'])
+rows = client.table('cs_vendors').select('include_in_directory').execute().data
+included = sum(1 for r in rows if r.get('include_in_directory') is True)
+print(f'Total: {len(rows)} | Included: {included}')
+"
+```
+
+---
+
+## Run pipeline health check only
+
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 scripts/pipeline_health_check.py
+```
+
+Exits 0 if all checks pass, 1 if violations found.
+
+---
+
+## Export directory dataset only
+
+```bash
+cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 scripts/export_directory_dataset.py
+```
+
+---
+
+## Run the pipeline directly (with live logs) [legacy]
 
 ```bash
 cd /home/chris/projects/CSP-Directory && \
 source .venv/bin/activate && \
 PYTHONUNBUFFERED=1 python3 scripts/run_pipeline.py --no-serve-preview 2>&1 | tee /tmp/csp_pipeline.log
-```
-
-Run with a specific query:
-```bash
-cd /home/chris/projects/CSP-Directory && \
-source .venv/bin/activate && \
-PYTHONUNBUFFERED=1 python3 scripts/run_pipeline.py "customer success software" --no-serve-preview 2>&1 | tee /tmp/csp_pipeline.log
 ```
 
 ---
