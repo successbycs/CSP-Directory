@@ -779,7 +779,7 @@
       "proof_description": "case_studies no longer stores detection keywords. Detection signals moved to internal case_study_signals field (not exported). case_study_details populated with {url, summary} objects where URLs are confirmed fetchable. DIRECTORY_DATASET_FIELDS updated to export case_study_details instead of case_studies.",
       "proof_artifact": "runs/proofs/M56_case_studies_fix.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [],
       "verify": [
         "python3 scripts/autonomous_audit.py"
@@ -793,7 +793,7 @@
       "proof_description": "Integration categories extraction bounded to integration-relevant page sections. ToS and prose text no longer captured. INTEGRATION_BRAND_RULES used as canonical output vocabulary. At least 60% of vendors with previous non-empty integration data return at least one valid mapped integration.",
       "proof_artifact": "runs/proofs/M57_integration_fix.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [],
       "verify": [
         "python3 scripts/autonomous_audit.py"
@@ -807,7 +807,7 @@
       "proof_description": "Supabase pricing column migrated from TEXT to TEXT[]. VendorIntelligence.pricing type and supabase_client upsert mapping confirmed consistent. directory_dataset.py _list_value confirmed to handle array correctly. Existing pricing data preserved through migration.",
       "proof_artifact": "runs/proofs/M58_pricing_type_fix.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [],
       "verify": [
         "python3 scripts/autonomous_audit.py"
@@ -821,7 +821,7 @@
       "proof_description": "Architecture doc written: scraped_ (HTML-extracted), llm_ (LLM-inferred), operator_ (no prefix, operator-set). auto_directory_fit, auto_directory_category, auto_include_in_directory renamed to llm_ equivalents via dual-write migration. All 20+ touch points updated atomically across vendor_intel.py, supabase_client.py, vendor_review_dataset.py, vendor_profile_builder.py, enrich_vendors_deterministic.py, apply_schema_migration.py, both test files, both SQL schema files, admin.js, vendor_schema.md. auto_ columns dropped after verification.",
       "proof_artifact": "runs/proofs/M59_llm_rename.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M58"
       ],
