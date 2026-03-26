@@ -1255,7 +1255,7 @@ def extract_vendor_intelligence(
         ),
         source_urls=all_evidence_urls,
         evidence_urls=all_evidence_urls,
-        youtube_channel_url=_extract_youtube_channel_url(combined_text),
+        youtube_channel_url=_extract_youtube_channel_url_from_pages(page_payloads),
         funding_stage=_extract_funding_stage(combined_text),
     )
 
@@ -1631,18 +1631,51 @@ FUNDING_STAGE_PATTERNS = [
 YOUTUBE_CHANNEL_PATTERNS = [
     re.compile(r"https?://(?:www\.)?youtube\.com/channel/([A-Za-z0-9_\-]+)"),
     re.compile(r"https?://(?:www\.)?youtube\.com/c/([A-Za-z0-9_\-]+)"),
-    re.compile(r"https?://(?:www\.)?youtube\.com/@([A-Za-z0-9_\-]+)"),
+    re.compile(r"https?://(?:www\.)?youtube\.com/@([A-Za-z0-9_\-.]+)"),
 ]
+
+# Also match href="https://youtube.com/..." patterns from HTML/markdown
+_YOUTUBE_HREF_PATTERN = re.compile(
+    r'(?:href=["\']|url=["\']|src=["\']|follow us|subscribe|watch|channel|youtube)["\s:=]*'
+    r'(https?://(?:www\.)?youtube\.com/(?:channel/|c/|@)[A-Za-z0-9_\-.]+)',
+    re.IGNORECASE,
+)
 
 
 def _extract_youtube_channel_url(text: str) -> str:
-    """Return the first YouTube channel URL found in the supplied text."""
+    """Return the first YouTube channel URL found in the supplied text.
+
+    Checks href/link contexts first (highest signal), then bare URL patterns.
+    """
     if not text:
         return ""
+    # Prefer href/social-link context (M62: webcrawl HTML href detection)
+    href_match = _YOUTUBE_HREF_PATTERN.search(text)
+    if href_match:
+        return href_match.group(1).rstrip("/")
+    # Fall back to bare URL patterns
     for pattern in YOUTUBE_CHANNEL_PATTERNS:
         match = pattern.search(text)
         if match:
             return match.group(0).rstrip("/")
+    return ""
+
+
+def _extract_youtube_channel_url_from_pages(page_payloads: dict[str, dict]) -> str:
+    """Return YouTube channel URL by searching homepage, about, contact, and footer-heavy pages.
+
+    M62: multi-page search strategy — about_page and contact_page often contain social links.
+    """
+    priority_keys = ["homepage", "about_page", "contact_page", "team_page"]
+    all_keys = list(page_payloads.keys())
+    search_order = [k for k in priority_keys if k in page_payloads] + [
+        k for k in all_keys if k not in priority_keys
+    ]
+    for page_key in search_order:
+        page_text = str(page_payloads.get(page_key, {}).get("text", "") or "")
+        url = _extract_youtube_channel_url(page_text)
+        if url:
+            return url
     return ""
 
 
