@@ -50,7 +50,8 @@ def merge_vendor_intelligence(
         deterministic.support_signals,
         llm_result.support_signals,
     )
-    merged_case_studies = _merge_unique_strings(deterministic.case_studies, llm_result.case_studies)
+    merged_case_studies = _merge_unique_strings(deterministic.case_studies)
+    merged_case_study_signals = _merge_unique_strings(deterministic.case_study_signals, llm_result.case_study_signals)
     merged_case_study_details = _merge_named_records(
         deterministic.case_study_details,
         llm_result.case_study_details,
@@ -78,7 +79,7 @@ def merge_vendor_intelligence(
         usp=merged_usp,
         icp=merged_icp,
         use_cases=merged_use_cases,
-            case_studies=merged_case_studies,
+            case_studies=merged_case_study_signals,
             customers=merged_customers,
             pricing=merged_pricing,
             value_statements=llm_result.value_statements,
@@ -123,6 +124,7 @@ def merge_vendor_intelligence(
         external_enrichment=merged_external_enrichment,
         support_signals=merged_support_signals,
         case_studies=merged_case_studies,
+        case_study_signals=merged_case_study_signals,
         case_study_details=merged_case_study_details,
         testimonials=merged_testimonials,
         blog_posts=merged_blog_posts,

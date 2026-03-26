@@ -171,7 +171,7 @@ def test_extract_vendor_intelligence_parses_structured_json(monkeypatch):
     assert result.integration_categories == ["crm"]
     assert result.integrations == ["Salesforce"]
     assert result.support_signals == ["help center"]
-    assert result.case_studies == ["case study"]
+    assert result.case_study_signals == ["case study"]  # LLM returns signals mapped to case_study_signals
     assert result.case_study_details == [
         {
             "client": "Acme",
@@ -315,7 +315,7 @@ def test_extract_vendor_intelligence_normalizes_list_fields(monkeypatch):
     ]
     assert result.use_cases == ["onboarding", "health scoring"]
     assert result.pricing == ["contact sales", "annual pricing"]
-    assert result.case_studies == ["case study", "customer story"]
+    assert result.case_study_signals == ["case study", "customer story"]  # LLM returns signals mapped to case_study_signals
     assert result.customers == ["Acme", "Beta"]
     assert result.value_statements == ["reduce churn", "improve adoption"]
 

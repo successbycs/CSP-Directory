@@ -59,7 +59,8 @@ def test_extract_vendor_intelligence_populates_directory_fields_from_explored_pa
     assert result.free_trial is True
     assert result.soc2 is True
     assert result.founded == "2021"
-    assert result.case_studies == ["case study", "customer story", "how customers use the product"]
+    assert result.case_study_signals == ["case study", "customer story", "how customers use the product"]
+    assert result.case_studies == []  # case_studies is reserved for LLM-extracted URLs/summaries
     assert result.customers == ["Acme"]
     assert result.value_statements == [
         "reduce churn",
@@ -94,7 +95,8 @@ def test_extract_vendor_intelligence_returns_empty_lists_when_no_keywords_match(
     assert result.value_statements == []
     assert result.lifecycle_stages == []
     assert result.pricing == []
-    assert result.case_studies == []
+    assert result.case_study_signals == []
+    assert result.case_studies == []  # case_studies is reserved for LLM-extracted URLs/summaries
     assert result.customers == []
     assert result.confidence == "low"
 
@@ -206,7 +208,8 @@ def test_extract_vendor_intelligence_detects_icp_pricing_soc2_and_case_study_sig
     assert result.icp == ["B2B startups", "product-led teams"]
     assert result.pricing == ["$", "per seat", "per month"]
     assert result.soc2 is True
-    assert result.case_studies == ["case study", "customer story"]
+    assert result.case_study_signals == ["case study", "customer story"]
+    assert result.case_studies == []  # case_studies is reserved for LLM-extracted URLs/summaries
 
 
 def test_extract_vendor_intelligence_uses_extra_pages_in_combined_text():
@@ -456,5 +459,6 @@ def test_extract_vendor_intelligence_caps_confidence_when_cs_relevance_is_weak()
     result = extract_vendor_intelligence(explored_pages)
 
     assert result.pricing == ["$", "per user", "per month"]
-    assert result.case_studies == ["case study", "customer story"]
+    assert result.case_study_signals == ["case study", "customer story"]
+    assert result.case_studies == []  # case_studies is reserved for LLM-extracted URLs/summaries
     assert result.confidence == "low"

@@ -173,10 +173,6 @@ LLM_RESULT_SCHEMA = {
             "type": "array",
             "items": {"type": "string"},
         },
-        "case_studies": {
-            "type": "array",
-            "items": {"type": "string"},
-        },
         "testimonials": {
             "type": "array",
             "items": {
@@ -276,7 +272,6 @@ LLM_RESULT_SCHEMA = {
         "integration_categories",
         "integrations",
         "support_signals",
-        "case_studies",
         "testimonials",
         "blog_posts",
         "case_study_details",
@@ -317,7 +312,7 @@ class LLMExtractionResult:
     integration_categories: list[str] = field(default_factory=list)
     integrations: list[str] = field(default_factory=list)
     support_signals: list[str] = field(default_factory=list)
-    case_studies: list[str] = field(default_factory=list)
+    case_study_signals: list[str] = field(default_factory=list)
     testimonials: list[dict[str, Any]] = field(default_factory=list)
     blog_posts: list[dict[str, Any]] = field(default_factory=list)
     case_study_details: list[dict[str, Any]] = field(default_factory=list)
@@ -435,7 +430,7 @@ def extract_vendor_intelligence(
                             "- icp_buyer must be an array of buyer persona objects with persona, confidence, evidence, google_queries, and geo_queries\n"
                             "- google_queries and geo_queries must each contain up to 5 realistic searches/prompts the buyer would use to find this vendor category\n"
                             "- buyer personas should reflect who the website messaging is aimed at, not generic end users\n"
-                            "- icp, lifecycle_stages, compliance, case_studies, customers, value_statements, and source_urls must be arrays of short strings\n"
+                            "- icp, lifecycle_stages, compliance, customers, value_statements, and source_urls must be arrays of short strings\n"
                             "- pricing must be an array of short pricing signals like contact sales, per seat, per user, per month, or per year\n"
                             "- products must be structured product rows with name, category, description, use_cases, integration_categories, integrations, demo_url, support_url, help_center_url, developer_docs_url, and source_url when the site names multiple products\n"
                             "- keep vendor-level fields for company-wide claims; use product rows only for product-specific use cases, integrations, or surfaces\n"
@@ -628,7 +623,7 @@ def _parse_result(content: str) -> LLMExtractionResult:
         integration_categories=_filter_integration_categories(_normalize_string_list(raw_result.get("integration_categories"))),
         integrations=_filter_integrations(_normalize_string_list(raw_result.get("integrations"))),
         support_signals=_normalize_string_list(raw_result.get("support_signals")),
-        case_studies=_normalize_string_list(raw_result.get("case_studies")),
+        case_study_signals=_normalize_string_list(raw_result.get("case_studies")),
         testimonials=normalize_testimonial_records(raw_result.get("testimonials")),
         blog_posts=normalize_blog_posts(raw_result.get("blog_posts")),
         case_study_details=normalize_case_study_details(raw_result.get("case_study_details")),

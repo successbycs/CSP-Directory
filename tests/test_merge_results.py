@@ -43,7 +43,7 @@ def test_merge_vendor_intelligence_prefers_valid_llm_fields_and_keeps_determinis
         free_trial=None,
         soc2=None,
         founded="",
-        case_studies=["case study"],
+        case_study_signals=["case study"],
         customers=["Acme"],
         value_statements=["improve customer health"],
         confidence="medium",
@@ -75,7 +75,7 @@ def test_merge_vendor_intelligence_prefers_valid_llm_fields_and_keeps_determinis
         free_trial=True,
         soc2=True,
         founded="2024",
-        case_studies=["customer story"],
+        case_study_signals=["customer story"],
         customers=["Beta"],
         value_statements=["reduce churn"],
         confidence="high",
@@ -116,7 +116,8 @@ def test_merge_vendor_intelligence_prefers_valid_llm_fields_and_keeps_determinis
     assert merged.free_trial is True
     assert merged.soc2 is True
     assert merged.founded == "2024"
-    assert merged.case_studies == ["case study", "customer story"]
+    assert merged.case_studies == []
+    assert merged.case_study_signals == ["case study", "customer story"]
     assert merged.customers == ["Acme", "Beta"]
     assert "reduce churn" in merged.value_statements
     assert merged.confidence == "high"
@@ -145,7 +146,7 @@ def test_merge_vendor_intelligence_keeps_stronger_deterministic_signals():
         free_trial=True,
         soc2=True,
         founded="2020",
-        case_studies=["case study"],
+        case_study_signals=["case study"],
         customers=["Acme"],
         value_statements=["reduce churn"],
         confidence="medium",
@@ -170,7 +171,7 @@ def test_merge_vendor_intelligence_keeps_stronger_deterministic_signals():
         free_trial=False,
         soc2=False,
         founded="",
-        case_studies=["customer story"],
+        case_study_signals=["customer story"],
         customers=["Beta"],
         value_statements=["improve adoption"],
         confidence="low",
@@ -202,7 +203,8 @@ def test_merge_vendor_intelligence_keeps_stronger_deterministic_signals():
     assert merged.free_trial is True
     assert merged.soc2 is True
     assert merged.founded == "2020"
-    assert merged.case_studies == ["case study", "customer story"]
+    assert merged.case_studies == []
+    assert merged.case_study_signals == ["case study", "customer story"]
     assert merged.customers == ["Acme", "Beta"]
     assert "improve adoption" in merged.value_statements
     assert merged.confidence == "medium"

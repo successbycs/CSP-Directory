@@ -24,7 +24,7 @@ DEFAULT_GOOGLE_SHEETS_COLUMNS = (
     "free_trial",
     "soc2",
     "founded",
-    "case_studies",
+    "case_study_details",
     "customers",
     "value_statements",
     "confidence",

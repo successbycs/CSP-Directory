@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from services.persistence import supabase_client
-from services.extraction.vendor_intel import VendorIntelligence, normalize_icp_buyer_profiles
+from services.extraction.vendor_intel import VendorIntelligence, normalize_case_study_details, normalize_icp_buyer_profiles
 
 if TYPE_CHECKING:
     from supabase import Client
@@ -26,7 +26,7 @@ DIRECTORY_DATASET_FIELDS = (
     "pricing",
     "free_trial",
     "founded",
-    "case_studies",
+    "case_study_details",
     "customers",
     "value_statements",
     "confidence",
@@ -97,7 +97,7 @@ def _normalize_vendor_row(row: dict[str, Any]) -> dict[str, Any]:
         "free_trial": _bool_value(row.get("free_trial")),
         "soc2": _bool_value(row.get("soc2")),
         "founded": _string_value(row.get("founded")),
-        "case_studies": _list_value(row.get("case_studies")),
+        "case_study_details": _case_study_details_value(row.get("case_study_details")),
         "customers": _list_value(row.get("customers")),
         "value_statements": _list_value(row.get("value_statements")),
         "confidence": _string_value(row.get("confidence")),
@@ -121,7 +121,7 @@ def _profile_to_vendor_row(profile: VendorIntelligence) -> dict[str, Any]:
         "free_trial": profile.free_trial,
         "soc2": profile.soc2,
         "founded": profile.founded,
-        "case_studies": profile.case_studies,
+        "case_study_details": profile.case_study_details,
         "customers": profile.customers,
         "value_statements": profile.value_statements,
         "confidence": profile.confidence,
@@ -129,6 +129,17 @@ def _profile_to_vendor_row(profile: VendorIntelligence) -> dict[str, Any]:
         "directory_fit": profile.directory_fit,
         "directory_category": profile.directory_category,
     }
+
+
+
+def _case_study_details_value(value: object) -> list[dict[str, Any]]:
+    """Return a normalized list of case-study detail objects, each with only URL-based source_url.
+
+    Accepts a list of dicts or a JSON string. Keyword-only strings are rejected.
+    Only dict items are included (keyword detection strings stored in case_study_signals
+    are never included here).
+    """
+    return normalize_case_study_details(value)
 
 
 def _string_value(value: object) -> str:
