@@ -12,6 +12,9 @@ import requests
 
 from services.config.load_config import load_pipeline_config
 from services.extraction.vendor_intel import (
+    CANONICAL_INTEGRATION_CATEGORIES,
+    INTEGRATION_BRAND_RULES,
+    KNOWN_INTEGRATIONS,
     normalize_blog_posts,
     normalize_case_study_details,
     normalize_compliance_signals,
@@ -439,7 +442,8 @@ def extract_vendor_intelligence(
                             "- leadership must capture founder/CEO/executive evidence when the site states it\n"
                             "- ceo_name, hq_address, phone_numbers, contact_emails, company_hq, and contact_email should be populated only when explicitly supported by the website evidence\n"
                             "- developer_docs_url should only be populated when the site clearly links to developer or API documentation\n"
-                            "- integration_categories and integrations must be arrays of short strings when integrations are explicit\n"
+                            "- integrations must be an array of canonical software/platform/API brand names that the vendor explicitly integrates with (e.g. Salesforce, HubSpot, Slack, Zendesk); do NOT extract legal text, policy language, generic phrases, or anything that is not a named software product\n"
+                            "- integration_categories must be an array drawn only from this bounded set: crm, csp, pm, workflow, email/calendar, communication, support, warehouse, other\n"
                             "- support_signals must capture help-center, knowledge-base, support-portal, or community/training evidence when present\n"
                             "- compliance should capture items like SOC 2, ISO 27001, HIPAA, GDPR, trust center, or security review when supported\n"
                             "- testimonials must capture company, proof_type, summary, quote, source_url, and date when available\n"
@@ -612,7 +616,7 @@ def _parse_result(content: str) -> LLMExtractionResult:
         soc2=_normalize_optional_bool(raw_result.get("soc2")),
         compliance=normalize_compliance_signals(raw_result.get("compliance")),
         founded=_clean_string(raw_result.get("founded")),
-        products=normalize_product_profiles(raw_result.get("products")),
+        products=_filter_product_integrations(normalize_product_profiles(raw_result.get("products"))),
         leadership=normalize_leadership_profiles(raw_result.get("leadership")),
         ceo_name=_clean_string(raw_result.get("ceo_name")),
         hq_address=_clean_string(raw_result.get("hq_address")),
@@ -621,8 +625,8 @@ def _parse_result(content: str) -> LLMExtractionResult:
         company_hq=_clean_string(raw_result.get("company_hq")),
         contact_email=_clean_string(raw_result.get("contact_email")),
         developer_docs_url=_clean_string(raw_result.get("developer_docs_url")),
-        integration_categories=_normalize_string_list(raw_result.get("integration_categories")),
-        integrations=_normalize_string_list(raw_result.get("integrations")),
+        integration_categories=_filter_integration_categories(_normalize_string_list(raw_result.get("integration_categories"))),
+        integrations=_filter_integrations(_normalize_string_list(raw_result.get("integrations"))),
         support_signals=_normalize_string_list(raw_result.get("support_signals")),
         case_studies=_normalize_string_list(raw_result.get("case_studies")),
         testimonials=normalize_testimonial_records(raw_result.get("testimonials")),
@@ -633,6 +637,79 @@ def _parse_result(content: str) -> LLMExtractionResult:
         source_urls=_normalize_string_list(raw_result.get("source_urls")),
         confidence=confidence,
     )
+
+
+
+def _filter_integrations(items: list[str]) -> list[str]:
+    """Drop items that are not plausible software integration names.
+
+    Accepts anything that matches a known INTEGRATION_BRAND_RULES alias, or that
+    is a short single/two-word token (likely a product name).  Rejects long
+    prose strings (>30 chars AND contains a space AND does not match any known
+    brand alias) — these are typically legal or policy text captured by mistake.
+    """
+    known_aliases: set[str] = set()
+    for _canonical, _cat, aliases in INTEGRATION_BRAND_RULES:
+        for alias in aliases:
+            known_aliases.add(alias.lower())
+
+    filtered: list[str] = []
+    for item in items:
+        lowered = item.lower().strip()
+        # Always keep known brands
+        if lowered in known_aliases or item in KNOWN_INTEGRATIONS:
+            filtered.append(item)
+            continue
+        # Drop prose: longer than 30 chars, contains space, no internal capital (product names usually have capitals)
+        if len(item) > 30 and " " in item and not re.search(r"[A-Z]", item[1:]):
+            continue
+        # Drop if it looks like legal/prose: >30 chars with common legal/prose words
+        _prose_markers = (
+            "providing the", "including negligence", "from your use", "in connection with",
+            "subject to", "limitation of", "warranty", "indemnif", "liable", "liability",
+            "damages", "tort ", "arising from", "relating to", "pursuant to",
+        )
+        if any(marker in lowered for marker in _prose_markers):
+            continue
+        filtered.append(item)
+    return filtered
+
+
+def _filter_integration_categories(items: list[str]) -> list[str]:
+    """Return only categories that belong to the canonical bounded set."""
+    canonical_set = set(CANONICAL_INTEGRATION_CATEGORIES)
+    # Normalize aliases to canonical names
+    alias_map = {
+        "customer relationship management": "crm",
+        "customer success platform": "csp",
+        "customer success platforms": "csp",
+        "project management": "pm",
+        "project-management": "pm",
+        "workflow automation": "workflow",
+        "email and calendar": "email/calendar",
+        "email": "email/calendar",
+        "calendar": "email/calendar",
+        "data warehouse": "warehouse",
+        "data": "warehouse",
+    }
+    result: list[str] = []
+    for item in items:
+        normalized = item.strip().lower()
+        canonical = alias_map.get(normalized, normalized)
+        if canonical in canonical_set and canonical not in result:
+            result.append(canonical)
+    return result
+
+
+def _filter_product_integrations(products: list[dict]) -> list[dict]:
+    """Apply integration filters to product-level integrations and categories."""
+    result = []
+    for product in products:
+        filtered = dict(product)
+        filtered["integrations"] = _filter_integrations(product.get("integrations") or [])
+        filtered["integration_categories"] = _filter_integration_categories(product.get("integration_categories") or [])
+        result.append(filtered)
+    return result
 
 
 def _clean_string(value: object) -> str:
