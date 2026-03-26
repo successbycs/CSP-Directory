@@ -580,7 +580,7 @@
       "id": "M42",
       "title": "Expand vendor catalog to 50+ vendors",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M44",
         "M45"
@@ -596,7 +596,10 @@
         "python3 scripts/export_directory_dataset.py",
         "python3 scripts/check_supabase.py",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "evidence": {
+        "note": "57 vendors included as of 2026-03-26, exceeds 50+ target. 40 new vendors discovered via Google Search, enriched via n8n/OpenAI."
+      }
     },
     {
       "id": "M-OPS1",

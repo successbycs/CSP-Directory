@@ -33,8 +33,8 @@ This file is a short operational memory for the repository. It should stay conci
 
 ## Current Operating Assumptions
 
-- current active milestone is `M42` (expand vendor catalog to 50+ vendors)
-- as of 2026-03-26: 48 vendors included, 2 short of 50+ target
+- current active milestone is `M48` (ICP field always populated)
+- as of 2026-03-26: 57 vendors included (M42 complete — exceeded 50+ target)
 - production deployment live at vendors.successbycs.com (Vercel, auto-deploy from GitHub main)
 - pipeline runs via `python3 scripts/discover_vendors.py` (4-step: discover → enrich → health check → export)
 - all pipeline and export tests pass (50 tests green)
