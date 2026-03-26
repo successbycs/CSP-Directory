@@ -162,7 +162,7 @@ def test_build_vendor_row_uses_extracted_vendor_fields():
             "geo_queries": ["What AI tools reduce churn for SaaS teams?"],
         }
     ]
-    assert row["pricing"] == "contact sales|per seat"
+    assert row["pricing"] == ["contact sales", "per seat"]
     assert row["free_trial"] is True
     assert row["soc2"] is True
     assert row["founded"] == "2021"
