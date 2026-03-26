@@ -122,6 +122,11 @@ def run_mvp_pipeline(
             len(queued_vendor_candidates),
         )
 
+        # M48/cost-gate: annotate each candidate with whether expensive fetch (Playwright/Apify)
+        # is needed. Vendors already sufficiently enriched in Supabase skip the expensive path.
+        if supabase_client.is_configured():
+            _annotate_expensive_fetch_gate(queued_vendor_candidates)
+
         vendor_rows, enrichment_results, llm_success_count, llm_fallback_count = run_enrichment_phase_fn(
             queued_vendor_candidates,
             fetch_vendor_homepage_fn=fetch_vendor_homepage_fn,
@@ -210,7 +215,34 @@ def _drop_reason(profile: VendorIntelligence | dict[str, object], llm_result: ob
     if confidence == "low":
         return "low_confidence"
 
+    # M48: vendors with no ICP signal must not be included in the directory
+    icp = profile.icp if isinstance(profile, VendorIntelligence) else profile.get("icp", [])
+    if not icp:
+        return "empty_icp"
+
     return ""
+
+
+def _annotate_expensive_fetch_gate(vendor_candidates: list[dict[str, object]]) -> None:
+    """Set skip_expensive_fetch=True on candidates already sufficiently enriched in Supabase.
+
+    Vendors with all key fields populated (icp, lifecycle_stages, directory_category,
+    integrations, pricing) skip Playwright and Apify — plain HTTP is enough for re-enrichment.
+    """
+    for vendor in vendor_candidates:
+        website = str(vendor.get("website") or "")
+        if not website:
+            continue
+        try:
+            completeness = supabase_client.get_vendor_enrichment_completeness(website)
+            if completeness["is_sufficiently_enriched"]:
+                vendor["skip_expensive_fetch"] = True
+                logger.info(
+                    "Skipping expensive fetch for %s: all key fields already populated in Supabase",
+                    website,
+                )
+        except Exception as error:
+            logger.debug("Enrichment completeness check failed for %s: %s", website, error)
 
 
 def _profile_confidence(profile: VendorIntelligence | dict[str, object]) -> str:

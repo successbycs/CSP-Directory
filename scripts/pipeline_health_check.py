@@ -65,6 +65,15 @@ def check_other_category_violations(vendor_rows: list[dict]) -> list[str]:
     ]
 
 
+def check_empty_icp_violations(vendor_rows: list[dict]) -> list[str]:
+    """Return websites where include_in_directory=True but icp is null or empty. (M48)"""
+    return [
+        row["website"]
+        for row in vendor_rows
+        if row.get("include_in_directory") is True and not row.get("icp")
+    ]
+
+
 def run_health_check(vendor_rows: list[dict] | None = None) -> bool:
     """Run all quality gate checks. Returns True if all pass, False if any fail.
 
@@ -75,7 +84,7 @@ def run_health_check(vendor_rows: list[dict] | None = None) -> bool:
     if vendor_rows is None:
         client = supabase_client.get_supabase_client()
         response = client.table("cs_vendors").select(
-            "website,include_in_directory,lifecycle_stages,directory_category"
+            "website,include_in_directory,lifecycle_stages,directory_category,icp"
         ).execute()
         vendor_rows = response.data or []
 
@@ -96,6 +105,10 @@ def run_health_check(vendor_rows: list[dict] | None = None) -> bool:
     other = check_other_category_violations(vendor_rows)
     if other:
         violations.append(f"directory_category=other violations ({len(other)}): {other[:5]}")
+
+    empty_icp = check_empty_icp_violations(vendor_rows)
+    if empty_icp:
+        violations.append(f"Empty ICP violations (include_in_directory=True but no ICP) ({len(empty_icp)}): {empty_icp[:5]}")
 
     if violations:
         for v in violations:

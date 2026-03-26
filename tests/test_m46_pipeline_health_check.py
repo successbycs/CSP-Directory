@@ -84,6 +84,7 @@ def test_run_health_check_passes_with_clean_data():
             "include_in_directory": True,
             "lifecycle_stages": ["onboard", "adopt"],
             "directory_category": "csp",
+            "icp": ["Enterprise"],
         }
     ]
     assert run_health_check(vendor_rows=rows) is True

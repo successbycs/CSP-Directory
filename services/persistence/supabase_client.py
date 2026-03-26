@@ -209,6 +209,39 @@ def supports_export_ready_vendor_profiles(client: "Client | None" = None) -> boo
     return all(column in available_columns for column in EXPORT_READY_VENDOR_COLUMNS)
 
 
+_ENRICHMENT_KEY_FIELDS = ("icp", "lifecycle_stages", "directory_category", "integrations", "pricing")
+
+
+def get_vendor_enrichment_completeness(website: str, client: "Client | None" = None) -> dict[str, Any]:
+    """Return field completeness for a vendor to decide if expensive re-enrichment is needed.
+
+    Returns a dict with:
+      - ``fields_populated``: list of key fields that are non-empty
+      - ``fields_missing``: list of key fields that are null/empty
+      - ``is_sufficiently_enriched``: True when all key fields are populated (skip Playwright/Apify)
+    """
+    supabase = client or get_supabase_client()
+    normalized_website = normalize_vendor_website(website)
+    response = (
+        supabase.table("cs_vendors")
+        .select(",".join(_ENRICHMENT_KEY_FIELDS))
+        .eq("website", normalized_website or website)
+        .limit(1)
+        .execute()
+    )
+    rows = list(response.data or [])
+    if not rows:
+        return {"fields_populated": [], "fields_missing": list(_ENRICHMENT_KEY_FIELDS), "is_sufficiently_enriched": False}
+    row = rows[0]
+    populated = [f for f in _ENRICHMENT_KEY_FIELDS if row.get(f)]
+    missing = [f for f in _ENRICHMENT_KEY_FIELDS if not row.get(f)]
+    return {
+        "fields_populated": populated,
+        "fields_missing": missing,
+        "is_sufficiently_enriched": len(missing) == 0,
+    }
+
+
 def _vendor_row_has_review_signal(row: dict[str, Any]) -> bool:
     """Return True when a persisted vendor row has the minimum review/export fields populated."""
     return any(

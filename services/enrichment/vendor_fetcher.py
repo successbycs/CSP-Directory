@@ -43,44 +43,17 @@ def fetch_vendor_homepage(vendor: dict[str, str]) -> dict[str, str | int]:
     vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, "")
     config = load_pipeline_config().enrichment
 
-    # Apify-first path: use Website Content Crawler as the primary enrichment source
-    if config.external_fetch_backend == "apify":
-        logger.info("Fetching %s via Apify Website Content Crawler (primary path)", website)
-        apify_payload = fetch_page_with_fallback(website, config=config)
-        if apify_payload:
-            status_code = int(apify_payload.get("status_code", 200))
-            html_content = str(apify_payload.get("html", ""))
-            text = str(apify_payload.get("text", "")) or extract_visible_text(html_content)
-            vendor_name = _resolve_vendor_name(vendor.get("vendor_name", ""), website, html_content)
-            fetch_backend = str(apify_payload.get("fetch_backend", "apify"))
-            logger.info(
-                "Apify fetch succeeded for %s: status=%s, text_length=%s",
-                website,
-                status_code,
-                len(text),
-            )
-            return {
-                "vendor_name": vendor_name,
-                "website": website,
-                "url": website,
-                "source": vendor.get("source", ""),
-                "page_type": "homepage",
-                "status_code": status_code,
-                "html": html_content,
-                "text": text,
-                "fetch_backend": fetch_backend,
-            }
-        else:
-            logger.warning("Apify fetch returned no result for %s, falling back to HTTP", website)
-
-    # Plain HTTP fallback (or primary when Apify not configured)
+    # HTTP-first fetch: plain requests → Playwright → Apify (last resort only)
+    # Apify is expensive; use it only when HTTP and browser both fail or return blocked pages.
+    # skip_expensive_fetch=True means Playwright/Apify are bypassed (vendor already enriched).
+    skip_expensive_fetch = bool(vendor.get("skip_expensive_fetch"))
     request_timeout_seconds = config.request_timeout_seconds
     try:
         response = requests.get(website, timeout=request_timeout_seconds)
         status_code = response.status_code
         html_content = response.text
         fetch_backend = "requests"
-        if _should_skip_page(response.status_code, response.text):
+        if _should_skip_page(response.status_code, response.text) and not skip_expensive_fetch:
             fallback_payload = fetch_page_with_fallback(website, config=config)
             if fallback_payload:
                 status_code = int(fallback_payload.get("status_code", status_code))
@@ -96,7 +69,7 @@ def fetch_vendor_homepage(vendor: dict[str, str]) -> dict[str, str | int]:
             text = extract_visible_text(html_content)
     except requests.RequestException:
         fetch_backend = ""
-        fallback_payload = fetch_page_with_fallback(website, config=config)
+        fallback_payload = None if skip_expensive_fetch else fetch_page_with_fallback(website, config=config)
         if fallback_payload:
             status_code = int(fallback_payload.get("status_code", 200))
             html_content = str(fallback_payload.get("html", ""))

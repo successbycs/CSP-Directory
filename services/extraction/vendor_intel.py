@@ -352,6 +352,13 @@ CUSTOMER_PATTERNS = [
     r"customers include ([A-Z][A-Za-z0-9&.-]+(?:,\s*[A-Z][A-Za-z0-9&.-]+){0,4})",
     r"used by ([A-Z][A-Za-z0-9&.-]+(?:,\s*[A-Z][A-Za-z0-9&.-]+){0,4})",
     r"how ([A-Z][A-Za-z0-9&.-]+) uses",
+    # M49: additional case-study page patterns
+    r"(?:join|like|including)\s+([A-Z][A-Za-z0-9&.-]+(?:,\s*[A-Z][A-Za-z0-9&.-]+){0,4})\s+(?:who|that|and)",
+    r"(?:read|see|view)\s+how\s+([A-Z][A-Za-z0-9&.-]+)\s+",
+    r"([A-Z][A-Za-z0-9&.-]+)\s+(?:reduced|increased|improved|cut|saved|grew|achieved|deployed|uses|used)\s",
+    r"case study[:\s]+([A-Z][A-Za-z0-9&.-]+)",
+    r"customer story[:\s]+([A-Z][A-Za-z0-9&.-]+)",
+    r"([A-Z][A-Za-z0-9&.-]+)\s+(?:chose|selected|implemented|adopted)\s+",
 ]
 STRONG_CS_RELEVANCE_HINTS = [
     "customer success",
@@ -1147,7 +1154,10 @@ def extract_vendor_intelligence(
             if part
         )
     )
-    customers = _extract_customers(combined_text)
+    # M49: extract customers from case_studies_page first (highest signal), fall back to combined
+    customers = _extract_customers(case_studies_text or combined_text)
+    if case_studies_text and not customers:
+        customers = _extract_customers(combined_text)
     pricing = _extract_pricing(pricing_text or combined_text_lower)
     integrations = _extract_integrations(integration_source_text)
     integration_taxonomy = build_integration_taxonomy(
@@ -1204,7 +1214,7 @@ def extract_vendor_intelligence(
         support_signals=_extract_support_signals(
             f"{help_text} {support_text} {contact_text} {demo_text}".strip().lower()
         ),
-        case_studies=[],
+        case_studies=_derive_case_studies_text(case_study_details),
         case_study_signals=case_study_signals,
         case_study_details=case_study_details,
         testimonials=testimonials,
@@ -1396,12 +1406,29 @@ def _extract_case_study_details(text: str, *, source_url: str) -> list[dict[str,
     return details
 
 
+def _derive_case_studies_text(case_study_details: list[dict[str, str]]) -> list[str]:
+    """Return plain-text outcome statements derived from structured case_study_details. (M49)
+
+    Each entry is a short human-readable string like "Acme reduced churn by 20%."
+    Only confirmed outcome statements are included — keyword signals stay in case_study_signals.
+    """
+    results: list[str] = []
+    for detail in case_study_details:
+        client = str(detail.get("client") or "").strip()
+        value_realized = str(detail.get("value_realized") or "").strip()
+        if client and value_realized:
+            statement = f"{client} {value_realized}".rstrip(".")
+            if statement not in results:
+                results.append(statement)
+    return results
+
+
 def _extract_customers(text: str) -> list[str]:
     """Return simple named-customer signals from vendor text."""
     customers: list[str] = []
 
     for pattern in CUSTOMER_PATTERNS:
-        for match in re.finditer(pattern, text):
+        for match in re.finditer(pattern, text, re.IGNORECASE):
             for customer_name in re.split(r",|\band\b", match.group(1)):
                 cleaned_name = customer_name.strip().strip(".")
                 if cleaned_name and cleaned_name not in customers:

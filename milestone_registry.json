@@ -416,7 +416,7 @@
       "id": "M48",
       "title": "ICP field: always populated for every vendor",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M46"
       ],
@@ -440,7 +440,7 @@
       "id": "M49",
       "title": "Case studies extraction: populate case_studies and customers fields",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M46"
       ],

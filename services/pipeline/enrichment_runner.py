@@ -129,4 +129,6 @@ def _drop_status(drop_reason: str) -> str:
         return "dropped_non_cs_relevant"
     if "low_confidence" in lowered_reason:
         return "dropped_low_confidence"
+    if "empty_icp" in lowered_reason:
+        return "dropped_empty_icp"
     return "dropped"
