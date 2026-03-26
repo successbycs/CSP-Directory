@@ -2,7 +2,7 @@
 
 This is the operator-readable milestone plan. The machine-readable source of truth is `milestone_registry.json`.
 
-**Current focus:** M43 — Canonical vendor name enforcement
+**Current focus:** M42 — Expand vendor catalog to 50+ vendors (48 included as of 2026-03-26)
 
 ---
 

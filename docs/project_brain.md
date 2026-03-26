@@ -33,7 +33,18 @@ This file is a short operational memory for the repository. It should stay conci
 
 ## Current Operating Assumptions
 
-- current active milestone is `M35`
+- current active milestone is `M42` (expand vendor catalog to 50+ vendors)
+- as of 2026-03-26: 48 vendors included, 2 short of 50+ target
+- production deployment live at vendors.successbycs.com (Vercel, auto-deploy from GitHub main)
+- pipeline runs via `python3 scripts/discover_vendors.py` (4-step: discover → enrich → health check → export)
+- all pipeline and export tests pass (50 tests green)
+- three-tier field taxonomy in effect: `scraped_` / `llm_` / `operator_` (M59)
+- confidence gate: medium + high included; low excluded (except admin_override)
+- lifecycle stage gate: vendors in directory must have at least one lifecycle stage
+- directory_category='other' excluded from public export (M69)
+- n8n routes all Apify calls (Google Search + Website Content Crawler) via webhook
+- Supabase table: `cs_vendors` — apply_schema_migration.py is the safe migration path
+- next pending milestones in priority order: M42, M48, M49, M50, M51, M52, M60–M68
 
 
 
