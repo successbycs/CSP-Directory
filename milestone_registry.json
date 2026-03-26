@@ -320,7 +320,7 @@
       "id": "M44",
       "title": "Junk domain enforcement: config-driven denylist with subdomain matching",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M43"
       ],
@@ -343,7 +343,7 @@
       "id": "M45",
       "title": "Lifecycle stage enforcement: no vendor in directory without lifecycle stages",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M43"
       ],
@@ -366,7 +366,7 @@
       "id": "M46",
       "title": "Pipeline health check report: post-cycle quality gate",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M44",
         "M45"
@@ -682,7 +682,7 @@
       "id": "M53",
       "title": "Vercel production deployment: vendors.successbycs.com live",
       "delivery_type": "capability_delivering",
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M43B"
       ],
@@ -983,7 +983,7 @@
       "proof_description": "build_directory_dataset filters out vendors where directory_category is other or empty. Enrichment prompt updated to enforce valid category from approved list. Vendors currently categorised as other flagged in admin panel. Public dataset export confirmed contains zero other category entries.",
       "proof_artifact": "runs/proofs/M69_category_cleanup.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M59"
       ],

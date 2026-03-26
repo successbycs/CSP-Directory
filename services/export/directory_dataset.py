@@ -73,6 +73,7 @@ def build_directory_dataset(
         rows = []
     if not rows and fallback_profiles:
         rows = [_profile_to_vendor_row(profile) for profile in fallback_profiles if profile.include_in_directory is True]
+    rows = [row for row in rows if (row.get("directory_category") or row.get("llm_directory_category") or "") != "other"]
     dataset = [_normalize_vendor_row(row) for row in rows]
     return sorted(dataset, key=lambda item: item["vendor_name"].lower())
 

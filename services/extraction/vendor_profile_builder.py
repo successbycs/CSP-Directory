@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from urllib.parse import urlparse
 
 from services.extraction.directory_relevance import evaluate_directory_relevance_decision
@@ -43,7 +44,7 @@ def build_vendor_profile(
         include_in_directory = False
         directory_reasoning.append("Rejected as editorial/noise content because the profile looks like docs, support, or blocked content.")
 
-    return VendorIntelligence(
+    profile = VendorIntelligence(
         vendor_name=vendor_name,
         website=website,
         source=vendor.get("source", intelligence.source),
@@ -95,6 +96,17 @@ def build_vendor_profile(
         directory_decision_source="auto",
         directory_reasoning=directory_reasoning,
     )
+    return enforce_lifecycle_stage_gate(profile)
+
+
+def enforce_lifecycle_stage_gate(profile: VendorIntelligence) -> VendorIntelligence:
+    """Exclude any vendor marked include_in_directory=True that has no lifecycle_stages."""
+    if profile.include_in_directory is True and not profile.lifecycle_stages:
+        updated_reasoning = list(profile.directory_reasoning) + [
+            "Excluded by lifecycle_stage_gate: include_in_directory requires non-empty lifecycle_stages."
+        ]
+        return replace(profile, include_in_directory=False, directory_reasoning=updated_reasoning)
+    return profile
 
 
 def _collect_source_urls(explored_pages: ExploredPages) -> list[str]:
