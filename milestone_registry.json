@@ -391,7 +391,7 @@
       "id": "M47",
       "title": "Discover \u2192 enrich \u2192 export: single entry point pipeline",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M46"
       ],
