@@ -44,6 +44,7 @@ def build_admin_app(
     exclude_vendor_fn: Callable[[str], dict[str, Any]] | None = None,
     rerun_vendor_enrichment_fn: Callable[[str], dict[str, Any]] | None = None,
     publish_directory_fn: Callable[[], dict[str, Any]] | None = None,
+    enrich_write_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
 ):
     """Return a small WSGI app exposing admin JSON endpoints and public capture intake."""
     list_candidates_fn = list_candidates_fn or list_candidate_records
@@ -57,6 +58,7 @@ def build_admin_app(
     exclude_vendor_fn = exclude_vendor_fn or admin_actions.exclude_vendor
     rerun_vendor_enrichment_fn = rerun_vendor_enrichment_fn or admin_actions.rerun_vendor_enrichment
     publish_directory_fn = publish_directory_fn or _run_publish_directory
+    enrich_write_fn = enrich_write_fn or _run_enrich_write
 
     def app(environ, start_response):
         path = environ.get("PATH_INFO", "")
@@ -99,6 +101,9 @@ def build_admin_app(
             return _action_response(start_response, rerun_vendor_enrichment_fn, payload)
         if method == "POST" and path == "/admin/publish":
             return _publish_response(start_response, publish_directory_fn)
+        if method == "POST" and path == "/admin/enrich-write":
+            payload = _parse_enrich_write_payload(environ)
+            return _enrich_write_response(start_response, enrich_write_fn, payload)
         if method == "POST" and path == "/admin/lead/follow-up":
             payload = _parse_action_payload(environ)
             return _lead_follow_up_response(start_response, update_lead_follow_up_fn, payload)
@@ -380,6 +385,118 @@ def _publish_response(start_response, publish_fn: Callable[[], dict[str, Any]]):
         logger.exception("Publish directory failed")
         return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
     return _json_response(start_response, result)
+
+
+def _parse_enrich_write_payload(environ) -> dict[str, Any]:
+    """Parse a JSON body from the request without coercing values to strings."""
+    content_length = environ.get("CONTENT_LENGTH", "0") or "0"
+    try:
+        body_length = int(content_length)
+    except ValueError:
+        body_length = 0
+    raw_body = environ["wsgi.input"].read(body_length) if body_length > 0 else b""
+    if not raw_body:
+        return {}
+    try:
+        payload = json.loads(raw_body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    return payload
+
+
+def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
+    """Instantiate VendorIntelligence from an n8n enrichment payload, normalise and upsert."""
+    from services.extraction.vendor_intel import VendorIntelligence
+
+    website = str(payload.get("website") or "").strip()
+    vendor_name = str(payload.get("vendor_name") or payload.get("name") or "").strip()
+
+    validation_errors: list[str] = []
+    if not website:
+        validation_errors.append("website is required")
+
+    if validation_errors:
+        return {"ok": False, "vendor": None, "fields_written": [], "validation_errors": validation_errors}
+
+    # Build kwargs for VendorIntelligence — pass through every recognised field
+    vi_kwargs: dict[str, Any] = {"website": website, "vendor_name": vendor_name}
+    _SCALAR_FIELDS = {
+        "source", "mission", "usp", "founded", "confidence",
+        "directory_fit", "directory_category", "ceo_name", "hq_address",
+        "company_hq", "contact_email", "contact_page_url", "demo_url",
+        "help_center_url", "support_url", "about_url", "team_url",
+        "developer_docs_url", "directory_decision_source",
+        "llm_directory_fit", "llm_directory_category",
+    }
+    _BOOL_FIELDS = {"free_trial", "soc2", "include_in_directory", "llm_include_in_directory"}
+    _LIST_FIELDS = {
+        "icp", "use_cases", "lifecycle_stages", "pricing", "compliance",
+        "integration_categories", "integrations", "support_signals",
+        "case_studies", "case_study_signals", "customers", "value_statements",
+        "source_urls", "evidence_urls", "phone_numbers", "contact_emails",
+        "directory_reasoning",
+    }
+    _DICT_LIST_FIELDS = {
+        "icp_buyer", "products", "leadership", "integration_taxonomy",
+        "external_enrichment", "case_study_details", "testimonials", "blog_posts",
+    }
+
+    for f in _SCALAR_FIELDS:
+        if f in payload:
+            vi_kwargs[f] = payload[f]
+    for f in _BOOL_FIELDS:
+        if f in payload:
+            vi_kwargs[f] = payload[f]
+    for f in _LIST_FIELDS:
+        if f in payload:
+            vi_kwargs[f] = payload[f]
+    for f in _DICT_LIST_FIELDS:
+        if f in payload:
+            vi_kwargs[f] = payload[f]
+
+    try:
+        intelligence = VendorIntelligence(**vi_kwargs)
+    except (TypeError, ValueError) as exc:
+        return {"ok": False, "vendor": website, "fields_written": [], "validation_errors": [str(exc)]}
+
+    fields_written = [f for f in payload if f not in {"website", "vendor_name", "name"}]
+
+    if supabase_client.is_configured():
+        try:
+            supabase_client.upsert_vendor_result(
+                {"source": str(payload.get("source") or "n8n_enrich")},
+                {"website": website, "vendor_name": vendor_name, "text": ""},
+                intelligence,
+            )
+        except Exception as exc:
+            return {
+                "ok": False,
+                "vendor": website,
+                "fields_written": fields_written,
+                "validation_errors": [f"upsert_failed: {exc}"],
+            }
+
+    return {"ok": True, "vendor": website, "fields_written": fields_written, "validation_errors": []}
+
+
+def _enrich_write_response(
+    start_response,
+    enrich_write_fn: Callable[[dict[str, Any]], dict[str, Any]],
+    payload: dict[str, Any],
+):
+    try:
+        result = enrich_write_fn(payload)
+    except Exception as error:  # pragma: no cover - defensive error surface
+        logger.exception("Enrich-write failed")
+        return _json_response(
+            start_response,
+            {"ok": False, "vendor": None, "fields_written": [], "validation_errors": [str(error)]},
+            status="500 Internal Server Error",
+        )
+    status = "200 OK" if result.get("ok") else "400 Bad Request"
+    return _json_response(start_response, result, status=status)
 
 
 def _static_response(path: str):
