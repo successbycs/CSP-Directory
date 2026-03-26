@@ -770,6 +770,226 @@
       "verify": [
         "python3 scripts/autonomous_audit.py"
       ]
+    },
+    {
+      "id": "M56",
+      "title": "Fix case_studies field: keywords to case_study_signals and case_study_details URLs",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "case_studies no longer stores detection keywords. Detection signals moved to internal case_study_signals field (not exported). case_study_details populated with {url, summary} objects where URLs are confirmed fetchable. DIRECTORY_DATASET_FIELDS updated to export case_study_details instead of case_studies.",
+      "proof_artifact": "runs/proofs/M56_case_studies_fix.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M57",
+      "title": "Fix integration categories: bounded extraction using INTEGRATION_BRAND_RULES canonical vocabulary",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "Integration categories extraction bounded to integration-relevant page sections. ToS and prose text no longer captured. INTEGRATION_BRAND_RULES used as canonical output vocabulary. At least 60% of vendors with previous non-empty integration data return at least one valid mapped integration.",
+      "proof_artifact": "runs/proofs/M57_integration_fix.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M58",
+      "title": "Fix pricing column type mismatch: Supabase TEXT to TEXT array, align Python and export pipeline",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "Supabase pricing column migrated from TEXT to TEXT[]. VendorIntelligence.pricing type and supabase_client upsert mapping confirmed consistent. directory_dataset.py _list_value confirmed to handle array correctly. Existing pricing data preserved through migration.",
+      "proof_artifact": "runs/proofs/M58_pricing_type_fix.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M59",
+      "title": "Three-tier field taxonomy and auto_ to llm_ atomic migration",
+      "delivery_type": "capability_delivering",
+      "executor": "claude_code",
+      "proof_description": "Architecture doc written: scraped_ (HTML-extracted), llm_ (LLM-inferred), operator_ (no prefix, operator-set). auto_directory_fit, auto_directory_category, auto_include_in_directory renamed to llm_ equivalents via dual-write migration. All 20+ touch points updated atomically across vendor_intel.py, supabase_client.py, vendor_review_dataset.py, vendor_profile_builder.py, enrich_vendors_deterministic.py, apply_schema_migration.py, both test files, both SQL schema files, admin.js, vendor_schema.md. auto_ columns dropped after verification.",
+      "proof_artifact": "runs/proofs/M59_llm_rename.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M58"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M60",
+      "title": "About page crawl: extract ceo_name, ceo_linkedin, company_address, leadership",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "/about added to site_explorer crawl targets. LLM_RESULT_SCHEMA extended with ceo_name, ceo_linkedin, company_address, leadership array {name, title, linkedin}. Supabase columns added. At least 3 vendors with confirmed about pages show populated leadership fields after enrichment re-run.",
+      "proof_artifact": "runs/proofs/M60_about_page_crawl.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M61",
+      "title": "New fields schema migration: youtube_channel_url, funding_stage, total_funding, use_case_details",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "VendorIntelligence dataclass extended with youtube_channel_url, funding_stage, total_funding, use_case_details. LLM_RESULT_SCHEMA updated. Supabase migration applied. supabase_client.py upsert mapping updated. use_case_details kept internal until M67.",
+      "proof_artifact": "runs/proofs/M61_new_fields_schema.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M62",
+      "title": "YouTube channel URL extraction: webcrawl then validate then Google search fallback",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "Enrichment pipeline extracts youtube_channel_url by: (1) crawling about/contact pages for YouTube links, (2) validating URL returns HTTP 200, (3) if not found or invalid, Google search query site:youtube.com channel vendor_name. At least 5 vendors with known YouTube channels show populated youtube_channel_url after enrichment re-run.",
+      "proof_artifact": "runs/proofs/M62_youtube_extraction.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M61"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M63",
+      "title": "Extend external_enrichment provenance model: add field and url keys per record",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "external_enrichment JSONB record schema extended with field and url keys alongside existing source/value/retrieved_at. normalize_external_enrichment_records and summarize_external_enrichment updated. Replaces need for standalone pricing_source and pricing_reference_url columns. Existing records preserved.",
+      "proof_artifact": "runs/proofs/M63_provenance_model.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M64",
+      "title": "n8n write contract: Python validation endpoint for structured JSONB writes from n8n",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "POST /admin/enrich-write endpoint added to admin_api.py. Accepts n8n enrichment payload, instantiates VendorIntelligence, runs __post_init__ normalization, then calls supabase_client upsert. Returns ok, vendor, fields_written, validation_errors. n8n workflows must route structured JSONB field writes through this endpoint. Tested with a sample icp_buyer payload.",
+      "proof_artifact": "runs/proofs/M64_n8n_write_contract.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M65",
+      "title": "Pricing n8n workflow: content-quality gate, nullable schema, llm_inferred source flag",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "n8n workflow for pricing enrichment. Stage 1: crawl /pricing page with content-quality gate (min 200 visible-text words). Stage 2 fallback: LLM prompt with nullable tier fields, additionalProperties false, no URL citation required. Output: pricing array, has_public_pricing_page bool, free_trial bool, pricing_source scraped or llm_inferred. Writes via M64 validation endpoint. Tested on 10 vendors (5 with known public pricing, 5 without). LLM-inferred pricing shown on public site with llm_inferred label.",
+      "proof_artifact": "runs/proofs/M65_pricing_workflow.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M58",
+        "M63",
+        "M64"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M66",
+      "title": "Tracxn teaser enrichment: founded, hq_address, funding_stage via teaser page scrape",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "Enrichment pipeline crawls tracxn.com/d/companies/{slug}/ teaser for each vendor. Extracts founded, hq_address, funding_stage, total_funding. Safe-upsert mode: only writes to null or empty fields, never overwrites operator-set values. Canary check on one known-good Tracxn URL before each batch; abort if canary fails. Miss-rate logged per run.",
+      "proof_artifact": "runs/proofs/M66_tracxn_enrichment.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M61"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M67",
+      "title": "use_case_details extraction: website crawl to LLM structured objects with label, url, summary",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "Enrichment pipeline extracts use_case_details as array of {label, url, summary max 200 words} from vendor website crawl. use_case_details added to DIRECTORY_DATASET_FIELDS for public export. use_cases flat labels retained for filtering. At least 5 vendors show populated use_case_details with valid URLs after enrichment re-run.",
+      "proof_artifact": "runs/proofs/M67_use_case_details.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M61"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M68",
+      "title": "Expand INTEGRATION_BRAND_RULES from n8n node catalog discovery",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "n8n-nodes-base catalog parsed for Name, Description, Category. New entries identified that are not already in INTEGRATION_BRAND_RULES added. Re-run integration extraction on 5 vendors previously showing empty or garbage integrations to verify improvement.",
+      "proof_artifact": "runs/proofs/M68_integration_rules_expansion.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M57"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M69",
+      "title": "Exclude directory_category other from public export and enforce category quality",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "proof_description": "build_directory_dataset filters out vendors where directory_category is other or empty. Enrichment prompt updated to enforce valid category from approved list. Vendors currently categorised as other flagged in admin panel. Public dataset export confirmed contains zero other category entries.",
+      "proof_artifact": "runs/proofs/M69_category_cleanup.json",
+      "interaction_targets": [],
+      "status": "not_started",
+      "dependencies": [
+        "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
     }
   ]
 }
