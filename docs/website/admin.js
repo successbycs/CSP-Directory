@@ -521,12 +521,12 @@ function collectProductIntegrationValues(products, fieldName) {
 
 function formatVendorDecision(vendor) {
   const reasoning = Array.isArray(vendor.directory_reasoning) ? vendor.directory_reasoning.slice(0, 2).join(" | ") : "";
-  const autoFit = vendor.auto_directory_fit || vendor.directory_fit || "";
-  const autoCategory = vendor.auto_directory_category || vendor.directory_category || "";
+  const autoFit = vendor.llm_directory_fit || vendor.directory_fit || "";
+  const autoCategory = vendor.llm_directory_category || vendor.directory_category || "";
   const autoInclude =
-    vendor.auto_include_in_directory === true
+    vendor.llm_include_in_directory === true
       ? "true"
-      : vendor.auto_include_in_directory === false
+      : vendor.llm_include_in_directory === false
         ? "false"
         : "";
   return `

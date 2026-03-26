@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.cs_vendors (
   source TEXT,
   mission TEXT,
   usp TEXT,
-  pricing TEXT,
+  pricing TEXT[],
   icp_buyer JSONB DEFAULT '[]'::jsonb,
   free_trial BOOLEAN,
   soc2 BOOLEAN,
@@ -36,15 +36,16 @@ CREATE TABLE IF NOT EXISTS public.cs_vendors (
   use_cases TEXT[] DEFAULT '{}'::text[],
   lifecycle_stages TEXT[] DEFAULT '{}'::text[],
   case_study_details JSONB DEFAULT '[]'::jsonb,
+  case_study_signals TEXT[] DEFAULT '{}'::text[],
   testimonials JSONB DEFAULT '[]'::jsonb,
   blog_posts JSONB DEFAULT '[]'::jsonb,
   source_urls TEXT[] DEFAULT '{}'::text[],
   directory_fit TEXT,
   directory_category TEXT,
   include_in_directory BOOLEAN DEFAULT FALSE,
-  auto_directory_fit TEXT,
-  auto_directory_category TEXT,
-  auto_include_in_directory BOOLEAN,
+  llm_directory_fit TEXT,
+  llm_directory_category TEXT,
+  llm_include_in_directory BOOLEAN,
   directory_decision_source TEXT,
   directory_reasoning TEXT[] DEFAULT '{}'::text[],
   raw_description TEXT,
@@ -56,22 +57,23 @@ CREATE TABLE IF NOT EXISTS public.cs_vendors (
 
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS icp TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS case_studies TEXT[] DEFAULT '{}'::text[];
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS case_study_signals TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS customers TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS value_statements TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS evidence_urls TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS directory_fit TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS directory_category TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS include_in_directory BOOLEAN DEFAULT FALSE;
-ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS auto_directory_fit TEXT;
-ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS auto_directory_category TEXT;
-ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS auto_include_in_directory BOOLEAN;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS llm_directory_fit TEXT;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS llm_directory_category TEXT;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS llm_include_in_directory BOOLEAN;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS directory_decision_source TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS directory_reasoning TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS raw_description TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS source TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS mission TEXT;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS usp TEXT;
-ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS pricing TEXT;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS pricing TEXT[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS icp_buyer JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS free_trial BOOLEAN;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS soc2 BOOLEAN;

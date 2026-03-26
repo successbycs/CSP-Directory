@@ -77,6 +77,7 @@ def build_vendor_profile(
         external_enrichment=intelligence.external_enrichment,
         support_signals=intelligence.support_signals,
         case_studies=intelligence.case_studies,
+        case_study_signals=intelligence.case_study_signals,
         case_study_details=intelligence.case_study_details,
         testimonials=intelligence.testimonials,
         blog_posts=intelligence.blog_posts,
@@ -88,9 +89,9 @@ def build_vendor_profile(
         directory_fit=directory_fit,
         directory_category=directory_category,
         include_in_directory=include_in_directory,
-        auto_directory_fit=auto_decision.directory_fit,
-        auto_directory_category=auto_decision.directory_category,
-        auto_include_in_directory=auto_decision.include_in_directory,
+        llm_directory_fit=auto_decision.directory_fit,
+        llm_directory_category=auto_decision.directory_category,
+        llm_include_in_directory=auto_decision.include_in_directory,
         directory_decision_source="auto",
         directory_reasoning=directory_reasoning,
     )
@@ -131,7 +132,7 @@ def _looks_like_invalid_directory_vendor(
             intelligence.mission,
             intelligence.usp,
             *intelligence.value_statements,
-            *intelligence.case_studies,
+            *intelligence.case_study_signals,
         ]
     ).lower()
     domain = urlparse(website).netloc.lower()
@@ -142,7 +143,7 @@ def _looks_like_invalid_directory_vendor(
         return True
     if _has_noise_subdomain(domain):
         return True
-    if not intelligence.lifecycle_stages and not intelligence.case_studies and not intelligence.icp and not any(
+    if not intelligence.lifecycle_stages and not intelligence.case_study_signals and not intelligence.icp and not any(
         hint in lowered_signal_text for hint in ("customer success", "renewal", "onboarding", "adoption", "churn")
     ):
         return True

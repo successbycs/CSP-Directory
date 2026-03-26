@@ -33,9 +33,9 @@ from services.persistence import supabase_client  # noqa: E402
 # Each entry: (column_name, sql_type, nullable)
 REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
     # Directory classification columns
-    ("auto_directory_fit", "text", True),
-    ("auto_directory_category", "text", True),
-    ("auto_include_in_directory", "boolean", True),
+    ("llm_directory_fit", "text", True),
+    ("llm_directory_category", "text", True),
+    ("llm_include_in_directory", "boolean", True),
     ("directory_decision_source", "text", True),
     ("directory_reasoning", "text[]", True),
     # Vendor profile columns

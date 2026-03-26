@@ -32,9 +32,9 @@ The live database schema is `supabase/core_persistence_schema.sql`. That file mu
 | `directory_category` | text | Primary category in the directory | LLM classification | Medium |
 | `directory_reasoning` | text[] | Reasoning for directory fit decision | LLM classification | Medium |
 | `include_in_directory` | boolean | Whether to show in public directory | Operator review or auto | — |
-| `auto_directory_fit` | text | Auto-assessed fit (before operator review) | LLM classification | Medium |
-| `auto_directory_category` | text | Auto-assessed category | LLM classification | Medium |
-| `auto_include_in_directory` | boolean | Auto-inclusion flag | LLM classification | Medium |
+| `llm_directory_fit` | text | LLM-inferred fit (before operator review) | LLM classification | Medium |
+| `llm_directory_category` | text | LLM-inferred category | LLM classification | Medium |
+| `llm_include_in_directory` | boolean | LLM-recommended inclusion flag | LLM classification | Medium |
 | `directory_decision_source` | text | Who made the include/exclude decision | System | — |
 
 ---

@@ -57,9 +57,9 @@ def test_build_vendor_profile_merges_source_and_evidence_urls():
     assert result.directory_fit == "medium"
     assert result.directory_category == "cs_core"
     assert result.include_in_directory is True
-    assert result.auto_directory_fit == "medium"
-    assert result.auto_directory_category == "cs_core"
-    assert result.auto_include_in_directory is True
+    assert result.llm_directory_fit == "medium"
+    assert result.llm_directory_category == "cs_core"
+    assert result.llm_include_in_directory is True
     assert result.directory_decision_source == "auto"
     assert result.directory_reasoning
 
@@ -135,9 +135,9 @@ def test_build_vendor_profile_excludes_article_like_or_support_subdomain_vendors
     assert result.directory_fit == "low"
     assert result.directory_category == "infra"
     assert result.include_in_directory is False
-    assert result.auto_directory_fit == "medium"
-    assert result.auto_directory_category == "cs_adjacent"
-    assert result.auto_include_in_directory is True
+    assert result.llm_directory_fit == "medium"
+    assert result.llm_directory_category == "cs_adjacent"
+    assert result.llm_include_in_directory is True
     assert any("editorial/noise content" in reason.lower() for reason in result.directory_reasoning)
 
 

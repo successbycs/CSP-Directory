@@ -242,9 +242,9 @@ def enrich_vendor(vendor: dict) -> dict | None:
         "directory_fit": decision.directory_fit,
         "directory_category": decision.directory_category,
         "include_in_directory": decision.include_in_directory,
-        "auto_directory_fit": decision.directory_fit,
-        "auto_directory_category": decision.directory_category,
-        "auto_include_in_directory": decision.include_in_directory,
+        "llm_directory_fit": decision.directory_fit,
+        "llm_directory_category": decision.directory_category,
+        "llm_include_in_directory": decision.include_in_directory,
         "directory_decision_source": "deterministic_v2",
         "directory_reasoning": decision.reasoning,
     }

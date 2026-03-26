@@ -415,6 +415,7 @@ class VendorIntelligence:
     external_enrichment: list[dict[str, Any]] = field(default_factory=list)
     support_signals: list[str] = field(default_factory=list)
     case_studies: list[str] = field(default_factory=list)
+    case_study_signals: list[str] = field(default_factory=list)
     case_study_details: list[dict[str, Any]] = field(default_factory=list)
     testimonials: list[dict[str, Any]] = field(default_factory=list)
     blog_posts: list[dict[str, Any]] = field(default_factory=list)
@@ -426,9 +427,9 @@ class VendorIntelligence:
     directory_fit: str = ""
     directory_category: str = ""
     include_in_directory: bool | None = None
-    auto_directory_fit: str = ""
-    auto_directory_category: str = ""
-    auto_include_in_directory: bool | None = None
+    llm_directory_fit: str = ""
+    llm_directory_category: str = ""
+    llm_include_in_directory: bool | None = None
     directory_decision_source: str = ""
     directory_reasoning: list[str] = field(default_factory=list)
 
@@ -501,8 +502,8 @@ class VendorIntelligence:
             "confidence",
             "directory_fit",
             "directory_category",
-            "auto_directory_fit",
-            "auto_directory_category",
+            "llm_directory_fit",
+            "llm_directory_category",
             "directory_decision_source",
             "ceo_name",
             "hq_address",
@@ -530,6 +531,7 @@ class VendorIntelligence:
             "support_signals",
             "compliance",
             "case_studies",
+            "case_study_signals",
             "customers",
             "value_statements",
             "source_urls",
@@ -577,7 +579,7 @@ class VendorIntelligence:
         if not all(isinstance(item, dict) for item in self.blog_posts):
             raise TypeError("All items in blog_posts must be objects")
 
-        for field_name in ["free_trial", "soc2", "include_in_directory", "auto_include_in_directory"]:
+        for field_name in ["free_trial", "soc2", "include_in_directory", "llm_include_in_directory"]:
             value = getattr(self, field_name)
             if value is not None and not isinstance(value, bool):
                 raise TypeError(f"{field_name} must be a bool or None")
@@ -1133,7 +1135,7 @@ def extract_vendor_intelligence(
     use_cases = _extract_use_cases(combined_text_lower)
     lifecycle_stages = _extract_lifecycle_stages(combined_text_lower)
     value_statements = _extract_value_statements(combined_text_lower)
-    case_studies = _extract_case_studies(
+    case_study_signals = _extract_case_study_signals(
         " ".join(
             part
             for part in (
@@ -1202,7 +1204,8 @@ def extract_vendor_intelligence(
         support_signals=_extract_support_signals(
             f"{help_text} {support_text} {contact_text} {demo_text}".strip().lower()
         ),
-        case_studies=case_studies,
+        case_studies=[],
+        case_study_signals=case_study_signals,
         case_study_details=case_study_details,
         testimonials=testimonials,
         blog_posts=blog_posts,
@@ -1213,7 +1216,7 @@ def extract_vendor_intelligence(
             use_cases=use_cases,
             lifecycle_stages=lifecycle_stages,
             value_statements=value_statements,
-            case_studies=case_studies,
+            case_study_signals=case_study_signals,
             testimonials=testimonials,
             blog_posts=blog_posts,
             pricing=pricing,
@@ -1291,18 +1294,24 @@ def _extract_pricing(text: str) -> list[str]:
     return pricing
 
 
-def _extract_case_studies(text: str) -> list[str]:
-    """Return case-study style proof signals from vendor text."""
-    case_studies: list[str] = []
+def _extract_case_study_signals(text: str) -> list[str]:
+    """Return case-study detection keyword signals from vendor text.
+
+    These are keyword signals (e.g., "case study", "customer story") that indicate
+    the presence of case-study-type content. They are stored in case_study_signals,
+    NOT in case_studies. The case_studies field is reserved for confirmed case study
+    URLs or summaries from LLM extraction.
+    """
+    signals: list[str] = []
 
     for keywords, label in CASE_STUDY_RULES:
-        if _contains_any(text, keywords) and label not in case_studies:
-            case_studies.append(label)
+        if _contains_any(text, keywords) and label not in signals:
+            signals.append(label)
 
-    if re.search(r"how [a-z0-9&.-]+ uses", text) and "how customers use the product" not in case_studies:
-        case_studies.append("how customers use the product")
+    if re.search(r"how [a-z0-9&.-]+ uses", text) and "how customers use the product" not in signals:
+        signals.append("how customers use the product")
 
-    return case_studies
+    return signals
 
 
 def _extract_testimonials(text: str, *, source_url: str) -> list[dict[str, Any]]:
@@ -1857,7 +1866,7 @@ def _determine_confidence(
     use_cases: list[str],
     lifecycle_stages: list[str],
     value_statements: list[str],
-    case_studies: list[str],
+    case_study_signals: list[str],
     testimonials: list[dict[str, Any]],
     blog_posts: list[dict[str, Any]],
     pricing: list[str],
@@ -1872,7 +1881,7 @@ def _determine_confidence(
         + len(use_cases)
         + len(icp)
         + len(value_statements)
-        + len(case_studies)
+        + len(case_study_signals)
         + len(testimonials)
         + min(len(blog_posts), 3)
         + len(pricing)

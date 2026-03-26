@@ -124,9 +124,9 @@ def _normalize_vendor_row(row: dict[str, Any]) -> dict[str, Any]:
         "directory_category": _string_value(row.get("directory_category")),
         "directory_fit": _string_value(row.get("directory_fit")),
         "include_in_directory": _bool_value(row.get("include_in_directory")),
-        "auto_directory_category": _string_value(row.get("auto_directory_category")),
-        "auto_directory_fit": _string_value(row.get("auto_directory_fit")),
-        "auto_include_in_directory": _bool_value(row.get("auto_include_in_directory")),
+        "llm_directory_category": _string_value(row.get("llm_directory_category")),
+        "llm_directory_fit": _string_value(row.get("llm_directory_fit")),
+        "llm_include_in_directory": _bool_value(row.get("llm_include_in_directory")),
         "directory_decision_source": _string_value(row.get("directory_decision_source")) or "auto",
         "directory_reasoning": _list_value(row.get("directory_reasoning")),
         "confidence": _string_value(row.get("confidence")),
@@ -159,9 +159,9 @@ def _profile_to_vendor_row(profile: VendorIntelligence) -> dict[str, Any]:
         "directory_category": profile.directory_category,
         "directory_fit": profile.directory_fit,
         "include_in_directory": profile.include_in_directory,
-        "auto_directory_category": profile.auto_directory_category,
-        "auto_directory_fit": profile.auto_directory_fit,
-        "auto_include_in_directory": profile.auto_include_in_directory,
+        "llm_directory_category": profile.llm_directory_category,
+        "llm_directory_fit": profile.llm_directory_fit,
+        "llm_include_in_directory": profile.llm_include_in_directory,
         "directory_decision_source": profile.directory_decision_source,
         "directory_reasoning": profile.directory_reasoning,
         "confidence": profile.confidence,
@@ -472,9 +472,9 @@ def _render_vendor_review_html(dataset: list[dict[str, Any]]) -> str:
     }}
 
     function formatAutoDecision(vendor) {{
-      const fit = vendor.auto_directory_fit || vendor.directory_fit || "unscored";
-      const category = vendor.auto_directory_category || vendor.directory_category || "uncategorized";
-      const include = vendor.auto_include_in_directory;
+      const fit = vendor.llm_directory_fit || vendor.directory_fit || "unscored";
+      const category = vendor.llm_directory_category || vendor.directory_category || "uncategorized";
+      const include = vendor.llm_include_in_directory;
       return `${fit} / ${category} / ${include === true ? "true" : include === false ? "false" : ""}`;
     }}
 

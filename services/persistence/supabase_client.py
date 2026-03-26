@@ -58,6 +58,7 @@ VENDOR_PROFILE_SELECT = ",".join(
         "external_enrichment",
         "support_signals",
         "case_studies",
+        "case_study_signals",
         "case_study_details",
         "testimonials",
         "blog_posts",
@@ -69,9 +70,9 @@ VENDOR_PROFILE_SELECT = ",".join(
         "directory_fit",
         "directory_category",
         "include_in_directory",
-        "auto_directory_fit",
-        "auto_directory_category",
-        "auto_include_in_directory",
+        "llm_directory_fit",
+        "llm_directory_category",
+        "llm_include_in_directory",
         "directory_decision_source",
         "directory_reasoning",
         "last_updated",
@@ -116,6 +117,7 @@ VENDOR_WRITE_COLUMNS = (
     "use_cases",
     "lifecycle_stages",
     "case_studies",
+    "case_study_signals",
     "case_study_details",
     "testimonials",
     "blog_posts",
@@ -126,9 +128,9 @@ VENDOR_WRITE_COLUMNS = (
     "directory_fit",
     "directory_category",
     "include_in_directory",
-    "auto_directory_fit",
-    "auto_directory_category",
-    "auto_include_in_directory",
+    "llm_directory_fit",
+    "llm_directory_category",
+    "llm_include_in_directory",
     "directory_decision_source",
     "directory_reasoning",
     "raw_description",
@@ -441,7 +443,7 @@ def build_vendor_row(
         "usp": intelligence.usp or (intelligence.value_statements[0] if intelligence.value_statements else None),
         "icp": intelligence.icp or [],
         "icp_buyer": intelligence.icp_buyer or [],
-        "pricing": "|".join(intelligence.pricing) if intelligence.pricing else None,
+        "pricing": intelligence.pricing if intelligence.pricing else None,
         "free_trial": intelligence.free_trial if intelligence.free_trial is not None else _detect_text_boolean(
             raw_description or "",
             ["free trial"],
@@ -485,6 +487,7 @@ def build_vendor_row(
         "use_cases": intelligence.use_cases,
         "lifecycle_stages": intelligence.lifecycle_stages,
         "case_studies": intelligence.case_studies or [],
+        "case_study_signals": intelligence.case_study_signals or [],
         "case_study_details": intelligence.case_study_details or [],
         "testimonials": intelligence.testimonials or [],
         "blog_posts": intelligence.blog_posts or [],
@@ -495,11 +498,11 @@ def build_vendor_row(
         "directory_fit": intelligence.directory_fit or None,
         "directory_category": intelligence.directory_category or None,
         "include_in_directory": intelligence.include_in_directory,
-        "auto_directory_fit": intelligence.auto_directory_fit or intelligence.directory_fit or None,
-        "auto_directory_category": intelligence.auto_directory_category or intelligence.directory_category or None,
-        "auto_include_in_directory": (
-            intelligence.auto_include_in_directory
-            if intelligence.auto_include_in_directory is not None
+        "llm_directory_fit": intelligence.llm_directory_fit or intelligence.directory_fit or None,
+        "llm_directory_category": intelligence.llm_directory_category or intelligence.directory_category or None,
+        "llm_include_in_directory": (
+            intelligence.llm_include_in_directory
+            if intelligence.llm_include_in_directory is not None
             else intelligence.include_in_directory
         ),
         "directory_decision_source": intelligence.directory_decision_source or "auto",
