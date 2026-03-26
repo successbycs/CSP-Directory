@@ -334,6 +334,7 @@ def test_upsert_vendor_result_normalizes_richer_m18_fields():
         {
             "name": "Jane Doe",
             "title": "CEO",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         }
     ]

@@ -440,6 +440,11 @@ class VendorIntelligence:
     llm_include_in_directory: bool | None = None
     directory_decision_source: str = ""
     directory_reasoning: list[str] = field(default_factory=list)
+    # M61: new enrichment fields
+    youtube_channel_url: str = field(default="")
+    funding_stage: str = field(default="")
+    total_funding: str = field(default="")
+    use_case_details: list[dict] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Normalize structured buyer-persona enrichment into a stable list-of-dicts shape."""
@@ -492,6 +497,10 @@ class VendorIntelligence:
             self.compliance = ["SOC 2"]
         if self.compliance and self.soc2 is None:
             self.soc2 = "SOC 2" in self.compliance
+        self.youtube_channel_url = normalize_website_url(self.youtube_channel_url)
+        self.funding_stage = self.funding_stage.strip()
+        self.total_funding = self.total_funding.strip()
+        self.use_case_details = _normalize_use_case_details(self.use_case_details)
 
     def validate(self) -> None:
         """Validate the schema structure and types.
@@ -516,6 +525,9 @@ class VendorIntelligence:
             "directory_decision_source",
             "ceo_name",
             "ceo_linkedin",
+            "youtube_channel_url",
+            "funding_stage",
+            "total_funding",
             "hq_address",
             "company_hq",
             "contact_email",
@@ -588,6 +600,10 @@ class VendorIntelligence:
             raise TypeError("blog_posts must be a list")
         if not all(isinstance(item, dict) for item in self.blog_posts):
             raise TypeError("All items in blog_posts must be objects")
+        if not isinstance(self.use_case_details, list):
+            raise TypeError("use_case_details must be a list")
+        if not all(isinstance(item, dict) for item in self.use_case_details):
+            raise TypeError("All items in use_case_details must be objects")
 
         for field_name in ["free_trial", "soc2", "include_in_directory", "llm_include_in_directory"]:
             value = getattr(self, field_name)
@@ -1239,6 +1255,8 @@ def extract_vendor_intelligence(
         ),
         source_urls=all_evidence_urls,
         evidence_urls=all_evidence_urls,
+        youtube_channel_url=_extract_youtube_channel_url(combined_text),
+        funding_stage=_extract_funding_stage(combined_text),
     )
 
 
@@ -1596,6 +1614,79 @@ def _extract_ceo_name(leadership: list[dict[str, Any]], text: str = "") -> str:
     if match:
         return match.group(1).strip()
     return ""
+
+
+FUNDING_STAGE_PATTERNS = [
+    (["pre-seed", "pre seed"], "pre-seed"),
+    (["seed round", "seed funding", "seed stage", "seed"], "seed"),
+    (["series a"], "Series A"),
+    (["series b"], "Series B"),
+    (["series c"], "Series C"),
+    (["series d"], "Series D"),
+    (["series e"], "Series E"),
+    (["ipo", "publicly traded", "nasdaq", "nyse", "listed on"], "public"),
+    (["bootstrapped", "self-funded", "profitable"], "bootstrapped"),
+]
+
+YOUTUBE_CHANNEL_PATTERNS = [
+    re.compile(r"https?://(?:www\.)?youtube\.com/channel/([A-Za-z0-9_\-]+)"),
+    re.compile(r"https?://(?:www\.)?youtube\.com/c/([A-Za-z0-9_\-]+)"),
+    re.compile(r"https?://(?:www\.)?youtube\.com/@([A-Za-z0-9_\-]+)"),
+]
+
+
+def _extract_youtube_channel_url(text: str) -> str:
+    """Return the first YouTube channel URL found in the supplied text."""
+    if not text:
+        return ""
+    for pattern in YOUTUBE_CHANNEL_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            return match.group(0).rstrip("/")
+    return ""
+
+
+def _extract_funding_stage(text: str) -> str:
+    """Return a canonical funding stage label detected from vendor text."""
+    lowered = text.lower()
+    for keywords, label in FUNDING_STAGE_PATTERNS:
+        if _contains_any(lowered, keywords):
+            return label
+    return ""
+
+
+def _normalize_use_case_details(value: object) -> list[dict]:
+    """Return normalized use_case_details records."""
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned:
+            return []
+        try:
+            parsed = json.loads(cleaned)
+        except json.JSONDecodeError:
+            return []
+        return _normalize_use_case_details(parsed)
+
+    if not isinstance(value, list):
+        return []
+
+    normalized: list[dict] = []
+    seen_labels: set[str] = set()
+    for raw_item in value:
+        if not isinstance(raw_item, dict):
+            continue
+        label = str(raw_item.get("label") or "").strip()
+        if not label or label.lower() in seen_labels:
+            continue
+        normalized.append(
+            {
+                "label": label,
+                "url": normalize_website_url(raw_item.get("url")),
+                "summary": str(raw_item.get("summary") or "")[:200].strip(),
+            }
+        )
+        seen_labels.add(label.lower())
+    return normalized
 
 
 def _normalize_linkedin_url(value: object) -> str:

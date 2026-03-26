@@ -868,13 +868,23 @@
       "proof_description": "VendorIntelligence dataclass extended with youtube_channel_url, funding_stage, total_funding, use_case_details. LLM_RESULT_SCHEMA updated. Supabase migration applied. supabase_client.py upsert mapping updated. use_case_details kept internal until M67.",
       "proof_artifact": "runs/proofs/M61_new_fields_schema.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
+      "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
         "M59"
       ],
       "verify": [
-        "python3 scripts/autonomous_audit.py"
-      ]
+        "python3 -m pytest tests/test_m61_new_fields.py -v"
+      ],
+      "evidence": {
+        "changed_files": [
+          "services/extraction/vendor_intel.py",
+          "services/persistence/supabase_client.py",
+          "supabase/pending_migration.sql",
+          "tests/test_m61_new_fields.py"
+        ],
+        "proof_summary": "4 new fields added to VendorIntelligence: youtube_channel_url (str), funding_stage (str), total_funding (str), use_case_details (list[dict]). _extract_youtube_channel_url, _extract_funding_stage, _normalize_use_case_details helpers added. Supabase migration SQL added. build_vendor_row() updated. 32 tests pass."
+      }
     },
     {
       "id": "M62",
