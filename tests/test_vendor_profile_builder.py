@@ -84,7 +84,8 @@ def test_build_vendor_profile_falls_back_to_discovery_data_when_homepage_fields_
     assert result.website == "https://fallback.example.com"
     assert result.source == "google_search"
     assert result.directory_fit == "medium"
-    assert result.include_in_directory is True
+    # M45: no lifecycle_stages → lifecycle_stage_gate excludes vendor
+    assert result.include_in_directory is False
 
 
 def test_build_vendor_profile_canonicalizes_vendor_website_identity():
