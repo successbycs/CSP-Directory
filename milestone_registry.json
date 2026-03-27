@@ -605,7 +605,7 @@
       "id": "M-OPS1",
       "title": "Live pipeline log panel in admin dashboard",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M47"
       ],
@@ -624,7 +624,8 @@
       "verify": [
         "python3 -m pytest tests/test_admin_api.py -v -k log",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "completed": "2026-03-27"
     },
     {
       "id": "M53",

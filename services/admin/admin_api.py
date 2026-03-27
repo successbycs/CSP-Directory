@@ -99,6 +99,8 @@ def build_admin_app(
         if method == "POST" and path == "/admin/vendor/rerun-enrichment":
             payload = _parse_action_payload(environ)
             return _action_response(start_response, rerun_vendor_enrichment_fn, payload)
+        if method == "GET" and path == "/admin/pipeline-log":
+            return _pipeline_log_response(start_response)
         if method == "POST" and path == "/admin/publish":
             return _publish_response(start_response, publish_directory_fn)
         if method == "POST" and path == "/admin/enrich-write":
@@ -369,13 +371,60 @@ def _lead_follow_up_response(
 
 
 def _run_publish_directory() -> dict[str, Any]:
-    """Call export_directory_dataset() and return vendor count and output path."""
+    """Export directory_dataset.json and optionally push to GitHub."""
+    import os
+
     dataset = directory_dataset_export.export_directory_dataset()
     output_path = directory_dataset_export.DEFAULT_DIRECTORY_DATASET_PATH
     # Keep the static site dataset in sync so a git push deploys updated data
     web_data_path = PROJECT_ROOT / "docs" / "website" / "data" / "directory_dataset.json"
     directory_dataset_export.write_directory_dataset(dataset, web_data_path)
-    return {"ok": True, "vendor_count": len(dataset), "output_path": str(output_path)}
+
+    result: dict[str, Any] = {"ok": True, "vendor_count": len(dataset), "output_path": str(output_path)}
+
+    if os.environ.get("GITHUB_PUBLISH", "").lower() == "true":
+        try:
+            from scripts.publish_to_github import publish_to_github  # noqa: PLC0415
+            gh_result = publish_to_github(local_file=web_data_path)
+            result["github"] = gh_result
+            logger.info("GitHub publish: %s", gh_result)
+        except Exception as exc:
+            logger.warning("GitHub publish failed (non-fatal): %s", exc)
+            result["github"] = {"ok": False, "error": str(exc)}
+
+    return result
+
+
+RUN_HISTORY_PATH = PROJECT_ROOT / "runs" / "run_history.json"
+_PIPELINE_LOG_LIMIT = 50
+
+
+def _read_pipeline_log(limit: int = _PIPELINE_LOG_LIMIT) -> list[dict[str, Any]]:
+    """Return the last `limit` entries from runs/run_history.json as structured log lines."""
+    if not RUN_HISTORY_PATH.exists():
+        return []
+    try:
+        raw: list[dict[str, Any]] = json.loads(RUN_HISTORY_PATH.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    entries = raw[-limit:] if len(raw) > limit else raw
+    return [
+        {
+            "timestamp": e.get("timestamp", ""),
+            "phase": e.get("phase", ""),
+            "milestone": e.get("milestone", ""),
+            "action": e.get("action", ""),
+            "message": e.get("note", e.get("command", "")),
+            "success": e.get("success"),
+            "event_type": e.get("event_type", ""),
+        }
+        for e in reversed(entries)  # newest first
+    ]
+
+
+def _pipeline_log_response(start_response):
+    entries = _read_pipeline_log()
+    return _json_response(start_response, {"ok": True, "entries": entries, "count": len(entries)})
 
 
 def _publish_response(start_response, publish_fn: Callable[[], dict[str, Any]]):

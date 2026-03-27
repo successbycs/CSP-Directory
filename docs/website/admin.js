@@ -742,3 +742,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// ---- Pipeline Log Panel (M-OPS1) ----
+let _logPollInterval = null;
+
+async function refreshPipelineLog() {
+  const container = document.getElementById('pipeline-log-entries');
+  const status    = document.getElementById('log-refresh-status');
+  if (!container) return;
+  try {
+    const base = (window.state && window.state.apiBase) || API_FALLBACK_BASE;
+    const res  = await fetch(`${base}/admin/pipeline-log`);
+    const data = await res.json();
+    if (!data.ok || !Array.isArray(data.entries)) return;
+    container.innerHTML = data.entries.map(entry => {
+      const ts       = entry.timestamp ? entry.timestamp.substring(0, 19).replace('T', ' ') : '';
+      const phase    = entry.phase    ? `<span style="color:#58a6ff">[${escHtml(entry.phase)}]</span> ` : '';
+      const ms       = entry.milestone ? `<span style="color:#d2a8ff">${escHtml(entry.milestone)}</span> ` : '';
+      const action   = entry.action   ? `<span style="color:#79c0ff">${escHtml(entry.action)}</span> ` : '';
+      const msg      = entry.message  ? `<span style="color:#c9d1d9">${escHtml(entry.message)}</span>` : '';
+      const ok       = entry.success === false ? '<span style="color:#ff7b72"> ✗</span>' : (entry.success === true ? '<span style="color:#56d364"> ✓</span>' : '');
+      return `<div style="padding:2px 0;border-bottom:1px solid #21262d"><span style="color:#6e7681">${ts}</span> ${phase}${ms}${action}${msg}${ok}</div>`;
+    }).join('') || '<span style="color:#888">No log entries found.</span>';
+    status.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+  }
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Start polling on page load
+document.addEventListener('DOMContentLoaded', () => {
+  refreshPipelineLog();
+  _logPollInterval = setInterval(refreshPipelineLog, 3000);
+});
