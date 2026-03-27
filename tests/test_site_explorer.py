@@ -160,6 +160,8 @@ def test_explore_vendor_site_handles_unreachable_pages_gracefully(monkeypatch):
         raise site_explorer.requests.RequestException("timeout")
 
     monkeypatch.setattr(site_explorer.requests, "get", mock_get)
+    # Prevent real Playwright/Apify calls for unreachable pages
+    monkeypatch.setattr(site_explorer.discovery_mode, "fetch_page_with_fallback", lambda url, config: None)
 
     result = site_explorer.explore_vendor_site(homepage_payload)
 
@@ -283,6 +285,8 @@ def test_explore_vendor_site_uses_discovery_mode_links_for_sparse_homepages(monk
             ("https://gainsight.com/customer-success", "Customer Success"),
         ],
     )
+    # Prevent real Playwright/Apify calls for any URL not in mock_get dict
+    monkeypatch.setattr(site_explorer.discovery_mode, "fetch_page_with_fallback", lambda url, config: None)
 
     result = site_explorer.explore_vendor_site(homepage_payload)
 
