@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse the Directory | SuccessByCS</title>
+  <meta name="description" content="Browse 48+ customer success software vendors by lifecycle stage, use case, and fit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-900: #0f2318;
+      --green-800: #163320;
+      --green-700: #1f4a2e;
+      --green-600: #2d6a42;
+      --green-500: #3d8f5a;
+      --green-400: #52b86f;
+      --green-300: #7ed49a;
+      --green-200: #b3e8c4;
+      --green-100: #e6f7eb;
+      --cream: #faf8f4;
+      --text-dark: #0f2318;
+      --text-mid: #3a4a40;
+      --text-muted: #6b7a72;
+      --border: #dde8e1;
+      --shadow-sm: 0 1px 3px rgba(15,35,24,.08);
+      --shadow-md: 0 4px 16px rgba(15,35,24,.12);
+      --shadow-lg: 0 8px 32px rgba(15,35,24,.16);
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ---- NAV ---- */
+    .nav {
+      background: var(--green-900);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 16px;
+    }
+    .nav-brand {
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand span { color: var(--green-300); }
+    .nav-search {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .nav-search input {
+      width: 100%;
+      padding: 9px 16px 9px 40px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.15);
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .nav-search input::placeholder { color: rgba(255,255,255,.45); }
+    .nav-search input:focus { border-color: var(--green-400); background: rgba(255,255,255,.12); }
+    .nav-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: rgba(255,255,255,.4);
+      pointer-events: none;
+    }
+    .nav-count { color: var(--green-300); font-size: 13px; white-space: nowrap; }
+
+    /* ---- FILTERS ---- */
+    .filters-bar {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pill {
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .pill:hover { border-color: var(--green-500); color: var(--green-700); }
+    .pill.active { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+    .filter-sep { width: 1px; height: 20px; background: var(--border); }
+    .filter-select {
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-mid);
+      cursor: pointer;
+      outline: none;
+    }
+    .filter-select:focus { border-color: var(--green-500); }
+    .clear-btn {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: underline;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+    .clear-btn:hover { color: var(--text-dark); }
+
+    /* ---- MAIN LAYOUT ---- */
+    .main { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ---- STATUS ---- */
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .status-text { font-size: 13px; color: var(--text-muted); }
+    .status-text strong { color: var(--text-dark); }
+
+    /* ---- GRID ---- */
+    .vendor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    /* ---- CARD ---- */
+    .vendor-card {
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: box-shadow .2s, transform .2s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .vendor-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .card-name { font-size: 15px; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
+    .card-domain { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .card-category {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cat-cs_core { background: #e8f5ee; color: var(--green-700); }
+    .cat-cs_adjacent { background: #fef3e2; color: #7a4f00; }
+    .cat-other { background: #f0f0f0; color: #555; }
+
+    .card-mission {
+      font-size: 13px;
+      color: var(--text-mid);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-stages { display: flex; gap: 4px; flex-wrap: wrap; }
+    .stage-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--green-100);
+      color: var(--green-700);
+    }
+
+    .card-use-cases { display: flex; gap: 4px; flex-wrap: wrap; }
+    .use-case-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f5f5f5;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .card-footer { display: flex; gap: 6px; align-items: center; margin-top: auto; padding-top: 4px; border-top: 1px solid var(--border); }
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    .badge-trial { background: #e3f2fd; color: #1565c0; }
+    .badge-soc2 { background: #fce4ec; color: #b71c1c; }
+    .badge-confidence-high { background: #e8f5e9; color: #2e7d32; }
+    .badge-confidence-medium { background: #fff8e1; color: #f57f17; }
+
+    /* ---- EMPTY ---- */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text-dark); }
+
+    /* ---- GATE ---- */
+    .gate-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,35,24,.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .gate-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 36px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    .gate-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--green-600);
+      margin-bottom: 12px;
+    }
+    .gate-card h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--green-900);
+      margin-bottom: 10px;
+      line-height: 1.2;
+    }
+    .gate-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .gate-form { display: flex; flex-direction: column; gap: 10px; }
+    .gate-form input {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-dark);
+      outline: none;
+      transition: border-color .2s;
+    }
+    .gate-form input:focus { border-color: var(--green-500); }
+    .gate-form button {
+      padding: 13px;
+      background: var(--green-700);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .gate-form button:hover { background: var(--green-900); }
+    .gate-note { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      .nav { flex-wrap: wrap; height: auto; padding: 12px; }
+      .nav-search { max-width: 100%; order: 3; width: 100%; }
+      .filters-bar { padding: 10px 16px; }
+      .main { padding: 16px; }
+      .vendor-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- GATE (shown when no access token in localStorage) -->
+<div class="gate-overlay" id="gate" style="display:none;">
+  <div class="gate-card">
+    <p class="gate-eyebrow">Free access</p>
+    <h2>Your directory access is one step away</h2>
+    <p>Drop your email to browse 48+ customer success vendors, organized by lifecycle stage and enriched with practical signals.</p>
+    <form class="gate-form" id="gate-form" onsubmit="gateSubmit(event)">
+      <input type="email" id="gate-email" placeholder="Work email" required autocomplete="email" />
+      <input type="text" id="gate-company" placeholder="Company (optional)" autocomplete="organization" />
+      <button type="submit">Get instant access &rarr;</button>
+    </form>
+    <p class="gate-note">No password. No spam. Just the directory.</p>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-brand" href="/"><span>SuccessByCS</span> Directory</a>
+  <div class="nav-search">
+    <svg class="nav-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="8.5" cy="8.5" r="5.5"/><path d="M15 15l-3-3"/>
+    </svg>
+    <input type="text" id="search" placeholder="Search vendors, use cases, integrations&hellip;" oninput="applyFilters()" />
+  </div>
+  <span class="nav-count" id="nav-count"></span>
+</nav>
+
+<!-- FILTERS -->
+<div class="filters-bar">
+  <span class="filter-label">Stage</span>
+  <div class="filter-pills" id="stage-pills"></div>
+  <div class="filter-sep"></div>
+  <select class="filter-select" id="category-filter" onchange="applyFilters()">
+    <option value="">All categories</option>
+    <option value="cs_core">CS Core</option>
+    <option value="cs_adjacent">CS Adjacent</option>
+  </select>
+  <select class="filter-select" id="extras-filter" onchange="applyFilters()">
+    <option value="">All vendors</option>
+    <option value="free_trial">Free trial</option>
+    <option value="soc2">SOC 2</option>
+  </select>
+  <button class="clear-btn" onclick="clearFilters()">Clear filters</button>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="status-row">
+    <p class="status-text" id="status-text">Loading&hellip;</p>
+  </div>
+  <div class="vendor-grid" id="vendor-grid"></div>
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <h3>No vendors match your filters</h3>
+    <p>Try adjusting your search or clearing filters.</p>
+  </div>
+</main>
+
+<script>
+  const DATASET_URL = './data/directory_dataset.json';
+  const STAGE_ORDER = ['Sign','Onboard','Activate','Adopt','Support','Expand','Renew','Advocate'];
+  const CAT_LABELS  = { cs_core: 'CS Core', cs_adjacent: 'CS Adjacent', other: 'Other' };
+
+  let allVendors = [];
+  let activeStages = new Set();
+
+  // ---- Gate ----
+  function checkAccess() {
+    if (!localStorage.getItem('csp_access')) {
+      document.getElementById('gate').style.display = 'flex';
+    }
+  }
+  function gateSubmit(e) {
+    e.preventDefault();
+    const email   = document.getElementById('gate-email').value.trim();
+    const company = document.getElementById('gate-company').value.trim();
+    if (!email) return;
+    localStorage.setItem('csp_access', email);
+    fetch('https://vendors.successbycs.com/api/lead-capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, company, intent: 'browse_directory', source: 'browse_gate' }),
+    }).catch(() => {});
+    document.getElementById('gate').style.display = 'none';
+  }
+
+  // ---- Data ----
+  async function loadData() {
+    checkAccess();
+    try {
+      const resp = await fetch(DATASET_URL);
+      if (!resp.ok) throw new Error('Failed to load dataset');
+      allVendors = await resp.json();
+      buildStagePills();
+      applyFilters();
+    } catch (err) {
+      document.getElementById('status-text').textContent = 'Could not load directory data.';
+    }
+  }
+
+  function buildStagePills() {
+    const container = document.getElementById('stage-pills');
+    STAGE_ORDER.forEach(stage => {
+      const hasVendors = allVendors.some(v => (v.lifecycle_stages || []).includes(stage));
+      if (!hasVendors) return;
+      const btn = document.createElement('button');
+      btn.className = 'pill';
+      btn.textContent = stage;
+      btn.onclick = () => toggleStage(stage, btn);
+      container.appendChild(btn);
+    });
+  }
+
+  function toggleStage(stage, btn) {
+    if (activeStages.has(stage)) { activeStages.delete(stage); btn.classList.remove('active'); }
+    else { activeStages.add(stage); btn.classList.add('active'); }
+    applyFilters();
+  }
+
+  function clearFilters() {
+    document.getElementById('search').value = '';
+    document.getElementById('category-filter').value = '';
+    document.getElementById('extras-filter').value = '';
+    activeStages.clear();
+    document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q       = (document.getElementById('search')?.value || '').toLowerCase();
+    const cat     = document.getElementById('category-filter')?.value || '';
+    const extras  = document.getElementById('extras-filter')?.value || '';
+
+    let filtered = allVendors.filter(v => {
+      // Search
+      if (q) {
+        const haystack = [v.vendor_name, v.mission, v.usp, ...(v.use_cases || []), ...(v.icp || [])].join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      // Stage filter
+      if (activeStages.size > 0) {
+        const stages = v.lifecycle_stages || [];
+        if (!stages.some(s => activeStages.has(s))) return false;
+      }
+      // Category
+      if (cat && v.directory_category !== cat) return false;
+      // Extras
+      if (extras === 'free_trial' && !v.free_trial) return false;
+      if (extras === 'soc2' && !v.soc2) return false;
+      return true;
+    });
+
+    renderGrid(filtered);
+    document.getElementById('nav-count').textContent = `${filtered.length} vendor${filtered.length !== 1 ? 's' : ''}`;
+    document.getElementById('status-text').innerHTML =
+      `Showing <strong>${filtered.length}</strong> of <strong>${allVendors.length}</strong> vendors`;
+    document.getElementById('empty-state').style.display = filtered.length === 0 ? 'block' : 'none';
+    document.getElementById('vendor-grid').style.display = filtered.length === 0 ? 'none' : 'grid';
+  }
+
+  function renderGrid(vendors) {
+    const grid = document.getElementById('vendor-grid');
+    grid.innerHTML = vendors.map(v => cardHTML(v)).join('');
+  }
+
+  function cardHTML(v) {
+    const stages    = (v.lifecycle_stages || []).slice(0, 5);
+    const useCases  = (v.use_cases || []).slice(0, 3);
+    const cat       = v.directory_category || 'other';
+    const catLabel  = CAT_LABELS[cat] || cat;
+    const domain    = (v.website || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const mission   = v.mission || '';
+    const conf      = v.confidence || '';
+    const vendor_slug = encodeURIComponent(v.website || v.vendor_name);
+
+    return `
+    <a class="vendor-card" href="./vendor.html?vendor=${vendor_slug}">
+      <div class="card-header">
+        <div>
+          <div class="card-name">${esc(v.vendor_name)}</div>
+          <div class="card-domain">${esc(domain)}</div>
+        </div>
+        <span class="card-category cat-${cat}">${esc(catLabel)}</span>
+      </div>
+      ${mission ? `<p class="card-mission">${esc(mission)}</p>` : ''}
+      ${stages.length ? `<div class="card-stages">${stages.map(s => `<span class="stage-badge">${esc(s)}</span>`).join('')}</div>` : ''}
+      ${useCases.length ? `<div class="card-use-cases">${useCases.map(u => `<span class="use-case-tag">${esc(u)}</span>`).join('')}</div>` : ''}
+      <div class="card-footer">
+        ${v.free_trial ? '<span class="badge badge-trial">Free trial</span>' : ''}
+        ${v.soc2 ? '<span class="badge badge-soc2">SOC 2</span>' : ''}
+        ${conf === 'high' ? '<span class="badge badge-confidence-high">High confidence</span>' : ''}
+        ${conf === 'medium' ? '<span class="badge badge-confidence-medium">Medium confidence</span>' : ''}
+      </div>
+    </a>`;
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  loadData();
+</script>
+</body>
+</html>

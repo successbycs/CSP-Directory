@@ -782,6 +782,7 @@
     const company = document.getElementById('f-company').value;
     const intent  = document.getElementById('f-intent').value;
 
+    localStorage.setItem('csp_access', email);
     fetch('https://vendors.successbycs.com/api/lead-capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -791,6 +792,8 @@
     document.getElementById('modal-form-wrap').style.display = 'none';
     const success = document.getElementById('modal-success');
     success.style.display = 'block';
+    // Redirect to the directory after a short delay
+    setTimeout(() => { window.location.href = '/browse'; }, 1800);
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
