@@ -158,6 +158,7 @@ def test_extract_vendor_intelligence_parses_structured_json(monkeypatch):
         {
             "name": "Jane Doe",
             "title": "CEO",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         }
     ]

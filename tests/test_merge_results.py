@@ -294,6 +294,7 @@ def test_merge_vendor_intelligence_preserves_structured_case_studies_and_company
         {
             "name": "Jane Doe",
             "title": "CEO",
+            "linkedin": "",
             "source_url": "https://example.com/team",
         }
     ]
