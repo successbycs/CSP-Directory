@@ -986,13 +986,14 @@
       "proof_description": "Enrichment pipeline crawls tracxn.com/d/companies/{slug}/ teaser for each vendor. Extracts founded, hq_address, funding_stage, total_funding. Safe-upsert mode: only writes to null or empty fields, never overwrites operator-set values. Canary check on one known-good Tracxn URL before each batch; abort if canary fails. Miss-rate logged per run.",
       "proof_artifact": "runs/proofs/M66_tracxn_enrichment.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
       "dependencies": [
         "M61"
       ],
       "verify": [
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "completed": "2026-03-27"
     },
     {
       "id": "M67",
