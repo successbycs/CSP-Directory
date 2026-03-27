@@ -918,13 +918,21 @@
       "proof_description": "external_enrichment JSONB record schema extended with field and url keys alongside existing source/value/retrieved_at. normalize_external_enrichment_records and summarize_external_enrichment updated. Replaces need for standalone pricing_source and pricing_reference_url columns. Existing records preserved.",
       "proof_artifact": "runs/proofs/M63_provenance_model.json",
       "interaction_targets": [],
-      "status": "not_started",
+      "status": "complete",
+      "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
         "M59"
       ],
       "verify": [
-        "python3 scripts/autonomous_audit.py"
-      ]
+        "python3 -m pytest tests/test_m63_enrichment_provenance.py -v"
+      ],
+      "evidence": {
+        "changed_files": [
+          "services/extraction/vendor_intel.py",
+          "tests/test_m63_enrichment_provenance.py"
+        ],
+        "proof_summary": "normalize_external_enrichment_records extended to handle M63 provenance schema {field, url, source, value, fetched_at} alongside legacy {provider, source_id, ...} schema. _make_provenance_record helper added. summarize_external_enrichment updated for new schema. extract_vendor_intelligence() collects provenance from case_studies_page (customers, case_study_details) and about_page/team_page (leadership, ceo_name). 15 tests pass."
+      }
     },
     {
       "id": "M64",

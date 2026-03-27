@@ -798,7 +798,12 @@ def normalize_integration_taxonomy(
 
 
 def normalize_external_enrichment_records(value: object) -> list[dict[str, Any]]:
-    """Return normalized external enrichment provenance records."""
+    """Return normalized external enrichment provenance records.
+
+    Supports two schemas:
+    - Legacy: {provider, source_id, source_type, status, source_url, captured_at, freshness_days, fields, notes}
+    - Provenance (M63): {field, url, source, value, fetched_at}
+    """
     if isinstance(value, str):
         cleaned = value.strip()
         if not cleaned:
@@ -818,6 +823,29 @@ def normalize_external_enrichment_records(value: object) -> list[dict[str, Any]]
         if not isinstance(raw_item, dict):
             continue
 
+        # M63 provenance schema: field + url + source + value + fetched_at
+        field_name = str(raw_item.get("field") or "").strip()
+        if field_name:
+            url = normalize_website_url(raw_item.get("url"))
+            source = str(raw_item.get("source") or "webcrawl").strip()
+            value_str = str(raw_item.get("value") or "").strip()
+            fetched_at = str(raw_item.get("fetched_at") or "").strip()
+            key = (field_name.lower(), url.lower(), source.lower())
+            if key in seen_keys:
+                continue
+            normalized.append(
+                {
+                    "field": field_name,
+                    "url": url,
+                    "source": source,
+                    "value": value_str,
+                    "fetched_at": fetched_at,
+                }
+            )
+            seen_keys.add(key)
+            continue
+
+        # Legacy schema: provider-based enrichment records
         provider = str(raw_item.get("provider") or "").strip()
         source_id = str(raw_item.get("source_id") or provider).strip()
         source_type = str(raw_item.get("source_type") or "").strip()
@@ -845,6 +873,23 @@ def normalize_external_enrichment_records(value: object) -> list[dict[str, Any]]
         )
         seen_keys.add(key)
     return normalized
+
+
+def _make_provenance_record(
+    field: str,
+    value: str,
+    url: str,
+    source: str = "webcrawl",
+) -> dict[str, str]:
+    """Return a provenance record in the M63 schema: {field, url, source, value, fetched_at}."""
+    from datetime import datetime, timezone
+    return {
+        "field": str(field).strip(),
+        "url": normalize_website_url(url),
+        "source": str(source).strip() or "webcrawl",
+        "value": str(value).strip(),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 def normalize_leadership_profiles(value: object) -> list[dict[str, Any]]:
@@ -1196,6 +1241,30 @@ def extract_vendor_intelligence(
     )
     blog_posts = _extract_blog_posts(page_payloads)
 
+    # M63: collect enrichment provenance records for fields extracted from specific pages
+    provenance_records: list[dict[str, Any]] = []
+    _case_studies_url = _page_url(page_payloads, "case_studies_page")
+    _about_url = _page_url(page_payloads, "about_page")
+    _team_url = _page_url(page_payloads, "team_page")
+    if customers and _case_studies_url:
+        provenance_records.append(_make_provenance_record(
+            "customers", ", ".join(customers[:5]), _case_studies_url, "case_studies_page",
+        ))
+    if case_study_details and _case_studies_url:
+        provenance_records.append(_make_provenance_record(
+            "case_study_details", str(len(case_study_details)), _case_studies_url, "case_studies_page",
+        ))
+    if leadership and (_about_url or _team_url):
+        names = ", ".join(p["name"] for p in leadership if p.get("name"))
+        provenance_records.append(_make_provenance_record(
+            "leadership", names, _about_url or _team_url, "about_page",
+        ))
+    ceo_name_extracted = _extract_ceo_name(leadership, f"{about_text} {team_text}".strip())
+    if ceo_name_extracted and (_about_url or _team_url):
+        provenance_records.append(_make_provenance_record(
+            "ceo_name", ceo_name_extracted, _about_url or _team_url, "about_page",
+        ))
+
     return VendorIntelligence(
         vendor_name=str(homepage_payload.get("vendor_name", "")),
         website=canonical_website,
@@ -1253,6 +1322,7 @@ def extract_vendor_intelligence(
             pricing=pricing,
             strong_cs_relevance=_has_strong_cs_relevance(relevance_text),
         ),
+        external_enrichment=provenance_records,
         source_urls=all_evidence_urls,
         evidence_urls=all_evidence_urls,
         youtube_channel_url=_extract_youtube_channel_url_from_pages(page_payloads),
@@ -1837,6 +1907,13 @@ def summarize_external_enrichment(value: object) -> str:
     records = normalize_external_enrichment_records(value)
     parts: list[str] = []
     for record in records[:3]:
+        # M63 provenance schema: field/source/url
+        field_name = str(record.get("field") or "").strip()
+        if field_name:
+            source = str(record.get("source") or "webcrawl").strip()
+            parts.append(f"{field_name} ({source})")
+            continue
+        # Legacy schema: provider-based
         provider = str(record.get("provider") or record.get("source_id") or "").strip()
         if not provider:
             continue
