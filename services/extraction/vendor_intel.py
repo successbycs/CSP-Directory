@@ -323,6 +323,81 @@ INTEGRATION_BRAND_RULES = [
     ("Redshift", "warehouse", ["redshift"]),
     ("Databricks", "warehouse", ["databricks"]),
     ("Segment", "warehouse", ["segment"]),
+    # Analytics / product intelligence (from n8n node catalog)
+    ("Amplitude", "analytics", ["amplitude"]),
+    ("Mixpanel", "analytics", ["mixpanel"]),
+    ("Pendo", "analytics", ["pendo"]),
+    ("FullStory", "analytics", ["fullstory", "full story"]),
+    ("Heap", "analytics", ["heap analytics", "heap"]),
+    ("Google Analytics", "analytics", ["google analytics", "ga4"]),
+    ("Hotjar", "analytics", ["hotjar"]),
+    ("PostHog", "analytics", ["posthog", "post hog"]),
+    # Conversation intelligence
+    ("Gong", "conversation_intelligence", ["gong"]),
+    ("Chorus", "conversation_intelligence", ["chorus.ai", "chorus"]),
+    ("Clari", "conversation_intelligence", ["clari"]),
+    # Sales engagement / outreach
+    ("Outreach", "sales_engagement", ["outreach"]),
+    ("Salesloft", "sales_engagement", ["salesloft", "sales loft"]),
+    ("Apollo", "sales_engagement", ["apollo.io", "apollo"]),
+    # Marketing automation
+    ("Marketo", "marketing", ["marketo", "marketo engage"]),
+    ("Pardot", "marketing", ["pardot", "salesforce marketing cloud account engagement"]),
+    ("Mailchimp", "marketing", ["mailchimp"]),
+    ("HubSpot Marketing", "marketing", ["hubspot marketing", "hubspot email"]),
+    ("ActiveCampaign", "marketing", ["activecampaign", "active campaign"]),
+    ("Brevo", "marketing", ["brevo", "sendinblue"]),
+    # Transactional email / messaging
+    ("SendGrid", "email_infra", ["sendgrid", "send grid"]),
+    ("Twilio", "email_infra", ["twilio"]),
+    ("Postmark", "email_infra", ["postmark"]),
+    ("Resend", "email_infra", ["resend"]),
+    # Billing / subscriptions
+    ("Stripe", "billing", ["stripe"]),
+    ("Chargebee", "billing", ["chargebee", "charge bee"]),
+    ("Recurly", "billing", ["recurly"]),
+    ("Paddle", "billing", ["paddle"]),
+    ("Zuora", "billing", ["zuora"]),
+    # Collaboration / docs
+    ("Notion", "docs", ["notion"]),
+    ("Confluence", "docs", ["confluence", "atlassian confluence"]),
+    ("Google Docs", "docs", ["google docs"]),
+    ("Coda", "docs", ["coda.io", "coda"]),
+    # Spreadsheet / data entry
+    ("Google Sheets", "spreadsheet", ["google sheets"]),
+    ("Airtable", "spreadsheet", ["airtable"]),
+    ("Smartsheet", "spreadsheet", ["smartsheet"]),
+    # BI / reporting
+    ("Tableau", "bi", ["tableau"]),
+    ("Looker", "bi", ["looker", "google looker"]),
+    ("Power BI", "bi", ["power bi", "microsoft power bi", "powerbi"]),
+    ("Metabase", "bi", ["metabase"]),
+    ("Domo", "bi", ["domo"]),
+    # Video / async
+    ("Zoom", "video", ["zoom"]),
+    ("Loom", "video", ["loom"]),
+    ("Webex", "video", ["webex", "cisco webex"]),
+    # Customer support (extended)
+    ("Front", "support", ["front", "front app"]),
+    ("Kustomer", "support", ["kustomer"]),
+    ("Gorgias", "support", ["gorgias"]),
+    ("Gladly", "support", ["gladly"]),
+    ("Dixa", "support", ["dixa"]),
+    # Survey
+    ("Qualtrics", "survey", ["qualtrics"]),
+    ("SurveyMonkey", "survey", ["surveymonkey", "survey monkey"]),
+    ("Typeform", "survey", ["typeform"]),
+    ("Delighted", "survey", ["delighted"]),
+    ("AskNicely", "survey", ["asknicely", "ask nicely"]),
+    # Code / DevOps (common in PLG / developer-led CS)
+    ("GitHub", "devops", ["github"]),
+    ("GitLab", "devops", ["gitlab"]),
+    ("Jira Service Management", "devops", ["jira service management", "jira service desk"]),
+    # CDP / enrichment
+    ("Clearbit", "enrichment", ["clearbit"]),
+    ("ZoomInfo", "enrichment", ["zoominfo", "zoom info"]),
+    ("6sense", "enrichment", ["6sense"]),
+    ("Demandbase", "enrichment", ["demandbase"]),
 ]
 
 KNOWN_INTEGRATIONS = [canonical_name for canonical_name, _category, _aliases in INTEGRATION_BRAND_RULES]
