@@ -446,7 +446,7 @@
       <div class="nav-sub">Vendor Directory</div>
     </div>
   </a>
-  <button class="nav-cta" onclick="openModal()">Access the Directory</button>
+  <button class="nav-cta" type="button" data-open-access-modal>Access the Directory</button>
 </nav>
 
 <!-- HERO -->
@@ -460,7 +460,7 @@
     A curated intelligence layer for post-sale software &mdash; every vendor mapped by lifecycle stage, enriched with ICP signals, pricing cues, and proof.
   </p>
   <div class="hero-actions">
-    <button class="btn-primary" onclick="openModal()">
+    <button class="btn-primary" type="button" data-open-access-modal>
       Access the Directory
       <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
@@ -648,7 +648,7 @@
           </div>
           <h3>47 more vendor profiles</h3>
           <p>Access the full directory with filters, fit scores, ICP signals, and pricing data.</p>
-          <button class="btn-primary" onclick="openModal()">
+          <button class="btn-primary" type="button" data-open-access-modal>
             Access the Directory
             <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -682,7 +682,7 @@
         Shortlist briefs available
       </div>
     </div>
-    <button class="btn-primary-light" onclick="openModal()">
+    <button class="btn-primary-light" type="button" data-open-access-modal>
       Access the Directory
       <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
@@ -705,10 +705,10 @@
 </footer>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+<div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-header">
-      <button class="modal-close" onclick="closeModal()">
+      <button class="modal-close" type="button" data-close-access-modal>
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
       <div class="modal-eyebrow">Free access</div>
@@ -717,7 +717,7 @@
     </div>
     <div id="modal-form-wrap">
       <div class="modal-body">
-        <form id="access-form" onsubmit="handleSubmit(event)">
+        <form id="access-form">
           <div class="form-grid">
             <div class="form-row">
               <label for="f-name">Your name</label>
@@ -754,7 +754,7 @@
       <h3>You're in.</h3>
       <p id="success-copy">Your access request is confirmed. Head to the directory to browse vendor profiles and book time with Chris if you want help.</p>
       <div class="success-actions" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
-        <button class="btn-visit" onclick="window.location.href='/browse';">
+        <button class="btn-visit" id="open-directory-button" type="button">
           Open the directory
           <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         </button>
@@ -768,7 +768,15 @@
 </div>
 
 <script>
+  function hasDirectoryAccess() {
+    return Boolean(localStorage.getItem('csp_access'));
+  }
+
   function openModal() {
+    if (hasDirectoryAccess()) {
+      window.location.href = '/browse';
+      return;
+    }
     document.getElementById('modal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -811,6 +819,10 @@
       }
 
       localStorage.setItem('csp_access', email);
+      if (intent === 'browse_directory') {
+        window.location.href = '/browse';
+        return;
+      }
       document.getElementById('success-copy').textContent =
         result.thank_you_message || 'Your access request is confirmed. You can now browse the directory.';
       if (result.booking_url) {
@@ -834,6 +846,23 @@
     success.style.display = 'block';
     if (submitButton) submitButton.disabled = false;
   }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-open-access-modal]').forEach(button => {
+      button.addEventListener('click', openModal);
+    });
+    document.querySelector('[data-close-access-modal]')?.addEventListener('click', closeModal);
+    document.getElementById('modal')?.addEventListener('click', handleOverlayClick);
+    document.getElementById('access-form')?.addEventListener('submit', handleSubmit);
+    document.getElementById('open-directory-button')?.addEventListener('click', () => {
+      window.location.href = '/browse';
+    });
+  });
+
+  window.openModal = openModal;
+  window.closeModal = closeModal;
+  window.handleOverlayClick = handleOverlayClick;
+  window.handleSubmit = handleSubmit;
+
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
 
