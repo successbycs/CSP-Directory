@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst lead = body.lead || body;\nconst bookingUrl = body.booking_url || 'https://meetings-ap1.hubspot.com/christopher-sparshott';\nconst fallbackThankYou = body.thank_you_message || `Thanks for reaching out to SuccessByCS. Book time with Chris here: ${bookingUrl}`;\nconst intent = String(body.lead_intent || lead.lead_intent || '').trim();\nconst intentLabels = {\n  browse_directory: 'Browse the vendor directory',\n  advisory_follow_up: 'Advisory follow-up with SuccessByCS',\n  advisory: 'Advisory follow-up with SuccessByCS',\n  shortlist: 'Shortlist brief',\n};\nconst intentLabel = intentLabels[intent] || (intent || 'Lead capture');\nconst discordWebhook = String(body.discord_webhook_url || $env.DISCORD_WEBHOOK_URL || '').trim();\nconst discordWebhookUrl = discordWebhook ? (discordWebhook.includes('?') ? `${discordWebhook}&wait=true` : `${discordWebhook}?wait=true`) : '';\nconst discordContent = body.discord_content || [\n  'New CSP lead captured',\n  `Lead: ${lead.lead_name || body.lead_name || 'Unknown lead'}`,\n  `Company: ${lead.company_name || body.company_name || 'Unknown company'}`,\n  `Email: ${lead.lead_email || body.lead_email || ''}`,\n  `Intent: ${intentLabel}`,\n  `Book time with Chris: ${bookingUrl}`,\n].join('\\n');\nreturn [{ json: { lead_id: lead.lead_id || body.lead_id || '', lead_intent: intent, intent_label: intentLabel, thank_you_message: fallbackThankYou, booking_url: bookingUrl, discord_webhook_url: discordWebhookUrl, discord_content: discordContent } }];"
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst lead = body.lead || body;\nconst bookingUrl = body.booking_url || 'https://meetings-ap1.hubspot.com/christopher-sparshott';\nconst browseUrl = body.browse_url || 'https://vendors.successbycs.com/browse';\nconst fallbackThankYou = body.thank_you_message || `Thanks for reaching out to SuccessByCS. Book time with Chris here: ${bookingUrl}`;\nconst intent = String(body.lead_intent || lead.lead_intent || '').trim();\nconst intentLabels = {\n  browse_directory: 'Browse the vendor directory',\n  advisory_follow_up: 'Advisory follow-up with SuccessByCS',\n  advisory: 'Advisory follow-up with SuccessByCS',\n  shortlist: 'Shortlist brief',\n};\nconst intentLabel = intentLabels[intent] || (intent || 'Lead capture');\nconst leadName = String(lead.lead_name || body.lead_name || 'there').trim() || 'there';\nconst leadEmail = String(lead.lead_email || body.lead_email || '').trim();\nconst companyName = String(lead.company_name || body.company_name || 'your team').trim() || 'your team';\nconst discordWebhook = String(body.discord_webhook_url || '').trim();\nconst discordWebhookUrl = discordWebhook ? (discordWebhook.includes('?') ? `${discordWebhook}&wait=true` : `${discordWebhook}?wait=true`) : '';\nconst discordContent = body.discord_content || [\n  'New CSP lead captured',\n  `Lead: ${leadName}`,\n  `Company: ${companyName}`,\n  `Email: ${leadEmail}`,\n  `Intent: ${intentLabel}`,\n  `Book time with Chris: ${bookingUrl}`,\n].join('\\n');\nconst renderEmail = (paragraphs) => paragraphs.map((paragraph) => `<p style=\"margin:0 0 16px 0;line-height:1.6;font-family:Arial,sans-serif;color:#163320;font-size:16px;\">${paragraph}</p>`).join('');\nconst signature = '<p style=\"margin:24px 0 0 0;line-height:1.6;font-family:Arial,sans-serif;color:#163320;font-size:16px;\">Best,<br>Chris Sparshott<br>SuccessByCS<br><a href=\"mailto:chris@successbycs.com\" style=\"color:#163320;\">chris@successbycs.com</a></p>';\nlet emailSubject = 'Thanks for reaching out to SuccessByCS';\nlet emailMessage = renderEmail([\n  `Hi ${leadName},`,\n  'Thanks for reaching out to SuccessByCS.',\n  `You can book time with me here: <a href=\"${bookingUrl}\" style=\"color:#163320;\">${bookingUrl}</a>`,\n]) + signature;\nif (intent === 'browse_directory') {\n  emailSubject = 'Your SuccessByCS vendor directory access';\n  emailMessage = renderEmail([\n    `Hi ${leadName},`,\n    `Thanks for requesting access to the SuccessByCS vendor directory for ${companyName}.`,\n    `You can browse it here: <a href=\"${browseUrl}\" style=\"color:#163320;\">${browseUrl}</a>`,\n    `If you want help interpreting the market or building a shortlist, book time with me here: <a href=\"${bookingUrl}\" style=\"color:#163320;\">${bookingUrl}</a>`,\n  ]) + signature;\n} else if (intent === 'advisory_follow_up') {\n  emailSubject = 'Thanks for reaching out to SuccessByCS';\n  emailMessage = renderEmail([\n    `Hi ${leadName},`,\n    `Thanks for reaching out to SuccessByCS. I received your advisory follow-up request for ${companyName}.`,\n    `You can book time with me here: <a href=\"${bookingUrl}\" style=\"color:#163320;\">${bookingUrl}</a>`,\n    'If useful, just reply to this email with your evaluation context, timeline, or current stack.',\n  ]) + signature;\n}\nreturn [{ json: { lead_id: lead.lead_id || body.lead_id || '', lead_name: leadName, lead_email: leadEmail, company_name: companyName, lead_intent: intent, intent_label: intentLabel, thank_you_message: fallbackThankYou, booking_url: bookingUrl, browse_url: browseUrl, discord_webhook_url: discordWebhookUrl, discord_configured: Boolean(discordWebhookUrl), discord_content: discordContent, email_subject: emailSubject, email_message: emailMessage } }];"
       },
       "id": "lead-0002-0002-0002-0002-000000000002",
       "name": "Normalize Lead",
@@ -27,9 +27,28 @@
     },
     {
       "parameters": {
+        "sendTo": "={{ $json.lead_email }}",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_message }}",
+        "options": {}
+      },
+      "id": "lead-0007-0007-0007-0007-000000000007",
+      "name": "Send Thank You Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [520, -160],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "pR08NeWM3CfGEWMU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
-          "conditions": [{ "id": "lead-intake-discord", "leftValue": "={{ !!$json.discord_webhook_url }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }],
+          "conditions": [{ "id": "lead-intake-discord", "leftValue": "={{ $('Normalize Lead').first().json.discord_configured }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }],
           "combinator": "and"
         },
         "options": {}
@@ -38,15 +57,15 @@
       "name": "Discord Configured?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [520, 0]
+      "position": [780, -160]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.discord_webhook_url }}",
+        "url": "={{ $('Normalize Lead').first().json.discord_webhook_url }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ content: $json.discord_content }) }}",
+        "jsonBody": "={{ { content: $('Normalize Lead').first().json.discord_content } }}",
         "options": { "timeout": 15000, "response": { "response": { "neverError": true } } }
       },
       "id": "lead-0004-0004-0004-0004-000000000004",
@@ -58,31 +77,32 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ ok: true, triggered: true, thank_you_message: $('Normalize Lead').first().json.thank_you_message, booking_url: $('Normalize Lead').first().json.booking_url, discord_sent: true, discord_status: $json.statusCode || $json.status || 200, discord_message_id: $json.id || null }) }}",
+        "responseBody": "={{ { ok: true, triggered: true, thank_you_message: $('Normalize Lead').first().json.thank_you_message, booking_url: $('Normalize Lead').first().json.booking_url, email_sent: true, email_to: $('Normalize Lead').first().json.lead_email, discord_sent: true, discord_status: $json.statusCode || $json.status || 200, discord_message_id: $json.id || null } }}",
         "options": {}
       },
       "id": "lead-0005-0005-0005-0005-000000000005",
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1040, -120]
+      "position": [1300, -280]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ ok: true, triggered: false, thank_you_message: $json.thank_you_message, booking_url: $json.booking_url, discord_sent: false, error: 'DISCORD_WEBHOOK_URL not configured in n8n runtime' }) }}",
+        "responseBody": "={{ { ok: true, triggered: false, thank_you_message: $('Normalize Lead').first().json.thank_you_message, booking_url: $('Normalize Lead').first().json.booking_url, email_sent: true, email_to: $('Normalize Lead').first().json.lead_email, discord_sent: false, error: 'DISCORD_WEBHOOK_URL not supplied by CSP runtime' } }}",
         "options": {}
       },
       "id": "lead-0006-0006-0006-0006-000000000006",
       "name": "Respond Missing Discord",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [780, 140]
+      "position": [1040, -20]
     }
   ],
   "connections": {
     "Webhook": { "main": [[{ "node": "Normalize Lead", "type": "main", "index": 0 }]] },
-    "Normalize Lead": { "main": [[{ "node": "Discord Configured?", "type": "main", "index": 0 }]] },
+    "Normalize Lead": { "main": [[{ "node": "Send Thank You Email", "type": "main", "index": 0 }]] },
+    "Send Thank You Email": { "main": [[{ "node": "Discord Configured?", "type": "main", "index": 0 }]] },
     "Discord Configured?": { "main": [[{ "node": "Send Discord Message", "type": "main", "index": 0 }], [{ "node": "Respond Missing Discord", "type": "main", "index": 0 }]] },
     "Send Discord Message": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
   },

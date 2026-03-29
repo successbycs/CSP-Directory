@@ -690,6 +690,7 @@
       "title": "Vercel production deployment: vendors.successbycs.com live",
       "delivery_type": "capability_delivering",
       "status": "complete",
+      "completed_at": "2026-03-29T01:05:52Z",
       "dependencies": [
         "M43B"
       ],
@@ -708,7 +709,11 @@
       "verify": [
         "curl -f https://vendors.successbycs.com",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "evidence": {
+        "workflow_id": "5uREyUbYE6k1M1g9",
+        "proof_summary": "CSP Lead Capture Intake workflow redeployed from CSP repo, removing forbidden $env access from the n8n Code node and adding a Gmail thank-you email step. Live n8n execution 1458 completed successfully: Send Thank You Email returned Gmail message/thread ID 19d3724e46deebb9, Send Discord Message returned HTTP 200, and the workflow responded with thank-you payload, booking link, email_sent=true, and discord_sent=true."
+      }
     },
     {
       "id": "M54",

@@ -177,6 +177,9 @@ def _trigger_n8n_lead_notification(row: dict) -> dict:
         "booking_url": BOOK_TIME_URL,
         "discord_content": _discord_notification_content(row),
     }
+    discord_webhook_url = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+    if discord_webhook_url:
+        payload["discord_webhook_url"] = discord_webhook_url
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         f"{base_url}/webhook/{LEAD_CAPTURE_WEBHOOK}",
