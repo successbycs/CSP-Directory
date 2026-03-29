@@ -110,6 +110,36 @@ def test_create_lead_capture_uses_lead_id_conflict_key(monkeypatch):
     assert row["intent_category"] == "content"
 
 
+def test_build_lead_capture_row_normalizes_browse_directory_intent():
+    row = lead_capture_store.build_lead_capture_row(
+        {
+            "name": "Taylor",
+            "email": "taylor@example.com",
+            "company": "Example",
+            "intent": "directory",
+        }
+    )
+
+    assert row["lead_intent"] == "browse_directory"
+    assert row["intent_category"] == "content"
+    assert row["recommended_handoff_channel"] == "directory_access"
+
+
+def test_build_lead_capture_row_preserves_advisory_follow_up_intent():
+    row = lead_capture_store.build_lead_capture_row(
+        {
+            "name": "Taylor",
+            "email": "taylor@example.com",
+            "company": "Example",
+            "intent": "advisory_follow_up",
+        }
+    )
+
+    assert row["lead_intent"] == "advisory_follow_up"
+    assert row["intent_category"] == "service"
+    assert "book time with Chris" in row["recommended_next_step"]
+
+
 def test_create_lead_capture_falls_back_to_local_dataset(monkeypatch, tmp_path):
     results_path = tmp_path / "lead_capture_dataset.json"
     monkeypatch.setattr(lead_capture_store.supabase_client, "is_configured", lambda: False)

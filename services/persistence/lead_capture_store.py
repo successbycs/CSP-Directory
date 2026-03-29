@@ -6,10 +6,12 @@ from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
+import re
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from services.extraction.identity import normalize_email_address, normalize_vendor_website
+from services import lead_capture_notifications
 from services.persistence import supabase_client
 
 if TYPE_CHECKING:
@@ -202,12 +204,8 @@ def build_lead_capture_row(
     lead_id = _clean_text(payload.get("lead_id")) or str(uuid4())
     intent_category = classify_intent_category(lead_intent)
     follow_up_priority = "high" if intent_category == "service" else "normal"
-    recommended_handoff_channel = "calendar_or_email" if intent_category == "service" else "email_nurture"
-    recommended_next_step = (
-        "Offer a consultation or shortlist review and confirm the buying timeline."
-        if intent_category == "service"
-        else "Send the requested asset and invite a reply with the evaluation context."
-    )
+    recommended_handoff_channel = _recommended_handoff_channel(lead_intent)
+    recommended_next_step = _recommended_next_step(lead_intent)
     entry_page = _clean_text(payload.get("entry_page"))
     entry_url = _clean_text(payload.get("entry_url"))
     cta_surface = _clean_text(payload.get("cta_surface"))
@@ -343,7 +341,7 @@ def is_lead_capture_store_unavailable_error(error: Exception) -> bool:
 
 def classify_intent_category(intent: str) -> str:
     """Map one lead intent to a content or service motion."""
-    if intent in {"shortlist", "advisory", "audit", "fractional-leadership"}:
+    if intent in {"shortlist", "advisory", "advisory_follow_up", "audit", "fractional-leadership"}:
         return "service"
     return "content"
 
@@ -388,7 +386,43 @@ def _clean_text(value: object) -> str:
 
 
 def _normalize_intent(value: object) -> str:
-    return _clean_text(value).lower()
+    normalized = _clean_text(value).lower()
+    slug = re.sub(r"[^a-z0-9]+", "_", normalized).strip("_")
+    aliases = {
+        "directory": "browse_directory",
+        "browse_directory": "browse_directory",
+        "browse_the_vendor_directory": "browse_directory",
+        "vendor_directory": "browse_directory",
+        "advisory_follow_up": "advisory_follow_up",
+        "advisory_follow_up_with_successbycs": "advisory_follow_up",
+    }
+    return aliases.get(slug, slug)
+
+
+def _recommended_handoff_channel(intent: str) -> str:
+    if intent == "advisory_follow_up":
+        return "calendar_or_email"
+    if intent == "browse_directory":
+        return "directory_access"
+    if classify_intent_category(intent) == "service":
+        return "calendar_or_email"
+    return "email_nurture"
+
+
+def _recommended_next_step(intent: str) -> str:
+    if intent == "advisory_follow_up":
+        return (
+            "Thank the buyer for requesting SuccessByCS help, invite them to book time with Chris at "
+            f"{lead_capture_notifications.BOOK_TIME_URL}, and confirm the evaluation context."
+        )
+    if intent == "browse_directory":
+        return (
+            "Thank the buyer for requesting directory access, encourage them to browse the vendor scan, "
+            f"and include the booking link for Chris: {lead_capture_notifications.BOOK_TIME_URL}."
+        )
+    if classify_intent_category(intent) == "service":
+        return "Offer a consultation or shortlist review and confirm the buying timeline."
+    return "Send the requested asset and invite a reply with the evaluation context."
 
 
 def _normalize_follow_up_status(value: object) -> str:

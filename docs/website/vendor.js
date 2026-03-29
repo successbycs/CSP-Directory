@@ -1,4 +1,5 @@
 const DATASET_URL = "./data/directory_dataset.json";
+const BOOK_TIME_URL = "https://meetings-ap1.hubspot.com/christopher-sparshott";
 
 document.addEventListener("DOMContentLoaded", () => {
   loadVendorProfile();
@@ -107,34 +108,20 @@ function renderVendor(container, vendor) {
           <h3>Need a shortlist around ${escapeHtml(vendorName)}?</h3>
           <p>Capture vendor-specific context and route the next step into the SuccessByCS follow-up flow.</p>
           <div class="hero-actions">
-            <button
+            <a
               class="button button-primary"
-              type="button"
-              data-lead-magnet-trigger
-              data-cta-surface="vendor-profile"
-              data-cta-variant="shortlist-brief"
-              data-cta-intent="shortlist"
-              data-cta-label="Get shortlist brief"
-              data-vendor-name="${escapeAttribute(vendorName)}"
-              data-vendor-website="${escapeAttribute(website)}"
-              data-vendor-category="${escapeAttribute(category)}"
+              href="${escapeAttribute(BOOK_TIME_URL)}"
+              target="_blank"
+              rel="noreferrer"
             >
-              Get shortlist brief
-            </button>
-            <button
+              Connect to Chris @ SuccessByCS
+            </a>
+            <a
               class="button button-secondary"
-              type="button"
-              data-lead-magnet-trigger
-              data-cta-surface="vendor-profile"
-              data-cta-variant="advisory-intro"
-              data-cta-intent="advisory"
-              data-cta-label="Talk to SuccessByCS"
-              data-vendor-name="${escapeAttribute(vendorName)}"
-              data-vendor-website="${escapeAttribute(website)}"
-              data-vendor-category="${escapeAttribute(category)}"
+              href="./browse.html"
             >
-              Talk to SuccessByCS
-            </button>
+              Back to browse
+            </a>
           </div>
         </section>
       </aside>

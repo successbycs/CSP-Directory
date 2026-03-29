@@ -735,10 +735,8 @@
           <div class="form-row">
             <label for="f-intent">What are you looking for?</label>
             <select id="f-intent">
-              <option value="directory">Browse the vendor directory</option>
-              <option value="market-map">The 2026 market map</option>
-              <option value="shortlist">A shortlist brief for my evaluation</option>
-              <option value="advisory">Advisory follow-up from SuccessByCS</option>
+              <option value="browse_directory">Browse the vendor directory</option>
+              <option value="advisory_follow_up">Advisory follow-up with SuccessByCS</option>
             </select>
           </div>
           <button type="submit" class="btn-submit">
@@ -754,11 +752,17 @@
         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <h3>You're in.</h3>
-      <p>Your access request is confirmed. Head to the directory to browse all 48 vendor profiles, or check your inbox for the market map link.</p>
-      <button class="btn-visit" onclick="window.open('https://vendors.successbycs.com','_blank');closeModal();">
-        Open the directory
-        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </button>
+      <p id="success-copy">Your access request is confirmed. Head to the directory to browse vendor profiles and book time with Chris if you want help.</p>
+      <div class="success-actions" style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+        <button class="btn-visit" onclick="window.location.href='/browse';">
+          Open the directory
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+        <a class="btn-visit" id="book-link" href="https://meetings-ap1.hubspot.com/christopher-sparshott" target="_blank" rel="noreferrer">
+          Book time with Chris
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -775,25 +779,60 @@
   function handleOverlayClick(e) {
     if (e.target === document.getElementById('modal')) closeModal();
   }
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const name    = document.getElementById('f-name').value;
     const email   = document.getElementById('f-email').value;
     const company = document.getElementById('f-company').value;
     const intent  = document.getElementById('f-intent').value;
 
-    localStorage.setItem('csp_access', email);
-    fetch('/api/lead-capture', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, company, intent }),
-    }).catch(() => {}); // fire-and-forget; show success regardless
+    const submitButton = document.querySelector('#access-form .btn-submit');
+    const disclaimer = document.querySelector('.modal-disclaimer');
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+      const response = await fetch('/api/lead-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          company,
+          intent,
+          entry_page: 'landing.html',
+          cta_surface: 'landing-access-modal',
+          cta_variant: intent,
+          cta_label: 'Get access',
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok === false) {
+        throw new Error(result.error || `Request failed: ${response.status}`);
+      }
+
+      localStorage.setItem('csp_access', email);
+      document.getElementById('success-copy').textContent =
+        result.thank_you_message || 'Your access request is confirmed. You can now browse the directory.';
+      if (result.booking_url) {
+        document.getElementById('book-link').href = result.booking_url;
+      }
+      if (disclaimer) {
+        disclaimer.textContent = result.notification && result.notification.error
+          ? 'Lead saved, but the notification workflow reported an issue.'
+          : 'Lead saved and follow-up routed successfully.';
+      }
+    } catch (error) {
+      if (disclaimer) {
+        disclaimer.textContent = `Lead capture failed: ${error.message}`;
+      }
+      if (submitButton) submitButton.disabled = false;
+      return;
+    }
 
     document.getElementById('modal-form-wrap').style.display = 'none';
     const success = document.getElementById('modal-success');
     success.style.display = 'block';
-    // Redirect to the directory after a short delay
-    setTimeout(() => { window.location.href = '/browse'; }, 1800);
+    if (submitButton) submitButton.disabled = false;
   }
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>

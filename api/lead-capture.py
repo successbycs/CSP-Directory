@@ -11,12 +11,15 @@ import os
 import re
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from uuid import uuid4
 
 LEAD_CAPTURE_TABLE = "lead_captures"
 DEFAULT_CAPTURE_VERSION = "m24a.v1"
 DEFAULT_FOLLOW_UP_OWNER = "fractional-head-of-cs"
-SERVICE_INTENTS = {"shortlist", "advisory", "audit", "fractional-leadership"}
+BOOK_TIME_URL = "https://meetings-ap1.hubspot.com/christopher-sparshott"
+LEAD_CAPTURE_WEBHOOK = "csp-lead-capture-intake"
+SERVICE_INTENTS = {"shortlist", "advisory", "advisory_follow_up", "audit", "fractional_leadership"}
 
 
 class handler(BaseHTTPRequestHandler):
@@ -42,7 +45,17 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             _upsert(row)
-            self._respond(200, {"ok": True, "lead": row})
+            notification = _trigger_n8n_lead_notification(row)
+            self._respond(
+                200,
+                {
+                    "ok": True,
+                    "lead": row,
+                    "notification": notification,
+                    "thank_you_message": notification.get("thank_you_message"),
+                    "booking_url": notification.get("booking_url"),
+                },
+            )
         except Exception as error:
             self._respond(500, {"ok": False, "error": str(error)})
 
@@ -65,7 +78,7 @@ def _build_row(payload: dict) -> dict:
     lead_name = _clean(payload.get("name") or payload.get("lead_name"))
     lead_email = _normalize_email(payload.get("email") or payload.get("lead_email"))
     company_name = _clean(payload.get("company") or payload.get("company_name"))
-    lead_intent = _clean(payload.get("intent") or payload.get("lead_intent")).lower()
+    lead_intent = _normalize_intent(payload.get("intent") or payload.get("lead_intent"))
 
     if not lead_name:
         raise ValueError("lead_name is required")
@@ -82,12 +95,8 @@ def _build_row(payload: dict) -> dict:
 
     intent_category = "service" if lead_intent in SERVICE_INTENTS else "content"
     follow_up_priority = "high" if intent_category == "service" else "normal"
-    recommended_handoff_channel = "calendar_or_email" if intent_category == "service" else "email_nurture"
-    recommended_next_step = (
-        "Offer a consultation or shortlist review and confirm the buying timeline."
-        if intent_category == "service"
-        else "Send the requested asset and invite a reply with the evaluation context."
-    )
+    recommended_handoff_channel = _recommended_handoff_channel(lead_intent)
+    recommended_next_step = _recommended_next_step(lead_intent)
 
     attribution = {k: _clean(payload.get(k)) or None for k in (
         "entry_page", "entry_url", "cta_surface", "cta_variant", "cta_label",
@@ -140,6 +149,145 @@ def _upsert(row: dict) -> None:
     with urllib.request.urlopen(req, timeout=10) as resp:
         if resp.status not in (200, 201):
             raise RuntimeError(f"Supabase returned {resp.status}")
+
+
+def _trigger_n8n_lead_notification(row: dict) -> dict:
+    base_url = os.environ.get("N8N_BASE_URL", "").strip().rstrip("/")
+    if not base_url:
+        return {
+            "triggered": False,
+            "skipped": True,
+            "error": "N8N_BASE_URL not set",
+            "thank_you_message": _thank_you_message(row["lead_intent"]),
+            "booking_url": BOOK_TIME_URL,
+        }
+
+    import urllib.request
+    import urllib.error
+
+    payload = {
+        "lead": row,
+        "lead_id": row.get("lead_id"),
+        "lead_name": row.get("lead_name"),
+        "lead_email": row.get("lead_email"),
+        "company_name": row.get("company_name"),
+        "lead_intent": row.get("lead_intent"),
+        "intent_category": row.get("intent_category"),
+        "thank_you_message": _thank_you_message(row["lead_intent"]),
+        "booking_url": BOOK_TIME_URL,
+        "discord_content": _discord_notification_content(row),
+    }
+    body = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"{base_url}/webhook/{LEAD_CAPTURE_WEBHOOK}",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            response_text = resp.read().decode("utf-8") if resp else ""
+            parsed = json.loads(response_text) if response_text else {}
+    except (urllib.error.URLError, json.JSONDecodeError) as error:
+        return {
+            "triggered": False,
+            "error": str(error),
+            "thank_you_message": payload["thank_you_message"],
+            "booking_url": BOOK_TIME_URL,
+        }
+    if not isinstance(parsed, dict):
+        parsed = {}
+    parsed.setdefault("triggered", True)
+    parsed.setdefault("thank_you_message", payload["thank_you_message"])
+    parsed.setdefault("booking_url", BOOK_TIME_URL)
+    return parsed
+
+
+def _normalize_intent(value: object) -> str:
+    normalized = _clean(value).lower()
+    slug = re.sub(r"[^a-z0-9]+", "_", normalized).strip("_")
+    aliases = {
+        "directory": "browse_directory",
+        "browse_directory": "browse_directory",
+        "browse_the_vendor_directory": "browse_directory",
+        "vendor_directory": "browse_directory",
+        "advisory_follow_up": "advisory_follow_up",
+        "advisory_follow_up_with_successbycs": "advisory_follow_up",
+    }
+    return aliases.get(slug, slug)
+
+
+def _recommended_handoff_channel(intent: str) -> str:
+    if intent == "advisory_follow_up":
+        return "calendar_or_email"
+    if intent == "browse_directory":
+        return "directory_access"
+    if intent in SERVICE_INTENTS:
+        return "calendar_or_email"
+    return "email_nurture"
+
+
+def _recommended_next_step(intent: str) -> str:
+    if intent == "advisory_follow_up":
+        return (
+            "Thank the buyer for requesting SuccessByCS help, invite them to book time with Chris at "
+            f"{BOOK_TIME_URL}, and confirm the evaluation context."
+        )
+    if intent == "browse_directory":
+        return (
+            "Thank the buyer for requesting directory access, encourage them to browse the vendor scan, "
+            f"and include the booking link for Chris."
+        )
+    if intent in SERVICE_INTENTS:
+        return "Offer a consultation or shortlist review and confirm the buying timeline."
+    return "Send the requested asset and invite a reply with the evaluation context."
+
+
+def _thank_you_message(intent: str) -> str:
+    if intent == "advisory_follow_up":
+        return (
+            "Thanks for reaching out to SuccessByCS. We have your advisory follow-up request. "
+            f"You can book time with Chris here: {BOOK_TIME_URL}"
+        )
+    if intent == "browse_directory":
+        return (
+            "Thanks for requesting access to the vendor directory. You can browse the vendor scan now, "
+            f"and if you want help interpreting the market, book time with Chris here: {BOOK_TIME_URL}"
+        )
+    if intent in {"shortlist", "advisory"}:
+        return (
+            "Thanks for sharing your evaluation context. We have your request and you can also book time "
+            f"with Chris here: {BOOK_TIME_URL}"
+        )
+    return (
+        "Thanks for reaching out to SuccessByCS. "
+        f"If you want to talk through the next step, book time with Chris here: {BOOK_TIME_URL}"
+    )
+
+
+def _discord_notification_content(row: dict) -> str:
+    intent = str(row.get("lead_intent") or "")
+    if intent == "advisory_follow_up":
+        intent_line = "Advisory follow-up with SuccessByCS"
+        action_line = f"Book time with Chris: {BOOK_TIME_URL}"
+    elif intent == "browse_directory":
+        intent_line = "Browse the vendor directory"
+        action_line = f"Optional advisory link: {BOOK_TIME_URL}"
+    else:
+        intent_line = intent.replace("_", " ") or "Lead capture"
+        action_line = f"Follow-up link: {BOOK_TIME_URL}"
+
+    return "\n".join(
+        [
+            "New CSP lead captured",
+            f"Lead: {row.get('lead_name') or 'Unknown lead'}",
+            f"Company: {row.get('company_name') or 'Unknown company'}",
+            f"Email: {row.get('lead_email') or ''}",
+            f"Intent: {intent_line}",
+            f"Entry page: {row.get('entry_page') or 'landing.html'}",
+            action_line,
+        ]
+    )
 
 
 def _clean(value: object) -> str:

@@ -1,0 +1,95 @@
+{
+  "name": "CSP Lead Capture Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "csp-lead-capture-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "lead-0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "csp-lead-capture-intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst lead = body.lead || body;\nconst bookingUrl = body.booking_url || 'https://meetings-ap1.hubspot.com/christopher-sparshott';\nconst fallbackThankYou = body.thank_you_message || `Thanks for reaching out to SuccessByCS. Book time with Chris here: ${bookingUrl}`;\nconst intent = String(body.lead_intent || lead.lead_intent || '').trim();\nconst intentLabels = {\n  browse_directory: 'Browse the vendor directory',\n  advisory_follow_up: 'Advisory follow-up with SuccessByCS',\n  advisory: 'Advisory follow-up with SuccessByCS',\n  shortlist: 'Shortlist brief',\n};\nconst intentLabel = intentLabels[intent] || (intent || 'Lead capture');\nconst discordWebhook = String(body.discord_webhook_url || $env.DISCORD_WEBHOOK_URL || '').trim();\nconst discordWebhookUrl = discordWebhook ? (discordWebhook.includes('?') ? `${discordWebhook}&wait=true` : `${discordWebhook}?wait=true`) : '';\nconst discordContent = body.discord_content || [\n  'New CSP lead captured',\n  `Lead: ${lead.lead_name || body.lead_name || 'Unknown lead'}`,\n  `Company: ${lead.company_name || body.company_name || 'Unknown company'}`,\n  `Email: ${lead.lead_email || body.lead_email || ''}`,\n  `Intent: ${intentLabel}`,\n  `Book time with Chris: ${bookingUrl}`,\n].join('\\n');\nreturn [{ json: { lead_id: lead.lead_id || body.lead_id || '', lead_intent: intent, intent_label: intentLabel, thank_you_message: fallbackThankYou, booking_url: bookingUrl, discord_webhook_url: discordWebhookUrl, discord_content: discordContent } }];"
+      },
+      "id": "lead-0002-0002-0002-0002-000000000002",
+      "name": "Normalize Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [{ "id": "lead-intake-discord", "leftValue": "={{ !!$json.discord_webhook_url }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "lead-0003-0003-0003-0003-000000000003",
+      "name": "Discord Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.discord_webhook_url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.discord_content }) }}",
+        "options": { "timeout": 15000, "response": { "response": { "neverError": true } } }
+      },
+      "id": "lead-0004-0004-0004-0004-000000000004",
+      "name": "Send Discord Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [780, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, triggered: true, thank_you_message: $('Normalize Lead').first().json.thank_you_message, booking_url: $('Normalize Lead').first().json.booking_url, discord_sent: true, discord_status: $json.statusCode || $json.status || 200, discord_message_id: $json.id || null }) }}",
+        "options": {}
+      },
+      "id": "lead-0005-0005-0005-0005-000000000005",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1040, -120]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, triggered: false, thank_you_message: $json.thank_you_message, booking_url: $json.booking_url, discord_sent: false, error: 'DISCORD_WEBHOOK_URL not configured in n8n runtime' }) }}",
+        "options": {}
+      },
+      "id": "lead-0006-0006-0006-0006-000000000006",
+      "name": "Respond Missing Discord",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 140]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Normalize Lead", "type": "main", "index": 0 }]] },
+    "Normalize Lead": { "main": [[{ "node": "Discord Configured?", "type": "main", "index": 0 }]] },
+    "Discord Configured?": { "main": [[{ "node": "Send Discord Message", "type": "main", "index": 0 }], [{ "node": "Respond Missing Discord", "type": "main", "index": 0 }]] },
+    "Send Discord Message": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true },
+  "staticData": null,
+  "meta": {
+    "description": "CSP lead-capture intake workflow. Receives a persisted lead row, posts a Discord operator notification through DISCORD_WEBHOOK_URL using the AF webhook pattern, and returns a thank-you message plus booking link to the caller."
+  },
+  "pinData": {}
+}

@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT_SECONDS = 120
 
+# Webhook path constants
+WEBHOOK_G2_ENRICHMENT = "framework-g2-enrichment"
+WEBHOOK_PRICING_ENRICHMENT = "framework-pricing-enrichment"
+WEBHOOK_LEAD_CAPTURE_INTAKE = "csp-lead-capture-intake"
+
 
 def get_n8n_base_url() -> str:
     """Return the n8n base URL from env, raising if not set."""

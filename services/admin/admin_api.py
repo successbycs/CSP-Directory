@@ -17,6 +17,7 @@ from services.admin import admin_actions
 from services.discovery import discovery_store
 from services.export import directory_dataset as directory_dataset_export
 from services.export import search_visibility_report
+from services import lead_capture_notifications
 from services.persistence import lead_capture_store
 from services.persistence import search_visibility_store
 from services.persistence import supabase_client
@@ -39,6 +40,7 @@ def build_admin_app(
     list_search_visibility_fn: Callable[[], dict[str, Any]] | None = None,
     list_leads_fn: Callable[[], dict[str, Any]] | None = None,
     create_lead_fn: Callable[[dict[str, str]], dict[str, Any]] | None = None,
+    notify_lead_capture_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
     update_lead_follow_up_fn: Callable[..., dict[str, Any]] | None = None,
     include_vendor_fn: Callable[[str], dict[str, Any]] | None = None,
     exclude_vendor_fn: Callable[[str], dict[str, Any]] | None = None,
@@ -53,6 +55,7 @@ def build_admin_app(
     list_search_visibility_fn = list_search_visibility_fn or list_search_visibility_data
     list_leads_fn = list_leads_fn or list_lead_capture_data
     create_lead_fn = create_lead_fn or lead_capture_store.create_lead_capture
+    notify_lead_capture_fn = notify_lead_capture_fn or _notify_lead_capture
     update_lead_follow_up_fn = update_lead_follow_up_fn or lead_capture_store.update_lead_follow_up
     include_vendor_fn = include_vendor_fn or admin_actions.include_vendor
     exclude_vendor_fn = exclude_vendor_fn or admin_actions.exclude_vendor
@@ -89,7 +92,7 @@ def build_admin_app(
             return _safe_payload_response(start_response, list_leads_fn, label="leads")
         if method == "POST" and path == "/api/lead-capture":
             payload = _parse_action_payload(environ)
-            return _lead_capture_response(start_response, create_lead_fn, payload)
+            return _lead_capture_response(start_response, create_lead_fn, notify_lead_capture_fn, payload)
         if method == "POST" and path == "/admin/vendor/include":
             payload = _parse_action_payload(environ)
             return _action_response(start_response, include_vendor_fn, payload)
@@ -333,6 +336,7 @@ def _action_response(start_response, action_fn: Callable[[str], dict[str, Any]],
 def _lead_capture_response(
     start_response,
     create_lead_fn: Callable[[dict[str, str]], dict[str, Any]],
+    notify_lead_capture_fn: Callable[[dict[str, Any]], dict[str, Any]],
     payload: dict[str, str],
 ):
     try:
@@ -342,7 +346,26 @@ def _lead_capture_response(
     except Exception as error:  # pragma: no cover - defensive error surface
         logger.exception("Lead capture failed")
         return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
-    return _json_response(start_response, {"ok": True, "lead": result})
+    notification: dict[str, Any] | None = None
+    try:
+        notification = notify_lead_capture_fn(result)
+    except Exception as error:  # pragma: no cover - defensive error surface
+        logger.warning("Lead capture notification failed: %s", error)
+        notification = {"triggered": False, "error": str(error)}
+    return _json_response(
+        start_response,
+        {
+            "ok": True,
+            "lead": result,
+            "notification": notification,
+            "thank_you_message": (notification or {}).get("thank_you_message"),
+            "booking_url": (notification or {}).get("booking_url"),
+        },
+    )
+
+
+def _notify_lead_capture(lead_row: dict[str, Any]) -> dict[str, Any]:
+    return lead_capture_notifications.trigger_lead_capture_notification(lead_row)
 
 
 def _lead_follow_up_response(
@@ -478,14 +501,16 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
         "help_center_url", "support_url", "about_url", "team_url",
         "developer_docs_url", "directory_decision_source",
         "llm_directory_fit", "llm_directory_category",
+        "g2_url", "g2_market_segment", "g2_rating", "g2_review_count",
+        "pricing_source", "funding_stage", "total_funding", "youtube_channel_url",
     }
-    _BOOL_FIELDS = {"free_trial", "soc2", "include_in_directory", "llm_include_in_directory"}
+    _BOOL_FIELDS = {"free_trial", "soc2", "include_in_directory", "llm_include_in_directory", "has_public_pricing_page"}
     _LIST_FIELDS = {
         "icp", "use_cases", "lifecycle_stages", "pricing", "compliance",
         "integration_categories", "integrations", "support_signals",
         "case_studies", "case_study_signals", "customers", "value_statements",
         "source_urls", "evidence_urls", "phone_numbers", "contact_emails",
-        "directory_reasoning",
+        "directory_reasoning", "g2_categories",
     }
     _DICT_LIST_FIELDS = {
         "icp_buyer", "products", "leadership", "integration_taxonomy",
