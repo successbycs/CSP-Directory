@@ -61,6 +61,7 @@ def test_enrich_write_returns_ok_true_for_valid_website():
     assert result["vendor"] == "https://example.com"
     assert isinstance(result["fields_written"], list)
     assert result["validation_errors"] == []
+    assert result["enrichment_pipeline"] == "n8n_enrich"
 
 
 def test_enrich_write_returns_error_when_website_missing():

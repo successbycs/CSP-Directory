@@ -26,6 +26,10 @@ class FakeTableQuery:
         self.operations.append(("limit", count))
         return self
 
+    def order(self, column: str, **kwargs):
+        self.operations.append(("order", column))
+        return self
+
     def upsert(self, payload, on_conflict: str):
         self.operations.append(("upsert", payload, on_conflict))
         return self
@@ -170,7 +174,7 @@ def test_upsert_vendor_result_uses_website_conflict_key():
         client=fake_client,
     )
 
-    assert fake_client.table_calls == ["cs_vendors"]
+    assert "cs_vendors" in fake_client.table_calls
     assert fake_client.last_query.operations[0][0] == "upsert"
     assert fake_client.last_query.operations[0][2] == "website"
     assert fake_client.last_query.operations[1] == ("execute",)
@@ -186,6 +190,9 @@ def test_upsert_vendor_result_uses_website_conflict_key():
     assert row["raw_description"] == (
         "Reduce churn with customer health visibility. Free trial available. SOC 2 compliant."
     )
+    assert row["last_enriched_pipeline"] == "web_search"
+    assert row["enrichment_count"] == 1
+    assert row["enrichment_pipeline_counts"] == {"web_search": 1}
     assert row["is_new"] is True
 
 
@@ -462,3 +469,40 @@ def test_upsert_vendor_result_normalizes_external_enrichment_records():
             "notes": "Launch evidence",
         }
     ]
+
+
+def test_upsert_vendor_result_increments_existing_enrichment_counts():
+    fake_client = FakeSupabaseClient(
+        [
+            {
+                "enrichment_count": 3,
+                "enrichment_pipeline_counts": {"g2": 2, "apify": 1},
+            }
+        ]
+    )
+    vendor = {
+        "vendor_name": "ExampleCorp",
+        "website": "https://example.com",
+        "source": "manual",
+    }
+    homepage_payload = {
+        "vendor_name": "ExampleCorp",
+        "website": "https://example.com",
+        "text": "Homepage text.",
+    }
+    intelligence = VendorIntelligence(
+        vendor_name="ExampleCorp",
+        website="https://example.com",
+    )
+
+    row = supabase_client.upsert_vendor_result(
+        vendor,
+        homepage_payload,
+        intelligence,
+        enrichment_pipeline="g2",
+        client=fake_client,
+    )
+
+    assert row["enrichment_count"] == 4
+    assert row["last_enriched_pipeline"] == "g2"
+    assert row["enrichment_pipeline_counts"] == {"g2": 3, "apify": 1}

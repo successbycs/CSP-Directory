@@ -12,6 +12,33 @@ These phases are independent. URL acquisition runs on a discovery cadence. Enric
 
 ---
 
+## Runtime phase map (code source of truth)
+
+Phase boundaries are implemented in `services/pipeline/orchestrator.py` inside `run_mvp_pipeline(...)`:
+
+- Phase 1 call: `run_discovery_phase_fn(...)`
+- Phase 2 call: `run_enrichment_phase_fn(...)`
+- Post-phase persistence/export: run record write, candidate status updates, dataset/report exports
+
+Concrete phase implementations:
+
+- Phase 1 — URL Acquisition:
+  - `services/pipeline/discovery_runner.py`
+  - function: `run_discovery_phase(...)`
+  - responsibilities: source fetch, dedupe, candidate status assignment, queueing for enrichment
+
+- Phase 2 — Enrichment:
+  - `services/pipeline/enrichment_runner.py`
+  - function: `run_enrichment_phase(...)`
+  - responsibilities: homepage fetch, site exploration, deterministic extraction, optional LLM extraction, merge, profile build, upsert, enrichment status result
+
+- Phase 3 — Persistence/Export:
+  - `services/pipeline/orchestrator.py`
+  - functions: `_persist_run_record(...)`, `_persist_candidate_records(...)`, `_export_directory_dataset(...)`, `_export_vendor_review_dataset(...)`, `_persist_search_visibility_queries(...)`, `_export_search_visibility_artifacts(...)`
+  - responsibilities: persist run/candidate state and produce admin/public artifacts
+
+---
+
 ## Phase 1 — URL Acquisition
 
 ### Goal

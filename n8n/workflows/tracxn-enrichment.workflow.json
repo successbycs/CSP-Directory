@@ -1,0 +1,356 @@
+{
+  "name": "tracxn-enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tracxn-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "tx0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "tracxn-enrichment"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split vendors array into individual items for processing\nconst body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || [];\n\nif (!vendors.length) {\n  return [{ json: { _no_vendors: true } }];\n}\n\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    // Only pass fields that are currently empty so we can skip already-enriched vendors\n    _needs_founded: !v.founded,\n    _needs_hq: !v.hq_address,\n    _needs_funding_stage: !v.funding_stage,\n    _needs_total_funding: !v.total_funding,\n  }\n}));"
+      },
+      "id": "tx0002-0002-0002-0002-000000000002",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-needs-enrichment",
+              "leftValue": "={{ $json._needs_founded || $json._needs_hq || $json._needs_funding_stage || $json._needs_total_funding }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tx0003-0003-0003-0003-000000000003",
+      "name": "Needs Enrichment?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, skipped: true, reason: 'already_enriched' }) }}",
+        "options": {}
+      },
+      "id": "tx0004-0004-0004-0004-000000000004",
+      "name": "Already Enriched",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [720, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Derive a Tracxn slug from the website domain or vendor name.\n// Mirrors derive_tracxn_slug() in services/enrichment/tracxn_enricher.py\nconst item = $input.first().json;\n\nfunction deriveSlug(vendorName, website) {\n  if (website) {\n    const domain = website.replace(/^https?:\\/\\/(?:www\\.)?/, '').split('/')[0];\n    const base = domain.split('.')[0];\n    if (base && base.length >= 3) return base.toLowerCase();\n  }\n  return vendorName.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim().replace(/ +/g, '-');\n}\n\nconst slug = deriveSlug(item.vendor_name, item.website);\n\nreturn [{\n  json: {\n    ...item,\n    tracxn_slug: slug,\n    tracxn_url: `https://tracxn.com/d/companies/${slug}/`,\n  }\n}];"
+      },
+      "id": "tx0005-0005-0005-0005-000000000005",
+      "name": "Derive Slug",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, -160]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.tracxn_url }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 3
+            }
+          },
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "includeBodyInOutput": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            }
+          ]
+        }
+      },
+      "id": "tx0006-0006-0006-0006-000000000006",
+      "name": "Fetch Tracxn Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [960, -160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate the Tracxn response and extract visible text.\n// A miss is a 404, non-200, or page with less than 100 words.\nconst item = $input.first().json;\n\nconst statusCode = item.$response?.statusCode || item.statusCode || 0;\nconst body = String(item.$response?.body || item.body || '');\n\n// Strip HTML to visible text\nconst visibleText = body\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&[a-z]+;/gi, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst wordCount = visibleText ? visibleText.split(' ').filter(w => w.length > 1).length : 0;\nconst isReachable = statusCode >= 200 && statusCode < 400 && wordCount >= 100;\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    tracxn_slug: item.tracxn_slug,\n    tracxn_url: item.tracxn_url,\n    _needs_founded: item._needs_founded,\n    _needs_hq: item._needs_hq,\n    _needs_funding_stage: item._needs_funding_stage,\n    _needs_total_funding: item._needs_total_funding,\n    page_valid: isReachable,\n    visible_text: isReachable ? visibleText.slice(0, 10000) : '',\n    raw_html: isReachable ? body.slice(0, 50000) : '',\n    status_code: statusCode,\n    word_count: wordCount,\n  }\n}];"
+      },
+      "id": "tx0007-0007-0007-0007-000000000007",
+      "name": "Validate Page",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, -160]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-page-valid",
+              "leftValue": "={{ $json.page_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tx0008-0008-0008-0008-000000000008",
+      "name": "Page Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1440, -160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract founded, hq_address, funding_stage, total_funding from Tracxn teaser page.\n// Mirrors _parse_tracxn_page() in services/enrichment/tracxn_enricher.py\nconst item = $input.first().json;\nconst text = item.visible_text || '';\nconst html = item.raw_html || '';\n\n// Founded year — first 4-digit year in reasonable range\nconst foundedMatch = text.match(/\\b((?:19|20)\\d{2})\\b/);\nconst founded = foundedMatch ? foundedMatch[1] : null;\n\n// HQ address — try JSON-LD first, then text heuristics\nlet hq_address = null;\nconst ldMatches = [...html.matchAll(/<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi)];\nfor (const m of ldMatches) {\n  try {\n    const data = JSON.parse(m[1]);\n    const addr = data.address || {};\n    if (typeof addr === 'object') {\n      const parts = [addr.addressLocality, addr.addressRegion, addr.addressCountry].filter(Boolean);\n      if (parts.length) { hq_address = parts.join(', '); break; }\n    }\n  } catch(e) {}\n}\nif (!hq_address) {\n  const hqMatch = text.match(/(?:Headquarters|HQ)[:\\s]+([A-Z][^\\n,;|]{3,50})/);\n  if (hqMatch) hq_address = hqMatch[1].trim();\n}\n\n// Funding stage — ordered most-specific first\nconst fundingStageRe = /Series\\s+[A-Z]{1,2}|Pre-Seed|Seed(?:\\s+Round)?|IPO|Acquired|Private Equity|Growth|Bootstrapped|Angel/i;\nconst stageMatch = text.match(fundingStageRe);\nconst funding_stage = stageMatch ? stageMatch[0].trim() : null;\n\n// Total funding — e.g. $42.5M, $1.2B, $500K\nconst fundingAmtMatch = text.match(/\\$[\\d.,]+\\s*[BMKbmk]/);\nconst total_funding = fundingAmtMatch ? fundingAmtMatch[0].trim() : null;\n\n// Only include fields that were empty and that Tracxn found\nconst payload = {\n  vendor_name: item.vendor_name,\n  website: item.website,\n};\nif (item._needs_founded && founded) payload.founded = founded;\nif (item._needs_hq && hq_address) payload.hq_address = hq_address;\nif (item._needs_funding_stage && funding_stage) payload.funding_stage = funding_stage;\nif (item._needs_total_funding && total_funding) payload.total_funding = total_funding;\n\nconst hasData = !!(founded || hq_address || funding_stage || total_funding);\nconst fieldsFound = Object.keys(payload).filter(k => !['vendor_name','website'].includes(k));\n\nreturn [{\n  json: {\n    ...payload,\n    tracxn_url: item.tracxn_url,\n    _has_data: hasData && fieldsFound.length > 0,\n    _fields_found: fieldsFound,\n  }\n}];"
+      },
+      "id": "tx0009-0009-0009-0009-000000000009",
+      "name": "Extract Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, -320]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Page unreachable or too short — record as miss\nconst item = $input.first().json;\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    tracxn_url: item.tracxn_url,\n    _miss: true,\n    _has_data: false,\n    _fields_found: [],\n  }\n}];"
+      },
+      "id": "tx0010-0010-0010-0010-000000000010",
+      "name": "Tracxn Miss",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1680, 0]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "output": "first"
+      },
+      "id": "tx0011-0011-0011-0011-000000000011",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1920, -160]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-has-data",
+              "leftValue": "={{ $json._has_data }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "tx0012-0012-0012-0012-000000000012",
+      "name": "Has Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2160, -160]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ADMIN_API_BASE_URL }}/admin/enrich-write",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Admin-Token",
+              "value": "={{ $vars.ADMIN_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"website\": \"{{ $json.website }}\",\n  \"vendor_name\": \"{{ $json.vendor_name }}\"\n  {{ $json.founded !== undefined ? `, \"founded\": ${JSON.stringify($json.founded)}` : '' }}\n  {{ $json.hq_address !== undefined ? `, \"hq_address\": ${JSON.stringify($json.hq_address)}` : '' }}\n  {{ $json.funding_stage !== undefined ? `, \"funding_stage\": ${JSON.stringify($json.funding_stage)}` : '' }}\n  {{ $json.total_funding !== undefined ? `, \"total_funding\": ${JSON.stringify($json.total_funding)}` : '' }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "tx0013-0013-0013-0013-000000000013",
+      "name": "Write to Admin API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2400, -320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, fields: $json._fields_found, tracxn_url: $json.tracxn_url }) }}",
+        "options": {}
+      },
+      "id": "tx0014-0014-0014-0014-000000000014",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2640, -320]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, vendor: $json.vendor_name, miss: true, tracxn_url: $json.tracxn_url }) }}",
+        "options": {}
+      },
+      "id": "tx0015-0015-0015-0015-000000000015",
+      "name": "Respond Miss",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2400, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Split Vendors", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Vendors": {
+      "main": [
+        [{ "node": "Needs Enrichment?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Needs Enrichment?": {
+      "main": [
+        [{ "node": "Derive Slug", "type": "main", "index": 0 }],
+        [{ "node": "Already Enriched", "type": "main", "index": 0 }]
+      ]
+    },
+    "Derive Slug": {
+      "main": [
+        [{ "node": "Fetch Tracxn Page", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Tracxn Page": {
+      "main": [
+        [{ "node": "Validate Page", "type": "main", "index": 0 }]
+      ]
+    },
+    "Validate Page": {
+      "main": [
+        [{ "node": "Page Valid?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Page Valid?": {
+      "main": [
+        [{ "node": "Extract Fields", "type": "main", "index": 0 }],
+        [{ "node": "Tracxn Miss", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Fields": {
+      "main": [
+        [{ "node": "Merge", "type": "main", "index": 0 }]
+      ]
+    },
+    "Tracxn Miss": {
+      "main": [
+        [{ "node": "Merge", "type": "main", "index": 1 }]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [{ "node": "Has Data?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Data?": {
+      "main": [
+        [{ "node": "Write to Admin API", "type": "main", "index": 0 }],
+        [{ "node": "Respond Miss", "type": "main", "index": 0 }]
+      ]
+    },
+    "Write to Admin API": {
+      "main": [
+        [{ "node": "Respond Success", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "description": "Tracxn teaser enrichment workflow. Accepts a batch of vendor objects, derives a Tracxn slug from the website domain or vendor name, fetches the teaser page, extracts founded/hq_address/funding_stage/total_funding via regex, and safe-upserts via /admin/enrich-write. Skips vendors where all 4 fields are already populated. Requires n8n variables: ADMIN_API_BASE_URL, ADMIN_API_TOKEN.",
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {}
+}

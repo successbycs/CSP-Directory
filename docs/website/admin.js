@@ -1,4 +1,86 @@
 const API_FALLBACK_BASE = "http://127.0.0.1:8787";
+const DEFAULT_PIPELINE_CONTROLS = [
+  {
+    pipeline_id: "full_pipeline",
+    name: "Full Discovery + Enrichment",
+    description:
+      "Includes Apify Google Search discovery -> Apify/web crawl enrichment (configured depth/page limits) -> deterministic + optional LLM extraction -> persistence + export.",
+  },
+  {
+    pipeline_id: "weekly_discovery_job",
+    name: "Weekly Discovery Job",
+    description:
+      "Discovery-only runner: Apify Google Search using configured query set and candidate limits.",
+  },
+  {
+    pipeline_id: "weekly_digest_job",
+    name: "Weekly Digest Job",
+    description: "Digest/report runner: builds weekly lifecycle summary outputs.",
+  },
+  {
+    pipeline_id: "g2_rapidapi_enrichment",
+    name: "G2 RapidAPI Enrichment",
+    description:
+      "Targeted enrichment runner: G2 RapidAPI enrichment over included vendors.",
+  },
+];
+const DEFAULT_PIPELINE_RUNNERS = [
+  {
+    step_order: 1,
+    phase: "discovery",
+    runner: "Apify Google Search",
+    details: "Runs configured query set and collects candidate domains/snippets.",
+    config: {
+      source_engine: "google_search",
+      actor_id: "apify/google-search-scraper",
+      query_count: 22,
+      max_pages_per_query: 1,
+      results_per_page: 10,
+      max_candidate_domains_per_run: 100,
+    },
+  },
+  {
+    step_order: 2,
+    phase: "enrichment",
+    runner: "Homepage fetch",
+    details: "Fetches each queued vendor homepage before deeper exploration.",
+    config: {
+      request_timeout_seconds: 10,
+      external_fetch_backend: "apify",
+      external_fetch_actor_id: "apify/website-content-crawler",
+      external_fetch_max_pages: 1,
+    },
+  },
+  {
+    step_order: 3,
+    phase: "enrichment",
+    runner: "Apify/Web crawl",
+    details: "Explores high-signal pages and crawl depth limits per vendor.",
+    config: {
+      discovery_mode: "auto",
+      max_crawl_depth: 3,
+      max_non_homepage_pages: 100,
+      max_pages_total: 100,
+    },
+  },
+  {
+    step_order: 4,
+    phase: "enrichment",
+    runner: "Deterministic extraction",
+    details: "Rule-based extraction from fetched pages.",
+    config: {},
+  },
+  {
+    step_order: 5,
+    phase: "enrichment",
+    runner: "LLM extraction",
+    details: "Optional semantic extraction and enrichment merge.",
+    config: {
+      enabled: true,
+      model: "gpt-4o-mini",
+    },
+  },
+];
 
 const state = {
   apiBase: "",
@@ -14,12 +96,21 @@ const state = {
     role_query_rankings: [],
     vendor_visibility_summary: [],
   },
+  enrichmentMetrics: {
+    metrics: {},
+    pipeline_counts: {},
+  },
+  pipelineRunners: [],
+  pipelines: [],
   errors: {
     candidates: "",
     vendors: "",
     leads: "",
     runs: "",
     searchVisibility: "",
+    enrichmentMetrics: "",
+    pipelineRunners: "",
+    pipelines: "",
   },
 };
 
@@ -30,18 +121,22 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("vendor-category-filter")?.addEventListener("change", renderVendors);
   document.getElementById("lead-search")?.addEventListener("input", renderLeads);
   document.getElementById("lead-status-filter")?.addEventListener("change", renderLeads);
+  document.getElementById("pipelines-body")?.addEventListener("click", handlePipelineTableClick);
   loadDashboard();
 });
 
 async function loadDashboard() {
   try {
     state.apiBase = await detectApiBase();
-    const [candidates, vendors, leads, runs, searchVisibility] = await Promise.all([
+    const [candidates, vendors, leads, runs, searchVisibility, enrichmentMetrics, pipelineRunners, pipelines] = await Promise.all([
       fetchJson("/admin/candidates"),
       fetchJson("/admin/vendors"),
       fetchJson("/admin/leads"),
       fetchJson("/admin/runs"),
       fetchJson("/admin/search-visibility"),
+      fetchJson("/admin/enrichment-metrics").catch(() => ({metrics: {}, pipeline_counts: {}, error: "enrichment_metrics_unavailable"})),
+      fetchJson("/admin/pipeline-runners").catch(() => ({items: [], error: "pipeline_runners_unavailable"})),
+      fetchJson("/admin/pipelines").catch(() => ({items: [], error: "pipelines_unavailable"})),
     ]);
 
     state.candidates = sortCandidates(candidates.items || []);
@@ -56,11 +151,20 @@ async function loadDashboard() {
       role_query_rankings: searchVisibility.role_query_rankings || [],
       vendor_visibility_summary: searchVisibility.vendor_visibility_summary || [],
     };
+    state.enrichmentMetrics = {
+      metrics: enrichmentMetrics.metrics || {},
+      pipeline_counts: enrichmentMetrics.pipeline_counts || {},
+    };
+    state.pipelineRunners = normalizePipelineRunners(pipelineRunners.items);
+    state.pipelines = normalizePipelineItems(pipelines.items);
     state.errors.candidates = formatApiError(candidates);
     state.errors.vendors = formatApiError(vendors);
     state.errors.leads = formatApiError(leads);
     state.errors.runs = formatApiError(runs);
     state.errors.searchVisibility = formatApiError(searchVisibility);
+    state.errors.enrichmentMetrics = formatApiError(enrichmentMetrics);
+    state.errors.pipelineRunners = formatApiError(pipelineRunners);
+    state.errors.pipelines = formatApiError(pipelines);
 
     populateVendorCategoryFilter();
     renderCandidates();
@@ -68,21 +172,40 @@ async function loadDashboard() {
     renderLeads();
     renderRuns();
     renderSearchVisibility();
+    renderEnrichmentMetrics();
+    renderPipelineRunners();
+    renderPipelines();
+    startPipelinePolling();
   } catch (error) {
     renderFailureState(`Admin API unavailable: ${error.message}`);
   }
 }
 
 async function detectApiBase() {
-  try {
-    const response = await fetch("/admin/candidates");
-    if (response.ok) {
-      return "";
-    }
-  } catch (error) {
-    // fall through to local API fallback
+  if (await hasJsonAdminEndpoint("")) {
+    return "";
+  }
+  if (await hasJsonAdminEndpoint(API_FALLBACK_BASE)) {
+    return API_FALLBACK_BASE;
   }
   return API_FALLBACK_BASE;
+}
+
+async function hasJsonAdminEndpoint(base) {
+  try {
+    const response = await fetch(`${base}/admin/candidates`);
+    if (!response.ok) {
+      return false;
+    }
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    if (!contentType.includes("application/json")) {
+      return false;
+    }
+    const payload = await response.json();
+    return !!payload && Array.isArray(payload.items);
+  } catch (error) {
+    return false;
+  }
 }
 
 async function fetchJson(path, options = {}) {
@@ -133,7 +256,7 @@ function renderCandidates() {
         <td>${escapeHtml(candidate.candidate_domain || "")}</td>
         <td>${escapeHtml(candidate.source_query || "")}</td>
         <td><span class="status-pill ${statusClass}">${escapeHtml(candidate.candidate_status || "")}</span></td>
-        <td>${escapeHtml(candidate.discovered_at || "")}</td>
+        <td>${escapeHtml(formatNzDateTime(candidate.discovered_at || ""))}</td>
         <td>${escapeHtml(candidate.drop_reason || "")}</td>
       </tr>
     `;
@@ -240,25 +363,15 @@ function renderLeads() {
 
   body.innerHTML = rows.map((lead) => `
     <tr>
-      <td>${escapeHtml(lead.created_at || "")}</td>
+      <td>${escapeHtml(formatNzDateTime(lead.created_at || ""))}</td>
       <td>${formatLeadIdentity(lead)}</td>
       <td>${formatLeadIntent(lead)}</td>
       <td>${formatLeadSource(lead)}</td>
       <td>${formatLeadAttribution(lead)}</td>
       <td>${formatLeadFollowUp(lead)}</td>
-      <td>
-        <div class="actions">
-          <button class="action-button action-secondary" data-lead-action="in_progress" data-lead-id="${escapeAttribute(lead.lead_id || "")}">Start</button>
-          <button class="action-button action-secondary" data-lead-action="contacted" data-lead-id="${escapeAttribute(lead.lead_id || "")}">Contacted</button>
-          <button class="action-button action-primary" data-lead-action="qualified" data-lead-id="${escapeAttribute(lead.lead_id || "")}">Qualified</button>
-        </div>
-      </td>
+      <td><span class="status-pill">n8n Discord and email sent</span></td>
     </tr>
   `).join("") || '<tr><td colspan="7" class="message">No captured leads found.</td></tr>';
-
-  body.querySelectorAll("[data-lead-action]").forEach((button) => {
-    button.addEventListener("click", handleLeadFollowUpAction);
-  });
 }
 
 function renderRuns() {
@@ -273,13 +386,44 @@ function renderRuns() {
   body.innerHTML = state.runs.map((run) => `
     <tr>
       <td>${escapeHtml(run.run_id || "")}</td>
-      <td>${escapeHtml(run.started_at || run.start_time || "")}</td>
-      <td>${escapeHtml(run.query || run.queries_executed || "")}</td>
+      <td>${escapeHtml(formatNzDateTime(run.started_at || run.start_time || ""))}</td>
+      <td>${formatRunQuery(run)}</td>
       <td>${escapeHtml(String(run.candidate_count ?? run.candidates_found ?? ""))}</td>
       <td>${escapeHtml(String(run.enriched_count ?? run.vendors_enriched ?? ""))}</td>
       <td>${escapeHtml(String(run.dropped_count ?? run.vendors_dropped ?? ""))}</td>
     </tr>
   `).join("") || '<tr><td colspan="6" class="message">No pipeline run snapshots found.</td></tr>';
+}
+
+function formatNzDateTime(value) {
+  if (!value) {
+    return "";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString("en-NZ", {
+    timeZone: "Pacific/Auckland",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+function formatRunQuery(run) {
+  const queryText = String(run.query || run.queries_executed || "").trim();
+  const pipelineLabel = String(run.pipeline_name || run.pipeline || "").trim() || "Apify Google search";
+  return `
+    <div class="cell-stack">
+      <span>${escapeHtml(queryText)}</span>
+      <span>Pipeline: ${escapeHtml(pipelineLabel)}</span>
+    </div>
+  `;
 }
 
 function renderSearchVisibility() {
@@ -334,6 +478,9 @@ function renderFailureState(message) {
   const searchVisibilityRankingsBody = document.getElementById("search-visibility-rankings-body");
   const searchVisibilityMetrics = document.getElementById("search-visibility-metrics");
   const leadCaptureMetrics = document.getElementById("lead-capture-metrics");
+  const enrichmentMetrics = document.getElementById("enrichment-metrics");
+  const pipelineControlMetrics = document.getElementById("pipeline-control-metrics");
+  const pipelinesBody = document.getElementById("pipelines-body");
   if (candidatesBody) {
     candidatesBody.innerHTML = `<tr><td colspan="5" class="message">${escapeHtml(message)}</td></tr>`;
   }
@@ -357,6 +504,15 @@ function renderFailureState(message) {
   }
   if (leadCaptureMetrics) {
     leadCaptureMetrics.textContent = message;
+  }
+  if (enrichmentMetrics) {
+    enrichmentMetrics.textContent = message;
+  }
+  if (pipelineControlMetrics) {
+    pipelineControlMetrics.textContent = message;
+  }
+  if (pipelinesBody) {
+    pipelinesBody.innerHTML = `<tr><td colspan="6" class="message">${escapeHtml(message)}</td></tr>`;
   }
 }
 
@@ -538,6 +694,173 @@ function formatVendorDecision(vendor) {
   `;
 }
 
+function renderEnrichmentMetrics() {
+  const node = document.getElementById("enrichment-metrics");
+  if (!node) {
+    return;
+  }
+  if (state.errors.enrichmentMetrics) {
+    node.textContent = state.errors.enrichmentMetrics;
+    return;
+  }
+  const metrics = state.enrichmentMetrics.metrics || {};
+  const pipelineCounts = state.enrichmentMetrics.pipeline_counts || {};
+  const topPipelines = Object.entries(pipelineCounts)
+    .slice(0, 3)
+    .map(([name, count]) => `${name}: ${count}`)
+    .join(", ");
+  const latest = metrics.latest_enriched_at || "n/a";
+  node.textContent =
+    `${metrics.total_enrichment_events || 0} enrichment events across ${metrics.vendors_with_enrichment || 0} vendors. ` +
+    `Latest: ${latest}.` +
+    (topPipelines ? ` Top pipelines: ${topPipelines}.` : "");
+}
+
+function renderPipelines() {
+  const body = document.getElementById("pipelines-body");
+  const metricsNode = document.getElementById("pipeline-control-metrics");
+  if (!body || !metricsNode) {
+    return;
+  }
+  const rows = state.pipelines.length ? state.pipelines : normalizePipelineItems([]);
+  const running = rows.filter((pipeline) => pipeline.status === "running").length;
+  metricsNode.textContent = state.errors.pipelines
+    ? `${rows.length} pipeline controls configured. ${state.errors.pipelines} Showing default controls.`
+    : `${rows.length} pipeline controls configured, ${running} running. Times shown in NZ (Pacific/Auckland).`;
+
+  body.innerHTML = rows.map((pipeline) => {
+    const status = String(pipeline.status || "idle");
+    const statusClass = status === "running" ? "is-warning" : status === "failed" ? "is-danger" : "is-neutral";
+    const progress = String(pipeline.progress || "").trim();
+    const progressText = progress || (state.errors.pipelines ? "Pipeline endpoint unavailable on this backend instance." : "No log output yet.");
+    return `
+      <tr>
+        <td>
+          <div class="cell-stack">
+            <strong>${escapeHtml(pipeline.name || pipeline.pipeline_id || "")}</strong>
+            <span>${escapeHtml(pipeline.description || "")}</span>
+            <span><code>${escapeHtml(pipeline.pipeline_id || "")}</code></span>
+          </div>
+        </td>
+        <td><span class="status-pill ${statusClass}">${escapeHtml(status)}</span></td>
+        <td>${escapeHtml(formatNzDateTime(pipeline.last_triggered_at || ""))}</td>
+        <td>${escapeHtml(formatNzDateTime(pipeline.last_finished_at || ""))}</td>
+        <td>
+          <div class="actions">
+            <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}" ${status === "running" ? "disabled" : ""}>Run</button>
+            <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
+          </div>
+        </td>
+        <td><pre class="pipeline-progress">${escapeHtml(progressText)}</pre></td>
+      </tr>
+    `;
+  }).join("") || '<tr><td colspan="6" class="message">No pipeline controls found.</td></tr>';
+}
+
+function renderPipelineRunners() {
+  const body = document.getElementById("pipeline-runners-body");
+  if (!body) {
+    return;
+  }
+  const rows = state.pipelineRunners.length ? state.pipelineRunners : normalizePipelineRunners([]);
+  body.innerHTML = rows.map((row) => `
+    <tr>
+      <td>${escapeHtml(String(row.step_order || ""))}</td>
+      <td>${escapeHtml(String(row.phase || ""))}</td>
+      <td>${escapeHtml(String(row.runner || ""))}</td>
+      <td>${escapeHtml(String(row.details || ""))}</td>
+      <td>${escapeHtml(formatRunnerConfig(row.config))}</td>
+    </tr>
+  `).join("") || '<tr><td colspan="5" class="message">No pipeline runner metadata found.</td></tr>';
+}
+
+function formatRunnerConfig(config) {
+  if (!config || typeof config !== "object") {
+    return "n/a";
+  }
+  const parts = Object.entries(config).map(([key, value]) => `${key}: ${String(value)}`);
+  return parts.length ? parts.join(" | ") : "n/a";
+}
+
+async function handlePipelineTableClick(event) {
+  const button = event.target.closest("[data-pipeline-action]");
+  if (!button) {
+    return;
+  }
+  const action = button.dataset.pipelineAction;
+  if (action === "refresh") {
+    await refreshPipelines();
+    return;
+  }
+  if (action !== "run") {
+    return;
+  }
+  const pipelineId = button.dataset.pipelineId;
+  if (!pipelineId) {
+    return;
+  }
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Running…";
+  try {
+    await fetchJson("/admin/pipelines/run", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({pipeline_id: pipelineId}),
+    });
+  } catch (error) {
+    window.alert(`Pipeline trigger failed: ${error.message}`);
+  } finally {
+    button.textContent = originalText;
+    await refreshPipelines();
+  }
+}
+
+async function refreshPipelines() {
+  try {
+    const payload = await fetchJson("/admin/pipelines");
+    state.pipelines = normalizePipelineItems(payload.items);
+    state.errors.pipelines = formatApiError(payload);
+  } catch (error) {
+    state.pipelines = normalizePipelineItems([]);
+    state.errors.pipelines = `Pipeline controls unavailable: ${error.message}`;
+  }
+  renderPipelines();
+}
+
+function normalizePipelineItems(items) {
+  const source = Array.isArray(items) ? items.filter((item) => item && typeof item === "object") : [];
+  const byId = new Map(source.map((item) => [String(item.pipeline_id || ""), item]));
+  return DEFAULT_PIPELINE_CONTROLS.map((base) => {
+    const live = byId.get(base.pipeline_id) || {};
+    return {
+      ...base,
+      ...live,
+      pipeline_id: String(live.pipeline_id || base.pipeline_id),
+      name: String(live.name || base.name),
+      description: String(live.description || base.description),
+      status: String(live.status || "idle"),
+      last_triggered_at: String(live.last_triggered_at || ""),
+      last_finished_at: String(live.last_finished_at || ""),
+      progress: String(live.progress || ""),
+    };
+  });
+}
+
+function normalizePipelineRunners(items) {
+  const source = Array.isArray(items) ? items.filter((item) => item && typeof item === "object") : [];
+  if (!source.length) {
+    return DEFAULT_PIPELINE_RUNNERS;
+  }
+  return source.map((item, index) => ({
+    step_order: item.step_order ?? index + 1,
+    phase: String(item.phase || ""),
+    runner: String(item.runner || ""),
+    details: String(item.details || ""),
+    config: item.config && typeof item.config === "object" ? item.config : {},
+  }));
+}
+
 function formatLeadIntent(lead) {
   return `
     <div class="cell-stack">
@@ -607,6 +930,10 @@ function escapeAttribute(value) {
 const VENDOR_FIELDS = [
   { key: "name", label: "Vendor name" },
   { key: "website", label: "Website" },
+  { key: "last_enriched_at", label: "Last enriched at" },
+  { key: "last_enriched_pipeline", label: "Last enriched pipeline" },
+  { key: "enrichment_count", label: "Enrichment count" },
+  { key: "enrichment_pipeline_counts", label: "Pipeline counts", wide: true },
   { key: "mission", label: "Mission / description", wide: true },
   { key: "usp", label: "USP", wide: true },
   { key: "icp", label: "ICP" },
@@ -745,6 +1072,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ---- Pipeline Log Panel (M-OPS1) ----
 let _logPollInterval = null;
+let _pipelinePollInterval = null;
 
 async function refreshPipelineLog() {
   const container = document.getElementById('pipeline-log-entries');
@@ -772,6 +1100,15 @@ async function refreshPipelineLog() {
 
 function escHtml(str) {
   return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function startPipelinePolling() {
+  if (_pipelinePollInterval) {
+    clearInterval(_pipelinePollInterval);
+  }
+  _pipelinePollInterval = setInterval(() => {
+    refreshPipelines();
+  }, 5000);
 }
 
 // Start polling on page load

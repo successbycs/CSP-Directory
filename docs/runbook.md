@@ -12,6 +12,12 @@ cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 -m
 
 Open `http://127.0.0.1:8787` in your browser.
 
+Current admin behavior:
+- Discovery candidate timestamps are rendered in NZ time (`Pacific/Auckland`).
+- Pipeline run start times are rendered in NZ time (`Pacific/Auckland`).
+- Lead capture `created_at` times are rendered in NZ time (`Pacific/Auckland`).
+- The top **Pipeline control** panel lists runnable pipelines, allows manual trigger, and shows live progress plus last-triggered/last-finished NZ timestamps.
+
 ---
 
 ## Restart the admin panel (pick up code changes)
@@ -49,6 +55,11 @@ Re-enrich all without discovering new vendors:
 ```bash
 cd /home/chris/projects/CSP-Directory && source .venv/bin/activate && python3 scripts/discover_vendors.py --skip-discover --enrich-all
 ```
+
+Scheduling intent:
+- Scheduled discovery/enrichment is weekly by default (see `config/scheduler.toml` `discovery_schedule.day_of_week`).
+- Extra enrichments are manual/dev-triggered from CLI or Admin Pipeline control panel.
+- This avoids unnecessary Apify spend from high-frequency automatic reruns.
 
 ---
 

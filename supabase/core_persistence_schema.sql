@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS public.cs_vendors (
   raw_description TEXT,
   confidence TEXT,
   first_seen DATE DEFAULT CURRENT_DATE,
+  last_enriched_at TIMESTAMPTZ,
+  last_enriched_pipeline TEXT,
+  enrichment_count INTEGER DEFAULT 0,
+  enrichment_pipeline_counts JSONB DEFAULT '{}'::jsonb,
   last_updated TIMESTAMPTZ DEFAULT NOW(),
   is_new BOOLEAN DEFAULT TRUE
 );
@@ -106,6 +110,10 @@ ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS testimonials JSONB DEFAUL
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS blog_posts JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS source_urls TEXT[] DEFAULT '{}'::text[];
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS confidence TEXT;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS last_enriched_at TIMESTAMPTZ;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS last_enriched_pipeline TEXT;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS enrichment_count INTEGER DEFAULT 0;
+ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS enrichment_pipeline_counts JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS last_updated TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE public.cs_vendors ADD COLUMN IF NOT EXISTS is_new BOOLEAN DEFAULT TRUE;
 
@@ -261,6 +269,21 @@ CREATE TABLE IF NOT EXISTS public.lead_captures (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS public.integration_catalog (
+  integration_name TEXT PRIMARY KEY,
+  category TEXT NOT NULL,
+  aliases TEXT[] DEFAULT '{}'::text[],
+  source TEXT,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS integration_catalog_category_idx
+  ON public.integration_catalog (category);
+
+CREATE INDEX IF NOT EXISTS integration_catalog_active_idx
+  ON public.integration_catalog (active);
 
 ALTER TABLE public.lead_captures ADD COLUMN IF NOT EXISTS capture_version TEXT;
 ALTER TABLE public.lead_captures ADD COLUMN IF NOT EXISTS lead_id TEXT;

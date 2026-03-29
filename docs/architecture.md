@@ -13,6 +13,26 @@ For each vendor URL, populate the fields defined in `docs/vendor_schema.md` usin
 **Phase 3 — Persistence**
 Supabase is the source of truth. All enrichment writes to `cs_vendors` via upsert on normalised domain. The export layer builds `outputs/directory_dataset.json` from Supabase for the public frontend.
 
+## Phase-to-runtime map
+
+Runtime source of truth is `services/pipeline/orchestrator.py` in `run_mvp_pipeline(...)`, which calls each phase in order:
+
+1. Phase 1 entrypoint: `services/pipeline/discovery_runner.py` -> `run_discovery_phase(...)`
+2. Phase 2 entrypoint: `services/pipeline/enrichment_runner.py` -> `run_enrichment_phase(...)`
+3. Phase 3 persistence/export in orchestrator helpers:
+   - `_persist_run_record(...)`
+   - `_persist_candidate_records(...)`
+   - `_export_directory_dataset(...)`
+   - `_export_vendor_review_dataset(...)`
+   - `_persist_search_visibility_queries(...)`
+   - `_export_search_visibility_artifacts(...)`
+
+Operational trigger paths:
+
+- Ad-hoc/manual: `scripts/run_pipeline.py` (invokes orchestrator)
+- Admin control panel: `POST /admin/pipelines/run` in `services/admin/admin_api.py`, delegated to `services/admin/pipeline_control.py`
+- Scheduled run: GitHub Actions weekly schedule (repository workflow), invoking the same pipeline entry path
+
 ## Key Design Rules
 
 - The schema defines what enrichment needs to produce — see `docs/vendor_schema.md`
@@ -498,7 +518,7 @@ python -m services.pipeline.scheduler --run-now digest
 
 18. Vendors included in the digest have `is_new = FALSE`.
 
-19. The admin dashboard reads `/admin/candidates`, `/admin/vendors`, and `/admin/runs`, and POSTs lightweight quality-control actions back to the same admin service.
+19. The admin dashboard reads `/admin/candidates`, `/admin/vendors`, `/admin/runs`, and `/admin/pipelines`, and POSTs lightweight quality-control actions back to the same admin service.
 
 ---
 

@@ -472,6 +472,8 @@ class VendorIntelligence:
     use_cases: list[str] = field(default_factory=list)
     lifecycle_stages: list[str] = field(default_factory=list)
     pricing: list[str] = field(default_factory=list)
+    has_public_pricing_page: bool | None = None
+    pricing_source: str = field(default="")
     free_trial: bool | None = None
     soc2: bool | None = None
     compliance: list[str] = field(default_factory=list)
@@ -520,6 +522,12 @@ class VendorIntelligence:
     funding_stage: str = field(default="")
     total_funding: str = field(default="")
     use_case_details: list[dict] = field(default_factory=list)
+    # M50: G2 enrichment fields
+    g2_url: str = field(default="")
+    g2_rating: float | None = field(default=None)
+    g2_review_count: int | None = field(default=None)
+    g2_market_segment: str = field(default="")
+    g2_categories: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Normalize structured buyer-persona enrichment into a stable list-of-dicts shape."""
@@ -576,6 +584,10 @@ class VendorIntelligence:
         self.funding_stage = self.funding_stage.strip()
         self.total_funding = self.total_funding.strip()
         self.use_case_details = _normalize_use_case_details(self.use_case_details)
+        self.pricing_source = self.pricing_source.strip()
+        self.g2_url = normalize_website_url(self.g2_url)
+        self.g2_market_segment = self.g2_market_segment.strip()
+        self.g2_categories = _normalize_string_list(self.g2_categories)
 
     def validate(self) -> None:
         """Validate the schema structure and types.
@@ -603,6 +615,9 @@ class VendorIntelligence:
             "youtube_channel_url",
             "funding_stage",
             "total_funding",
+            "g2_url",
+            "g2_market_segment",
+            "pricing_source",
             "hq_address",
             "company_hq",
             "contact_email",

@@ -173,6 +173,7 @@ def main() -> int:
     scheduler.add_job(
         run_discovery_job,
         "cron",
+        day_of_week=scheduler_config.discovery.day_of_week,
         hour=scheduler_config.discovery.hour,
         minute=scheduler_config.discovery.minute,
     )

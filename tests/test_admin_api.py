@@ -134,6 +134,215 @@ def test_admin_api_returns_search_visibility_endpoint():
     assert b'"surfaced_vendor_name": "Gainsight"' in response_body
 
 
+def test_admin_api_returns_enrichment_metrics_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_enrichment_metrics_fn=lambda: {
+            "metrics": {
+                "vendor_count": 10,
+                "vendors_with_enrichment": 7,
+                "total_enrichment_events": 21,
+                "latest_enriched_at": "2026-03-29T00:00:00+00:00",
+                "pipeline_count": 2,
+            },
+            "pipeline_counts": {"apify": 12, "g2": 9},
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/enrichment-metrics", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"total_enrichment_events": 21' in response_body
+    assert b'"apify": 12' in response_body
+
+
+def test_admin_api_returns_pipelines_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_pipelines_fn=lambda: {
+            "items": [
+                {
+                    "pipeline_id": "full_pipeline",
+                    "name": "Full Discovery + Enrichment",
+                    "status": "idle",
+                    "last_triggered_at": "",
+                    "progress": "",
+                }
+            ]
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/pipelines", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"pipeline_id": "full_pipeline"' in response_body
+
+
+def test_admin_api_returns_discovery_queries_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_discovery_queries_fn=lambda: {
+            "items": [{"position": 1, "query": "AI customer success platform"}],
+            "source_engine": "google_search",
+            "actor_id": "apify/google-search-scraper",
+            "query_count": 1,
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/discovery-queries", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"query": "AI customer success platform"' in response_body
+    assert b'"source_engine": "google_search"' in response_body
+
+
+def test_admin_api_returns_pipeline_runners_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_pipeline_runners_fn=lambda: {
+            "items": [
+                {
+                    "step_order": 1,
+                    "phase": "discovery",
+                    "runner": "Apify Google Search",
+                    "details": "Runs configured query set",
+                    "config": {"max_pages_per_query": 1},
+                }
+            ]
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/pipeline-runners", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"runner": "Apify Google Search"' in response_body
+    assert b'"max_pages_per_query": 1' in response_body
+
+
+def test_admin_api_returns_n8n_integrations_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_n8n_integrations_fn=lambda: {
+            "items": [
+                {
+                    "workflow_name": "CSP Lead Capture Intake",
+                    "file_name": "csp-lead-capture-intake.workflow.json",
+                    "webhook_path": "csp-lead-capture-intake",
+                    "webhook_id": "csp-lead-capture-intake",
+                    "node_count": 8,
+                    "active": False,
+                    "description": "Lead capture integration",
+                }
+            ],
+            "workflow_count": 1,
+            "source_directory": "n8n/workflows",
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/n8n-integrations", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"workflow_name": "CSP Lead Capture Intake"' in response_body
+    assert b'"webhook_path": "csp-lead-capture-intake"' in response_body
+
+
+def test_admin_api_returns_integration_catalog_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        list_integration_catalog_fn=lambda: {
+            "items": [
+                {
+                    "integration_name": "Salesforce",
+                    "category": "crm",
+                    "aliases": ["salesforce", "sales cloud"],
+                }
+            ],
+            "integration_count": 1,
+            "category_count": 1,
+            "categories": ["crm"],
+            "source": "services/extraction/vendor_intel.py::INTEGRATION_BRAND_RULES",
+        },
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(app({"PATH_INFO": "/admin/integration-catalog", "QUERY_STRING": ""}, start_response))
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"integration_name": "Salesforce"' in response_body
+    assert b'"category": "crm"' in response_body
+
+
+def test_admin_api_pipeline_run_endpoint():
+    app = admin_api.build_admin_app(
+        list_candidates_fn=lambda: [],
+        list_vendors_fn=lambda: [],
+        list_runs_fn=lambda: [],
+        trigger_pipeline_fn=lambda pipeline_id: {"ok": True, "pipeline": {"pipeline_id": pipeline_id, "status": "running"}},
+    )
+    status_headers = {}
+
+    def start_response(status, headers):
+        status_headers["status"] = status
+        status_headers["headers"] = headers
+
+    response_body = b"".join(
+        app(
+            {
+                "PATH_INFO": "/admin/pipelines/run",
+                "QUERY_STRING": "",
+                "REQUEST_METHOD": "POST",
+                "CONTENT_LENGTH": "31",
+                "wsgi.input": BytesIO(b'{"pipeline_id":"full_pipeline"}'),
+            },
+            start_response,
+        )
+    )
+
+    assert status_headers["status"] == "200 OK"
+    assert b'"status": "running"' in response_body
+
+
 def test_admin_api_returns_leads_endpoint():
     app = admin_api.build_admin_app(
         list_candidates_fn=lambda: [],

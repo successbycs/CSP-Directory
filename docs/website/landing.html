@@ -768,6 +768,12 @@
 </div>
 
 <script>
+  const ALWAYS_GATE_EMAIL = 'chris@successbycs.com';
+
+  function shouldPersistAccess(email) {
+    return String(email || '').trim().toLowerCase() !== ALWAYS_GATE_EMAIL;
+  }
+
   function openModal() {
     document.getElementById('modal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -810,7 +816,11 @@
         throw new Error(result.error || `Request failed: ${response.status}`);
       }
 
-      localStorage.setItem('csp_access', email);
+      if (shouldPersistAccess(email)) {
+        localStorage.setItem('csp_access', email);
+      } else {
+        localStorage.removeItem('csp_access');
+      }
       if (intent === 'browse_directory') {
         window.location.href = '/browse';
         return;

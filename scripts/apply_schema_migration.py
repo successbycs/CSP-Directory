@@ -50,6 +50,21 @@ REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
     ("external_enrichment", "jsonb", True),
     ("testimonials", "jsonb", True),
     ("blog_posts", "jsonb", True),
+    # M50 — G2 enrichment fields
+    ("g2_url", "text", True),
+    ("g2_rating", "numeric(3,1)", True),
+    ("g2_review_count", "integer", True),
+    ("g2_market_segment", "text", True),
+    ("g2_categories", "text[]", True),
+    # M51 — deep crawl fields
+    ("raw_crawl_blob", "text", True),
+    ("crawl_page_count", "integer", True),
+    ("crawl_completed_at", "timestamp with time zone", True),
+    # Enrichment observability columns
+    ("last_enriched_at", "timestamp with time zone", True),
+    ("last_enriched_pipeline", "text", True),
+    ("enrichment_count", "integer", True),
+    ("enrichment_pipeline_counts", "jsonb", True),
 ]
 
 COLUMNS_TO_DROP: list[str] = []

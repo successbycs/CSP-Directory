@@ -25,6 +25,7 @@ slack_timeout_seconds = 45
 
     result = load_scheduler_config(config_path)
 
+    assert result.discovery.day_of_week == "mon"
     assert result.discovery.hour == 6
     assert result.discovery.minute == 30
     assert result.digest.day_of_week == "fri"

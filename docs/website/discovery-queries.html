@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline Runners | SuccessByCS Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-900: #0f2318;
+      --green-800: #1a3329;
+      --green-700: #1e3d2f;
+      --green-100: #dceee4;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-500: #6b7280;
+      --gray-300: #d1d5db;
+      --gray-100: #f3f4f6;
+      --cream: #faf9f7;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--gray-900);
+    }
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    .top-link {
+      display: inline-block;
+      margin-bottom: 14px;
+      color: var(--green-700);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    h1 {
+      margin: 0;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 36px;
+      color: var(--green-900);
+      line-height: 1.15;
+    }
+    .sub {
+      margin-top: 10px;
+      color: var(--gray-700);
+      line-height: 1.6;
+    }
+    .meta {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--white);
+      border: 1px solid var(--green-100);
+      border-radius: 10px;
+      color: var(--gray-700);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .table-wrap {
+      margin-top: 18px;
+      background: var(--white);
+      border: 1px solid var(--green-100);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 14px;
+    }
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+      color: var(--gray-500);
+      border-bottom: 1px solid var(--gray-300);
+      background: var(--white);
+    }
+    .message {
+      padding: 12px;
+      color: var(--gray-500);
+      background: var(--white);
+      border: 1px solid var(--green-100);
+      border-radius: 10px;
+      margin-top: 18px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="top-link" href="/admin.html">&larr; Back to admin dashboard</a>
+    <h1>Pipeline Runners</h1>
+    <p class="sub">Read-only view of discovery/enrichment runner steps and the configured query set passed to Apify Google Search.</p>
+    <div id="meta" class="meta">Loading runner configuration...</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>order</th>
+            <th>phase</th>
+            <th>runner</th>
+            <th>details</th>
+            <th>config</th>
+          </tr>
+        </thead>
+        <tbody id="runners-body">
+          <tr><td colspan="5">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>query</th>
+          </tr>
+        </thead>
+      <tbody id="queries-body">
+          <tr><td colspan="2">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="error" class="message" style="display:none;"></div>
+  </main>
+
+  <script>
+    const API_FALLBACK_BASE = "http://127.0.0.1:8787";
+    const FALLBACK_DISCOVERY_QUERIES = [
+      "AI CSP software",
+      "AI customer success platform",
+      "AI-powered customer success",
+      "customer success software SaaS",
+      "customer success management platform",
+      "customer success management CSM tool",
+      "digital customer success platform",
+      "customer health score platform",
+      "customer health score software",
+      "customer onboarding automation software",
+      "customer onboarding platform B2B",
+      "churn prevention software B2B",
+      "churn prediction software SaaS",
+      "renewal management software SaaS",
+      "customer expansion revenue software",
+      "customer lifecycle management software",
+      "B2B customer engagement platform",
+      "product adoption analytics platform",
+      "product adoption software B2B",
+      "customer retention software SaaS",
+      "voice of customer software B2B",
+      "customer advocacy software platform",
+    ];
+    const FALLBACK_RUNNERS = [
+      {
+        step_order: 1,
+        phase: "discovery",
+        runner: "Apify Google Search",
+        details: "Runs configured query set and collects candidate domains/snippets.",
+        config: {
+          source_engine: "google_search",
+          actor_id: "apify/google-search-scraper",
+          query_count: FALLBACK_DISCOVERY_QUERIES.length,
+          max_pages_per_query: 1,
+          results_per_page: 10,
+          max_candidate_domains_per_run: 100,
+        },
+      },
+      {
+        step_order: 2,
+        phase: "enrichment",
+        runner: "Homepage fetch",
+        details: "Fetches each queued vendor homepage before deeper exploration.",
+        config: {
+          request_timeout_seconds: 10,
+          external_fetch_backend: "apify",
+          external_fetch_actor_id: "apify/website-content-crawler",
+          external_fetch_max_pages: 1,
+        },
+      },
+      {
+        step_order: 3,
+        phase: "enrichment",
+        runner: "Apify/Web crawl",
+        details: "Explores high-signal pages and crawl depth limits per vendor.",
+        config: {
+          discovery_mode: "auto",
+          max_crawl_depth: 3,
+          max_non_homepage_pages: 100,
+          max_pages_total: 100,
+        },
+      },
+      {
+        step_order: 4,
+        phase: "enrichment",
+        runner: "Deterministic extraction",
+        details: "Rule-based extraction from fetched pages.",
+        config: {},
+      },
+      {
+        step_order: 5,
+        phase: "enrichment",
+        runner: "LLM extraction",
+        details: "Optional semantic extraction and enrichment merge.",
+        config: {
+          enabled: true,
+          model: "gpt-4o-mini",
+        },
+      },
+    ];
+
+    async function detectApiBase() {
+      if (await hasEndpoint("")) return "";
+      if (await hasEndpoint(API_FALLBACK_BASE)) return API_FALLBACK_BASE;
+      return API_FALLBACK_BASE;
+    }
+
+    async function hasEndpoint(base) {
+      try {
+        const response = await fetch(`${base}/admin/pipeline-runners`);
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function formatConfig(config) {
+      if (!config || typeof config !== "object") {
+        return "n/a";
+      }
+      const pairs = Object.entries(config).map(([key, value]) => `${key}: ${String(value)}`);
+      return pairs.join(" | ") || "n/a";
+    }
+
+    async function loadDiscoveryQueries() {
+      const runnersBody = document.getElementById("runners-body");
+      const body = document.getElementById("queries-body");
+      const meta = document.getElementById("meta");
+      const errorNode = document.getElementById("error");
+      try {
+        const apiBase = await detectApiBase();
+        const [runnersResponse, queriesResponse] = await Promise.all([
+          fetch(`${apiBase}/admin/pipeline-runners`),
+          fetch(`${apiBase}/admin/discovery-queries`),
+        ]);
+        const runnersPayload = runnersResponse.ok ? await runnersResponse.json() : { items: [] };
+        const runnerItems = Array.isArray(runnersPayload.items) && runnersPayload.items.length
+          ? runnersPayload.items
+          : FALLBACK_RUNNERS;
+
+        const queriesPayload = queriesResponse.ok ? await queriesResponse.json() : { items: [] };
+        const queryItems = Array.isArray(queriesPayload.items) && queriesPayload.items.length
+          ? queriesPayload.items
+          : FALLBACK_DISCOVERY_QUERIES.map((query, index) => ({ position: index + 1, query }));
+
+        meta.innerHTML =
+          `Pipeline steps: <strong>${escapeHtml(String(runnerItems.length))}</strong><br>` +
+          `Queries: <strong>${escapeHtml(String(queriesPayload.query_count ?? queryItems.length))}</strong><br>` +
+          `Data source: ${runnersResponse.ok ? "<strong>live admin API</strong>" : "<strong>fallback config</strong>"} ` +
+          `${runnersResponse.ok ? "" : "(backend returned non-200)."}`;
+
+        runnersBody.innerHTML = runnerItems.map((item) => `
+          <tr>
+            <td>${escapeHtml(String(item.step_order ?? ""))}</td>
+            <td>${escapeHtml(String(item.phase ?? ""))}</td>
+            <td>${escapeHtml(String(item.runner ?? ""))}</td>
+            <td>${escapeHtml(String(item.details ?? ""))}</td>
+            <td>${escapeHtml(formatConfig(item.config))}</td>
+          </tr>
+        `).join("") || '<tr><td colspan="5">No pipeline runner configuration found.</td></tr>';
+
+        body.innerHTML = queryItems.map((item) => `
+          <tr>
+            <td>${escapeHtml(String(item.position ?? ""))}</td>
+            <td>${escapeHtml(String(item.query ?? ""))}</td>
+          </tr>
+        `).join("") || '<tr><td colspan="2">No configured discovery queries found.</td></tr>';
+      } catch (error) {
+        errorNode.style.display = "block";
+        errorNode.textContent = `Pipeline runner view unavailable: ${error.message}. Showing fallback config.`;
+        runnersBody.innerHTML = FALLBACK_RUNNERS.map((item) => `
+          <tr>
+            <td>${escapeHtml(String(item.step_order ?? ""))}</td>
+            <td>${escapeHtml(String(item.phase ?? ""))}</td>
+            <td>${escapeHtml(String(item.runner ?? ""))}</td>
+            <td>${escapeHtml(String(item.details ?? ""))}</td>
+            <td>${escapeHtml(formatConfig(item.config))}</td>
+          </tr>
+        `).join("");
+        body.innerHTML = FALLBACK_DISCOVERY_QUERIES.map((query, index) => `
+          <tr>
+            <td>${escapeHtml(String(index + 1))}</td>
+            <td>${escapeHtml(query)}</td>
+          </tr>
+        `).join("");
+        meta.innerHTML =
+          `Pipeline steps: <strong>${escapeHtml(String(FALLBACK_RUNNERS.length))}</strong><br>` +
+          `Queries: <strong>${escapeHtml(String(FALLBACK_DISCOVERY_QUERIES.length))}</strong><br>` +
+          `Data source: <strong>fallback config</strong>.`;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    loadDiscoveryQueries();
+  </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+{
+  "name": "framework-pricing-enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "framework-pricing-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "framework-pricing-enrichment"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split vendors array into individual items for processing\nconst body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || [];\n\nif (!vendors.length) {\n  return [{ json: { _no_vendors: true } }];\n}\n\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n  }\n}));"
+      },
+      "id": "a1b2c3d4-0002-0002-0002-000000000002",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}/pricing",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 3
+            }
+          },
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0003-0003-0003-000000000003",
+      "name": "Fetch Pricing Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Content quality gate: count visible words in response body\n// Pass-through all upstream fields; add quality gate flags\n\nconst item = $input.first().json;\n\n// Strip HTML tags to count visible text words\nconst body = String(item.$response?.body || item.body || '');\nconst visibleText = body\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&[a-z]+;/gi, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst wordCount = visibleText ? visibleText.split(' ').filter(w => w.length > 1).length : 0;\nconst statusCode = item.$response?.statusCode || item.statusCode || 0;\nconst hasEnoughContent = wordCount >= 200 && statusCode < 400;\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    pricing_url: `${item.website}/pricing`,\n    status_code: statusCode,\n    word_count: wordCount,\n    has_enough_content: hasEnoughContent,\n    visible_text: visibleText.slice(0, 8000),\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0004-0004-0004-000000000004",
+      "name": "Content Quality Gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-pricing-gate",
+              "leftValue": "={{ $json.has_enough_content }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0005-0005-0005-000000000005",
+      "name": "Has Pricing Content?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract pricing tiers from scraped text using regex heuristics\nconst item = $input.first().json;\nconst text = item.visible_text || '';\n\n// Common pricing tier patterns\nconst tierPatterns = [\n  /\\b(free|starter|basic|professional|pro|business|enterprise|growth|scale|team|plus|premium|ultimate)\\b/gi,\n];\n\nconst tiers = new Set();\nfor (const pattern of tierPatterns) {\n  const matches = text.matchAll(pattern);\n  for (const m of matches) {\n    const t = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase();\n    tiers.add(t);\n  }\n}\n\n// Detect free trial signals\nconst hasFreeTrialSignal = /free trial|try free|\\d+.day free|no credit card/i.test(text);\n\n// Pricing array: de-duped tier names, max 8\nconst pricingTiers = [...tiers].slice(0, 8);\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    has_public_pricing_page: true,\n    pricing: pricingTiers,\n    free_trial: hasFreeTrialSignal,\n    pricing_source: 'scraped',\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0006-0006-0006-000000000006",
+      "name": "Extract Pricing from HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, -160]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a pricing analyst. Extract pricing information for B2B SaaS vendors. Return JSON only with these nullable fields: pricing (string array of tier names, null if unknown), free_trial (boolean or null), has_public_pricing_page (boolean). Do not guess — return null for fields you cannot determine. Respond with valid JSON matching: {\\\"pricing\\\": string[] | null, \\\"free_trial\\\": boolean | null, \\\"has_public_pricing_page\\\": boolean}\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Vendor: {{ $json.vendor_name }}\\nWebsite: {{ $json.website }}\\nExtract pricing information for this vendor based on what you know. Be conservative — only return data you are confident about.\"\n    }\n  ]\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1b2c3d4-0007-0007-0007-000000000007",
+      "name": "LLM Extract Pricing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1200, 160],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openai-api-key",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI response and normalise to write contract\nconst item = $input.first().json;\n\nlet extracted = {};\ntry {\n  const content = item.choices?.[0]?.message?.content || '{}';\n  extracted = JSON.parse(content);\n} catch (e) {\n  // leave extracted empty\n}\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    has_public_pricing_page: extracted.has_public_pricing_page ?? false,\n    pricing: extracted.pricing || [],\n    free_trial: extracted.free_trial ?? null,\n    pricing_source: 'llm_inferred',\n  }\n}];"
+      },
+      "id": "a1b2c3d4-0008-0008-0008-000000000008",
+      "name": "Normalise LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 160]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "output": "first"
+      },
+      "id": "a1b2c3d4-0009-0009-0009-000000000009",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1680, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.ADMIN_API_BASE_URL }}/admin/enrich-write",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Admin-Token",
+              "value": "={{ $vars.ADMIN_API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"website\": \"{{ $json.website }}\",\n  \"vendor_name\": \"{{ $json.vendor_name }}\",\n  \"has_public_pricing_page\": {{ $json.has_public_pricing_page }},\n  \"pricing\": {{ JSON.stringify($json.pricing || []) }},\n  \"free_trial\": {{ $json.free_trial }},\n  \"pricing_source\": \"{{ $json.pricing_source }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "a1b2c3d4-0010-0010-0010-000000000010",
+      "name": "Write to Admin API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1920, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, pricing_source: $json.pricing_source }) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0011-0011-0011-000000000011",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [2160, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Split Vendors", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Vendors": {
+      "main": [
+        [{ "node": "Fetch Pricing Page", "type": "main", "index": 0 }]
+      ]
+    },
+    "Fetch Pricing Page": {
+      "main": [
+        [{ "node": "Content Quality Gate", "type": "main", "index": 0 }]
+      ]
+    },
+    "Content Quality Gate": {
+      "main": [
+        [{ "node": "Has Pricing Content?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Pricing Content?": {
+      "main": [
+        [{ "node": "Extract Pricing from HTML", "type": "main", "index": 0 }],
+        [{ "node": "LLM Extract Pricing", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Pricing from HTML": {
+      "main": [
+        [{ "node": "Merge", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Extract Pricing": {
+      "main": [
+        [{ "node": "Normalise LLM Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalise LLM Response": {
+      "main": [
+        [{ "node": "Merge", "type": "main", "index": 1 }]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [{ "node": "Write to Admin API", "type": "main", "index": 0 }]
+      ]
+    },
+    "Write to Admin API": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "description": "M65: Pricing enrichment workflow. Stage 1: fetch /pricing page and apply content-quality gate (min 200 words). Stage 2 fallback: LLM extraction with nullable fields. Writes via /admin/enrich-write. Requires n8n variables: ADMIN_API_BASE_URL, ADMIN_API_TOKEN. Requires credential: OpenAI API Key (httpHeaderAuth with Authorization: Bearer <key>).",
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {}
+}

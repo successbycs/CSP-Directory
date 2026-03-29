@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>n8n Integrations | SuccessByCS Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-900: #0f2318;
+      --green-700: #1e3d2f;
+      --green-100: #dceee4;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-500: #6b7280;
+      --gray-300: #d1d5db;
+      --gray-100: #f3f4f6;
+      --cream: #faf9f7;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Inter", system-ui, sans-serif; background: var(--cream); color: var(--gray-900); }
+    main { max-width: 1120px; margin: 0 auto; padding: 28px 20px 52px; }
+    a.back { display: inline-block; margin-bottom: 14px; font-weight: 600; color: var(--green-700); text-decoration: none; }
+    h1 { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 38px; color: var(--green-900); }
+    p.sub { margin: 10px 0 0; color: var(--gray-700); line-height: 1.6; }
+    .meta { margin-top: 16px; padding: 14px 16px; background: var(--white); border: 1px solid var(--green-100); border-radius: 10px; color: var(--gray-700); }
+    .table-wrap { margin-top: 16px; background: var(--white); border: 1px solid var(--green-100); border-radius: 10px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-100); font-size: 14px; vertical-align: top; }
+    th { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--gray-500); border-bottom: 1px solid var(--gray-300); }
+    .message { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--green-100); border-radius: 8px; color: var(--gray-700); background: var(--white); }
+    code { background: var(--gray-100); border-radius: 4px; padding: 1px 5px; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="/admin.html">&larr; Back to admin dashboard</a>
+    <h1>n8n Integrations</h1>
+    <p class="sub">Read-only view of workflow integrations from <code>n8n/workflows</code>.</p>
+    <div id="meta" class="meta">Loading integrations...</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>workflow</th>
+            <th>file</th>
+            <th>webhook path</th>
+            <th>webhook id</th>
+            <th>nodes</th>
+            <th>active</th>
+            <th>description</th>
+          </tr>
+        </thead>
+        <tbody id="integrations-body">
+          <tr><td colspan="7">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="error" class="message" style="display:none;"></div>
+  </main>
+
+  <script>
+    const API_FALLBACK_BASE = "http://127.0.0.1:8787";
+    const FALLBACK_ITEMS = [
+      { workflow_name: "CSP Lead Capture Intake", file_name: "csp-lead-capture-intake.workflow.json", webhook_path: "csp-lead-capture-intake", webhook_id: "csp-lead-capture-intake", node_count: "", active: "", description: "" },
+      { workflow_name: "CSP G2 Enrichment", file_name: "csp-g2-enrichment.workflow.json", webhook_path: "csp-g2-enrichment", webhook_id: "csp-g2-enrichment", node_count: "", active: "", description: "" },
+      { workflow_name: "CSP Pricing Enrichment", file_name: "csp-pricing-enrichment.workflow.json", webhook_path: "csp-pricing-enrichment", webhook_id: "csp-pricing-enrichment", node_count: "", active: "", description: "" },
+      { workflow_name: "CSP Tracxn Enrichment", file_name: "csp-tracxn-enrichment.workflow.json", webhook_path: "csp-tracxn-enrichment", webhook_id: "csp-tracxn-enrichment", node_count: "", active: "", description: "" },
+      { workflow_name: "Framework G2 Enrichment", file_name: "framework-g2-enrichment.workflow.json", webhook_path: "framework-g2-enrichment", webhook_id: "framework-g2-enrichment", node_count: "", active: "", description: "" },
+      { workflow_name: "Framework Pricing Enrichment", file_name: "framework-pricing-enrichment.workflow.json", webhook_path: "framework-pricing-enrichment", webhook_id: "framework-pricing-enrichment", node_count: "", active: "", description: "" },
+      { workflow_name: "Tracxn Enrichment", file_name: "tracxn-enrichment.workflow.json", webhook_path: "tracxn-enrichment", webhook_id: "tracxn-enrichment", node_count: "", active: "", description: "" },
+    ];
+
+    async function detectApiBase() {
+      if (await hasEndpoint("")) return "";
+      if (await hasEndpoint(API_FALLBACK_BASE)) return API_FALLBACK_BASE;
+      return API_FALLBACK_BASE;
+    }
+
+    async function hasEndpoint(base) {
+      try {
+        const response = await fetch(`${base}/admin/n8n-integrations`);
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function esc(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderRows(items) {
+      const body = document.getElementById("integrations-body");
+      body.innerHTML = items.map((item) => `
+        <tr>
+          <td>${esc(item.workflow_name)}</td>
+          <td><code>${esc(item.file_name)}</code></td>
+          <td><code>${esc(item.webhook_path)}</code></td>
+          <td><code>${esc(item.webhook_id)}</code></td>
+          <td>${esc(String(item.node_count ?? ""))}</td>
+          <td>${esc(String(item.active ?? ""))}</td>
+          <td>${esc(item.description || "")}</td>
+        </tr>
+      `).join("") || '<tr><td colspan="7">No n8n integrations found.</td></tr>';
+    }
+
+    async function loadIntegrations() {
+      const meta = document.getElementById("meta");
+      const error = document.getElementById("error");
+      try {
+        const apiBase = await detectApiBase();
+        const response = await fetch(`${apiBase}/admin/n8n-integrations`);
+        if (!response.ok) {
+          throw new Error(`Request failed: ${response.status}`);
+        }
+        const payload = await response.json();
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        renderRows(items);
+        meta.innerHTML =
+          `Workflows: <strong>${esc(String(payload.workflow_count ?? items.length))}</strong><br>` +
+          `Source: <code>${esc(payload.source_directory || "n8n/workflows")}</code>`;
+      } catch (err) {
+        renderRows(FALLBACK_ITEMS);
+        meta.innerHTML = "Workflows: <strong>fallback list</strong><br>Source: <code>embedded fallback</code>";
+        error.style.display = "block";
+        error.textContent = `Live endpoint unavailable (${err.message}). Showing fallback workflow list.`;
+      }
+    }
+
+    loadIntegrations();
+  </script>
+</body>
+</html>

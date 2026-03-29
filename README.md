@@ -48,6 +48,9 @@ Run the scheduler:
 .venv/bin/python -m services.pipeline.scheduler --run-now digest
 ```
 
+Scheduling note:
+- Keep scheduled discovery/enrichment weekly by default (`config/scheduler.toml`), and use manual/admin-triggered runs for extra enrichment to control Apify spend.
+
 ## Checks and Exports
 
 Supabase connectivity and schema check:
@@ -136,6 +139,7 @@ Current focus: `M35` — Human test and operator validation. Fix milestones will
 
 - `docs/product_design.md` — full product architecture and data model
 - `docs/architecture.md` — system architecture
+- `docs/lead_capture_architecture.md` — lead capture behaviour, admin panel wiring, and data contract
 - `docs/project_brain.md` — operator knowledge base
 - `docs/solution_enhancement_workflow.md` — enhancement request workflow
 - `docs/production_checklist.md` — production deployment checklist

@@ -6,6 +6,7 @@ from dataclasses import replace
 from urllib.parse import urlparse
 
 from services.extraction.directory_relevance import evaluate_directory_relevance_decision
+from services.extraction.use_case_details_extractor import extract_use_case_details
 from services.extraction.vendor_intel import VendorIntelligence
 
 PagePayload = dict[str, str | int]
@@ -43,6 +44,10 @@ def build_vendor_profile(
         directory_category = "infra"
         include_in_directory = False
         directory_reasoning.append("Rejected as editorial/noise content because the profile looks like docs, support, or blocked content.")
+
+    # M67: deterministic use_case_details from explored sub-pages; merge with LLM results
+    det_use_case_details = extract_use_case_details(explored_pages)
+    use_case_details = _merge_use_case_details(intelligence.use_case_details, det_use_case_details)
 
     profile = VendorIntelligence(
         vendor_name=vendor_name,
@@ -95,8 +100,33 @@ def build_vendor_profile(
         llm_include_in_directory=auto_decision.include_in_directory,
         directory_decision_source="auto",
         directory_reasoning=directory_reasoning,
+        use_case_details=use_case_details,
     )
     return enforce_lifecycle_stage_gate(profile)
+
+
+def _merge_use_case_details(
+    primary: list[dict],
+    secondary: list[dict],
+) -> list[dict]:
+    """Merge two use_case_details lists, deduplicating by lowercased label.
+
+    Items from primary (LLM-derived) take precedence; secondary (deterministic)
+    items are appended only if their label is not already present.
+    """
+    seen: set[str] = set()
+    merged: list[dict] = []
+    for item in primary:
+        label = str(item.get("label") or "").strip().lower()
+        if label and label not in seen:
+            merged.append(item)
+            seen.add(label)
+    for item in secondary:
+        label = str(item.get("label") or "").strip().lower()
+        if label and label not in seen:
+            merged.append(item)
+            seen.add(label)
+    return merged
 
 
 def enforce_lifecycle_stage_gate(profile: VendorIntelligence) -> VendorIntelligence:

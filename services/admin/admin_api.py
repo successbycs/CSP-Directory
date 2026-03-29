@@ -14,7 +14,10 @@ from wsgiref.simple_server import make_server
 from dotenv import load_dotenv
 
 from services.admin import admin_actions
+from services.admin import pipeline_control
+from services.config.load_config import load_pipeline_config
 from services.discovery import discovery_store
+from services.extraction import vendor_intel
 from services.export import directory_dataset as directory_dataset_export
 from services.export import search_visibility_report
 from services import lead_capture_notifications
@@ -38,6 +41,14 @@ def build_admin_app(
     list_vendors_fn: Callable[[], list[dict[str, Any]]] | None = None,
     list_runs_fn: Callable[[], list[dict[str, Any]]] | None = None,
     list_search_visibility_fn: Callable[[], dict[str, Any]] | None = None,
+    list_enrichment_metrics_fn: Callable[[], dict[str, Any]] | None = None,
+    list_discovery_queries_fn: Callable[[], dict[str, Any]] | None = None,
+    list_pipeline_runners_fn: Callable[[], dict[str, Any]] | None = None,
+    list_n8n_integrations_fn: Callable[[], dict[str, Any]] | None = None,
+    list_integration_catalog_fn: Callable[[], dict[str, Any]] | None = None,
+    sync_integration_catalog_fn: Callable[[], dict[str, Any]] | None = None,
+    list_pipelines_fn: Callable[[], dict[str, Any]] | None = None,
+    trigger_pipeline_fn: Callable[[str], dict[str, Any]] | None = None,
     list_leads_fn: Callable[[], dict[str, Any]] | None = None,
     create_lead_fn: Callable[[dict[str, str]], dict[str, Any]] | None = None,
     notify_lead_capture_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -53,6 +64,14 @@ def build_admin_app(
     list_vendors_fn = list_vendors_fn or list_vendor_records
     list_runs_fn = list_runs_fn or list_run_records
     list_search_visibility_fn = list_search_visibility_fn or list_search_visibility_data
+    list_enrichment_metrics_fn = list_enrichment_metrics_fn or list_enrichment_metrics
+    list_discovery_queries_fn = list_discovery_queries_fn or list_discovery_queries
+    list_pipeline_runners_fn = list_pipeline_runners_fn or list_pipeline_runners
+    list_n8n_integrations_fn = list_n8n_integrations_fn or list_n8n_integrations
+    list_integration_catalog_fn = list_integration_catalog_fn or list_integration_catalog
+    sync_integration_catalog_fn = sync_integration_catalog_fn or sync_integration_catalog
+    list_pipelines_fn = list_pipelines_fn or pipeline_control.list_pipeline_controls
+    trigger_pipeline_fn = trigger_pipeline_fn or pipeline_control.trigger_pipeline_run
     list_leads_fn = list_leads_fn or list_lead_capture_data
     create_lead_fn = create_lead_fn or lead_capture_store.create_lead_capture
     notify_lead_capture_fn = notify_lead_capture_fn or _notify_lead_capture
@@ -88,6 +107,44 @@ def build_admin_app(
                 list_search_visibility_fn,
                 label="search_visibility",
             )
+        if method == "GET" and path == "/admin/enrichment-metrics":
+            return _safe_payload_response(
+                start_response,
+                list_enrichment_metrics_fn,
+                label="enrichment_metrics",
+            )
+        if method == "GET" and path == "/admin/discovery-queries":
+            return _safe_payload_response(
+                start_response,
+                list_discovery_queries_fn,
+                label="discovery_queries",
+            )
+        if method == "GET" and path == "/admin/pipeline-runners":
+            return _safe_payload_response(
+                start_response,
+                list_pipeline_runners_fn,
+                label="pipeline_runners",
+            )
+        if method == "GET" and path == "/admin/n8n-integrations":
+            return _safe_payload_response(
+                start_response,
+                list_n8n_integrations_fn,
+                label="n8n_integrations",
+            )
+        if method == "GET" and path == "/admin/integration-catalog":
+            return _safe_payload_response(
+                start_response,
+                list_integration_catalog_fn,
+                label="integration_catalog",
+            )
+        if method == "POST" and path == "/admin/integration-catalog/sync":
+            return _safe_payload_response(
+                start_response,
+                sync_integration_catalog_fn,
+                label="integration_catalog_sync",
+            )
+        if method == "GET" and path == "/admin/pipelines":
+            return _safe_payload_response(start_response, list_pipelines_fn, label="pipelines")
         if method == "GET" and path == "/admin/leads":
             return _safe_payload_response(start_response, list_leads_fn, label="leads")
         if method == "POST" and path == "/api/lead-capture":
@@ -112,6 +169,9 @@ def build_admin_app(
         if method == "POST" and path == "/admin/lead/follow-up":
             payload = _parse_action_payload(environ)
             return _lead_follow_up_response(start_response, update_lead_follow_up_fn, payload)
+        if method == "POST" and path == "/admin/pipelines/run":
+            payload = _parse_action_payload(environ)
+            return _pipeline_run_response(start_response, trigger_pipeline_fn, payload)
         if method == "GET":
             static_response = _static_response(path)
             if static_response is not None:
@@ -221,6 +281,242 @@ def list_search_visibility_data() -> dict[str, Any]:
             else:
                 logger.warning("Search visibility report build failed, falling back to local report output: %s", error)
     return read_search_visibility_results()
+
+
+def list_enrichment_metrics(*, limit: int = 2000) -> dict[str, Any]:
+    """Return enrichment execution metrics aggregated across vendor rows."""
+    rows: list[dict[str, Any]] = []
+    if supabase_client.is_configured():
+        try:
+            rows = supabase_client.list_vendor_profiles(limit=limit)
+        except Exception as error:
+            if supabase_client.is_persistence_unavailable_error(error):
+                logger.warning("Enrichment metrics unavailable from persistence, using local fallback: %s", error)
+            else:
+                logger.warning("Enrichment metrics load failed, using local fallback: %s", error)
+            rows = read_vendor_review_results()[:limit]
+    else:
+        rows = read_vendor_review_results()[:limit]
+
+    pipeline_counts: dict[str, int] = {}
+    total_events = 0
+    vendors_with_enrichment = 0
+    latest_enriched_at = ""
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        row_count = row.get("enrichment_count")
+        try:
+            numeric_count = int(row_count) if row_count is not None else 0
+        except (TypeError, ValueError):
+            numeric_count = 0
+        if numeric_count > 0:
+            vendors_with_enrichment += 1
+
+        row_latest = str(row.get("last_enriched_at") or "")
+        if row_latest > latest_enriched_at:
+            latest_enriched_at = row_latest
+
+        per_pipeline = row.get("enrichment_pipeline_counts")
+        if not isinstance(per_pipeline, dict):
+            continue
+        for raw_pipeline, raw_count in per_pipeline.items():
+            pipeline = _normalize_pipeline_name(raw_pipeline)
+            try:
+                count = max(int(raw_count), 0)
+            except (TypeError, ValueError):
+                continue
+            pipeline_counts[pipeline] = pipeline_counts.get(pipeline, 0) + count
+            total_events += count
+
+    if total_events == 0:
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            try:
+                total_events += max(int(row.get("enrichment_count") or 0), 0)
+            except (TypeError, ValueError):
+                continue
+
+    ordered_pipeline_counts = dict(sorted(pipeline_counts.items(), key=lambda item: (-item[1], item[0])))
+    return {
+        "metrics": {
+            "vendor_count": len(rows),
+            "vendors_with_enrichment": vendors_with_enrichment,
+            "total_enrichment_events": total_events,
+            "latest_enriched_at": latest_enriched_at,
+            "pipeline_count": len(ordered_pipeline_counts),
+        },
+        "pipeline_counts": ordered_pipeline_counts,
+    }
+
+
+def list_discovery_queries() -> dict[str, Any]:
+    """Return the configured search query set passed to Apify Google Search discovery."""
+    discovery = load_pipeline_config().discovery
+    queries = list(discovery.queries)
+    return {
+        "items": [
+            {
+                "position": index + 1,
+                "query": query,
+            }
+            for index, query in enumerate(queries)
+        ],
+        "source_engine": discovery.source_engine,
+        "actor_id": discovery.actor_id,
+        "max_pages_per_query": discovery.max_pages_per_query,
+        "results_per_page": discovery.results_per_page,
+        "query_count": len(queries),
+    }
+
+
+def list_pipeline_runners() -> dict[str, Any]:
+    """Return read-only runner stages and key config used in discovery/enrichment."""
+    config = load_pipeline_config()
+    discovery = config.discovery
+    enrichment = config.enrichment
+    llm = config.llm
+
+    items = [
+        {
+            "step_order": 1,
+            "step_id": "discovery_apify_google_search",
+            "phase": "discovery",
+            "runner": "Apify Google Search",
+            "details": "Runs configured query set to produce vendor candidates.",
+            "config": {
+                "source_engine": discovery.source_engine,
+                "actor_id": discovery.actor_id,
+                "query_count": len(discovery.queries),
+                "max_pages_per_query": discovery.max_pages_per_query,
+                "results_per_page": discovery.results_per_page,
+                "max_candidate_domains_per_run": discovery.max_candidate_domains_per_run,
+            },
+        },
+        {
+            "step_order": 2,
+            "step_id": "enrichment_homepage_fetch",
+            "phase": "enrichment",
+            "runner": "Homepage fetch",
+            "details": "Fetches vendor homepage before deeper crawl/exploration.",
+            "config": {
+                "request_timeout_seconds": enrichment.request_timeout_seconds,
+                "external_fetch_backend": enrichment.external_fetch_backend,
+                "external_fetch_actor_id": enrichment.external_fetch_actor_id,
+                "external_fetch_max_pages": enrichment.external_fetch_max_pages,
+            },
+        },
+        {
+            "step_order": 3,
+            "step_id": "enrichment_site_exploration",
+            "phase": "enrichment",
+            "runner": "Apify/Web site crawl",
+            "details": "Explores high-signal pages for each vendor.",
+            "config": {
+                "discovery_mode": enrichment.discovery_mode,
+                "max_crawl_depth": enrichment.max_crawl_depth,
+                "max_non_homepage_pages": enrichment.max_non_homepage_pages,
+                "max_pages_total": enrichment.max_pages_total,
+            },
+        },
+        {
+            "step_order": 4,
+            "step_id": "extraction_deterministic",
+            "phase": "enrichment",
+            "runner": "Deterministic extraction",
+            "details": "Rule-based extraction from fetched pages.",
+            "config": {},
+        },
+        {
+            "step_order": 5,
+            "step_id": "extraction_llm",
+            "phase": "enrichment",
+            "runner": "LLM extraction",
+            "details": "Optional semantic extraction/augmentation.",
+            "config": {
+                "enabled": llm.enabled,
+                "model": llm.model,
+                "request_timeout_seconds": llm.request_timeout_seconds,
+                "max_page_text_chars": llm.max_page_text_chars,
+                "max_site_text_chars": llm.max_site_text_chars,
+            },
+        },
+    ]
+
+    return {"items": items}
+
+
+def list_n8n_integrations() -> dict[str, Any]:
+    """Return read-only metadata for n8n workflow integrations in-repo."""
+    workflow_dir = PROJECT_ROOT / "n8n" / "workflows"
+    workflow_files = sorted(workflow_dir.glob("*.json"))
+    items: list[dict[str, Any]] = []
+
+    for workflow_path in workflow_files:
+        try:
+            payload = json.loads(workflow_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+
+        nodes = payload.get("nodes")
+        node_list = nodes if isinstance(nodes, list) else []
+
+        webhook_path = ""
+        webhook_id = ""
+        for node in node_list:
+            if not isinstance(node, dict):
+                continue
+            if str(node.get("type", "")).strip() != "n8n-nodes-base.webhook":
+                continue
+            params = node.get("parameters")
+            if isinstance(params, dict):
+                webhook_path = str(params.get("path") or "").strip()
+            webhook_id = str(node.get("webhookId") or "").strip()
+            if webhook_path or webhook_id:
+                break
+
+        items.append(
+            {
+                "workflow_name": str(payload.get("name") or workflow_path.stem),
+                "file_name": workflow_path.name,
+                "webhook_path": webhook_path,
+                "webhook_id": webhook_id,
+                "description": str((payload.get("meta") or {}).get("description") or "").strip() if isinstance(payload.get("meta"), dict) else "",
+                "node_count": len(node_list),
+                "active": bool(payload.get("active", False)),
+            }
+        )
+
+    return {
+        "items": items,
+        "workflow_count": len(items),
+        "source_directory": str(workflow_dir.relative_to(PROJECT_ROOT)),
+    }
+
+
+def list_integration_catalog() -> dict[str, Any]:
+    """Return the canonical integration catalog used for vendor extraction/mapping."""
+    items = [
+        {
+            "integration_name": canonical_name,
+            "category": category,
+            "aliases": list(aliases),
+        }
+        for canonical_name, category, aliases in vendor_intel.INTEGRATION_BRAND_RULES
+    ]
+    categories = sorted({str(item["category"]) for item in items})
+    return {
+        "items": items,
+        "integration_count": len(items),
+        "category_count": len(categories),
+        "categories": categories,
+        "source": "services/extraction/vendor_intel.py::INTEGRATION_BRAND_RULES",
+        "source_note": "Catalog includes integrations seeded from n8n node catalog and CSP-focused normalization rules.",
+    }
 
 
 def list_lead_capture_data(*, limit: int = 200) -> dict[str, Any]:
@@ -393,6 +689,25 @@ def _lead_follow_up_response(
     return _json_response(start_response, {"ok": True, "lead": result})
 
 
+def _pipeline_run_response(
+    start_response,
+    trigger_pipeline_fn: Callable[[str], dict[str, Any]],
+    payload: dict[str, str],
+):
+    pipeline_id = payload.get("pipeline_id", "").strip()
+    if not pipeline_id:
+        return _json_response(start_response, {"ok": False, "error": "pipeline_id_required"}, status="400 Bad Request")
+    try:
+        result = trigger_pipeline_fn(pipeline_id)
+    except ValueError as error:
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="400 Bad Request")
+    except Exception as error:  # pragma: no cover - defensive error surface
+        logger.exception("Pipeline run trigger failed")
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
+    status = "200 OK" if result.get("ok", True) else "409 Conflict"
+    return _json_response(start_response, result, status=status)
+
+
 def _run_publish_directory() -> dict[str, Any]:
     """Export directory_dataset.json and optionally push to GitHub."""
     import os
@@ -535,7 +850,8 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
     except (TypeError, ValueError) as exc:
         return {"ok": False, "vendor": website, "fields_written": [], "validation_errors": [str(exc)]}
 
-    fields_written = [f for f in payload if f not in {"website", "vendor_name", "name"}]
+    fields_written = [f for f in payload if f not in {"website", "vendor_name", "name", "pipeline_name"}]
+    pipeline_name = _infer_enrichment_pipeline_name(payload)
 
     if supabase_client.is_configured():
         try:
@@ -543,6 +859,8 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
                 {"source": str(payload.get("source") or "n8n_enrich")},
                 {"website": website, "vendor_name": vendor_name, "text": ""},
                 intelligence,
+                enrichment_pipeline=pipeline_name,
+                preserve_existing=True,
             )
         except Exception as exc:
             return {
@@ -552,7 +870,36 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
                 "validation_errors": [f"upsert_failed: {exc}"],
             }
 
-    return {"ok": True, "vendor": website, "fields_written": fields_written, "validation_errors": []}
+    return {
+        "ok": True,
+        "vendor": website,
+        "fields_written": fields_written,
+        "validation_errors": [],
+        "enrichment_pipeline": pipeline_name,
+    }
+
+
+def _infer_enrichment_pipeline_name(payload: dict[str, Any]) -> str:
+    explicit = _normalize_pipeline_name(payload.get("pipeline_name") or payload.get("source") or "")
+    if explicit and explicit not in {"n8n_enrich", "unknown"}:
+        return explicit
+    keys = {str(key) for key in payload.keys()}
+    if any(key.startswith("g2_") for key in keys):
+        return "g2"
+    if "tracxn_url" in keys:
+        return "tracxn"
+    if "pricing_source" in keys or "has_public_pricing_page" in keys:
+        return "pricing"
+    if "raw_crawl_blob" in keys or "crawl_page_count" in keys or "crawl_completed_at" in keys:
+        return "apify"
+    return "n8n_enrich"
+
+
+def _normalize_pipeline_name(value: object) -> str:
+    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(value or "").strip())
+    while "__" in normalized:
+        normalized = normalized.replace("__", "_")
+    return normalized.strip("_")
 
 
 def _enrich_write_response(

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integration Catalog | SuccessByCS Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-900: #0f2318;
+      --green-700: #1e3d2f;
+      --green-100: #dceee4;
+      --gray-900: #111827;
+      --gray-700: #374151;
+      --gray-500: #6b7280;
+      --gray-300: #d1d5db;
+      --gray-100: #f3f4f6;
+      --cream: #faf9f7;
+      --white: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Inter", system-ui, sans-serif; background: var(--cream); color: var(--gray-900); }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 52px; }
+    a.back { display: inline-block; margin-bottom: 14px; font-weight: 600; color: var(--green-700); text-decoration: none; }
+    h1 { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 38px; color: var(--green-900); }
+    p.sub { margin: 10px 0 0; color: var(--gray-700); line-height: 1.6; }
+    .meta { margin-top: 16px; padding: 14px 16px; background: var(--white); border: 1px solid var(--green-100); border-radius: 10px; color: var(--gray-700); line-height: 1.6; }
+    .table-wrap { margin-top: 16px; background: var(--white); border: 1px solid var(--green-100); border-radius: 10px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 920px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-100); font-size: 14px; vertical-align: top; }
+    th { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: var(--gray-500); border-bottom: 1px solid var(--gray-300); }
+    .controls { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    select, input {
+      height: 36px; border: 1px solid var(--gray-300); border-radius: 8px;
+      padding: 0 10px; font-size: 14px; font-family: inherit; background: var(--white); color: var(--gray-900);
+    }
+    .message { margin-top: 14px; padding: 10px 12px; border: 1px solid var(--green-100); border-radius: 8px; color: var(--gray-700); background: var(--white); }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="/admin.html">&larr; Back to admin dashboard</a>
+    <h1>Integration Catalog</h1>
+    <p class="sub">Read-only catalog of integrations used by enrichment/classification (includes n8n-derived integrations).</p>
+    <div id="meta" class="meta">Loading integration catalog...</div>
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search integration">
+      <select id="category-filter">
+        <option value="">All categories</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>integration</th>
+            <th>category</th>
+            <th>aliases</th>
+          </tr>
+        </thead>
+        <tbody id="catalog-body">
+          <tr><td colspan="3">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="error" class="message" style="display:none;"></div>
+  </main>
+
+  <script>
+    const API_FALLBACK_BASE = "http://127.0.0.1:8787";
+    const STATIC_FALLBACK_PATH = "./data/integration_catalog.json";
+    const FALLBACK_ITEMS = [
+      { integration_name: "Salesforce", category: "crm", aliases: ["salesforce", "sales cloud"] },
+      { integration_name: "HubSpot", category: "crm", aliases: ["hubspot"] },
+      { integration_name: "Gong", category: "conversation_intelligence", aliases: ["gong"] },
+      { integration_name: "Outreach", category: "sales_engagement", aliases: ["outreach"] },
+      { integration_name: "Zapier", category: "workflow", aliases: ["zapier"] },
+      { integration_name: "Make", category: "workflow", aliases: ["make.com"] },
+      { integration_name: "Workato", category: "workflow", aliases: ["workato"] },
+      { integration_name: "n8n", category: "workflow", aliases: ["n8n"] },
+      { integration_name: "Slack", category: "communication", aliases: ["slack"] },
+      { integration_name: "Zendesk", category: "support", aliases: ["zendesk"] },
+      { integration_name: "Intercom", category: "support", aliases: ["intercom"] },
+      { integration_name: "Stripe", category: "billing", aliases: ["stripe"] },
+      { integration_name: "Amplitude", category: "analytics", aliases: ["amplitude"] },
+      { integration_name: "Mixpanel", category: "analytics", aliases: ["mixpanel"] },
+      { integration_name: "Snowflake", category: "warehouse", aliases: ["snowflake"] },
+      { integration_name: "BigQuery", category: "warehouse", aliases: ["bigquery", "big query"] },
+    ];
+
+    const state = { items: [] };
+
+    async function detectApiBase() {
+      if (await hasEndpoint("")) return "";
+      if (await hasEndpoint(API_FALLBACK_BASE)) return API_FALLBACK_BASE;
+      return API_FALLBACK_BASE;
+    }
+
+    async function hasEndpoint(base) {
+      try {
+        const response = await fetch(`${base}/admin/integration-catalog`);
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function esc(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderCategoryFilter(items) {
+      const filter = document.getElementById("category-filter");
+      const categories = Array.from(new Set(items.map((item) => String(item.category || "")).filter(Boolean))).sort();
+      filter.querySelectorAll("option:not([value=''])").forEach((node) => node.remove());
+      categories.forEach((category) => filter.appendChild(new Option(category, category)));
+    }
+
+    function renderRows() {
+      const body = document.getElementById("catalog-body");
+      const search = String(document.getElementById("search").value || "").trim().toLowerCase();
+      const category = String(document.getElementById("category-filter").value || "");
+      const rows = state.items.filter((item) => {
+        const matchesSearch = !search || String(item.integration_name || "").toLowerCase().includes(search);
+        const matchesCategory = !category || String(item.category || "") === category;
+        return matchesSearch && matchesCategory;
+      });
+      body.innerHTML = rows.map((item) => `
+        <tr>
+          <td>${esc(item.integration_name)}</td>
+          <td>${esc(item.category)}</td>
+          <td>${esc(Array.isArray(item.aliases) ? item.aliases.join(", ") : "")}</td>
+        </tr>
+      `).join("") || '<tr><td colspan="3">No integrations match this filter.</td></tr>';
+    }
+
+    async function loadCatalog() {
+      const meta = document.getElementById("meta");
+      const error = document.getElementById("error");
+      try {
+        const apiBase = await detectApiBase();
+        const response = await fetch(`${apiBase}/admin/integration-catalog`);
+        if (!response.ok) {
+          throw new Error(`Request failed: ${response.status}`);
+        }
+        const payload = await response.json();
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        state.items = items;
+        renderCategoryFilter(items);
+        renderRows();
+        meta.innerHTML =
+          `Integrations: <strong>${esc(String(payload.integration_count ?? items.length))}</strong> | ` +
+          `Categories: <strong>${esc(String(payload.category_count ?? ""))}</strong><br>` +
+          `Source: <code>${esc(payload.source || "")}</code><br>` +
+          `${esc(payload.source_note || "")}`;
+      } catch (err) {
+        try {
+          const staticResponse = await fetch(STATIC_FALLBACK_PATH);
+          if (!staticResponse.ok) {
+            throw new Error(`Static fallback failed: ${staticResponse.status}`);
+          }
+          const staticPayload = await staticResponse.json();
+          const staticItems = Array.isArray(staticPayload.items) ? staticPayload.items : [];
+          state.items = staticItems.length ? staticItems : FALLBACK_ITEMS;
+          renderCategoryFilter(state.items);
+          renderRows();
+          meta.innerHTML =
+            `Integrations: <strong>${esc(String(staticPayload.integration_count ?? state.items.length))}</strong> | ` +
+            `Source: <code>${esc(staticPayload.source || "static fallback catalog")}</code>`;
+          error.style.display = "block";
+          error.textContent = `Live endpoint unavailable (${err.message}). Showing static fallback catalog.`;
+        } catch (staticErr) {
+          state.items = FALLBACK_ITEMS;
+          renderCategoryFilter(FALLBACK_ITEMS);
+          renderRows();
+          meta.innerHTML =
+            `Integrations: <strong>${esc(String(FALLBACK_ITEMS.length))}</strong> | Source: <strong>embedded fallback list</strong>`;
+          error.style.display = "block";
+          error.textContent = `Live endpoint unavailable (${err.message}). Static fallback also failed (${staticErr.message}). Showing minimal fallback list.`;
+        }
+      }
+    }
+
+    document.getElementById("search").addEventListener("input", renderRows);
+    document.getElementById("category-filter").addEventListener("change", renderRows);
+    loadCatalog();
+  </script>
+</body>
+</html>

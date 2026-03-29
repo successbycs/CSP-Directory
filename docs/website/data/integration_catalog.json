@@ -1,0 +1,768 @@
+{
+  "items": [
+    {
+      "integration_name": "Salesforce",
+      "category": "crm",
+      "aliases": [
+        "salesforce",
+        "sales cloud"
+      ]
+    },
+    {
+      "integration_name": "HubSpot",
+      "category": "crm",
+      "aliases": [
+        "hubspot"
+      ]
+    },
+    {
+      "integration_name": "Microsoft Dynamics 365",
+      "category": "crm",
+      "aliases": [
+        "microsoft dynamics",
+        "dynamics 365"
+      ]
+    },
+    {
+      "integration_name": "Pipedrive",
+      "category": "crm",
+      "aliases": [
+        "pipedrive"
+      ]
+    },
+    {
+      "integration_name": "Gainsight",
+      "category": "csp",
+      "aliases": [
+        "gainsight"
+      ]
+    },
+    {
+      "integration_name": "Totango",
+      "category": "csp",
+      "aliases": [
+        "totango"
+      ]
+    },
+    {
+      "integration_name": "ChurnZero",
+      "category": "csp",
+      "aliases": [
+        "churnzero",
+        "churn zero"
+      ]
+    },
+    {
+      "integration_name": "Vitally",
+      "category": "csp",
+      "aliases": [
+        "vitally"
+      ]
+    },
+    {
+      "integration_name": "Custify",
+      "category": "csp",
+      "aliases": [
+        "custify"
+      ]
+    },
+    {
+      "integration_name": "Planhat",
+      "category": "csp",
+      "aliases": [
+        "planhat"
+      ]
+    },
+    {
+      "integration_name": "Catalyst",
+      "category": "csp",
+      "aliases": [
+        "catalyst"
+      ]
+    },
+    {
+      "integration_name": "Jira",
+      "category": "pm",
+      "aliases": [
+        "jira"
+      ]
+    },
+    {
+      "integration_name": "Asana",
+      "category": "pm",
+      "aliases": [
+        "asana"
+      ]
+    },
+    {
+      "integration_name": "Linear",
+      "category": "pm",
+      "aliases": [
+        "linear"
+      ]
+    },
+    {
+      "integration_name": "ClickUp",
+      "category": "pm",
+      "aliases": [
+        "clickup",
+        "click up"
+      ]
+    },
+    {
+      "integration_name": "Monday.com",
+      "category": "pm",
+      "aliases": [
+        "monday.com",
+        "monday"
+      ]
+    },
+    {
+      "integration_name": "Trello",
+      "category": "pm",
+      "aliases": [
+        "trello"
+      ]
+    },
+    {
+      "integration_name": "Zapier",
+      "category": "workflow",
+      "aliases": [
+        "zapier"
+      ]
+    },
+    {
+      "integration_name": "Make",
+      "category": "workflow",
+      "aliases": [
+        "make.com"
+      ]
+    },
+    {
+      "integration_name": "Workato",
+      "category": "workflow",
+      "aliases": [
+        "workato"
+      ]
+    },
+    {
+      "integration_name": "Tray.io",
+      "category": "workflow",
+      "aliases": [
+        "tray.io",
+        "tray"
+      ]
+    },
+    {
+      "integration_name": "n8n",
+      "category": "workflow",
+      "aliases": [
+        "n8n"
+      ]
+    },
+    {
+      "integration_name": "Gmail",
+      "category": "email/calendar",
+      "aliases": [
+        "gmail",
+        "google mail"
+      ]
+    },
+    {
+      "integration_name": "Google Calendar",
+      "category": "email/calendar",
+      "aliases": [
+        "google calendar"
+      ]
+    },
+    {
+      "integration_name": "Outlook",
+      "category": "email/calendar",
+      "aliases": [
+        "outlook",
+        "microsoft outlook"
+      ]
+    },
+    {
+      "integration_name": "Office 365",
+      "category": "email/calendar",
+      "aliases": [
+        "office 365",
+        "microsoft 365"
+      ]
+    },
+    {
+      "integration_name": "Calendly",
+      "category": "email/calendar",
+      "aliases": [
+        "calendly"
+      ]
+    },
+    {
+      "integration_name": "Slack",
+      "category": "communication",
+      "aliases": [
+        "slack"
+      ]
+    },
+    {
+      "integration_name": "Microsoft Teams",
+      "category": "communication",
+      "aliases": [
+        "microsoft teams"
+      ]
+    },
+    {
+      "integration_name": "Zendesk",
+      "category": "support",
+      "aliases": [
+        "zendesk"
+      ]
+    },
+    {
+      "integration_name": "Intercom",
+      "category": "support",
+      "aliases": [
+        "intercom"
+      ]
+    },
+    {
+      "integration_name": "Freshdesk",
+      "category": "support",
+      "aliases": [
+        "freshdesk"
+      ]
+    },
+    {
+      "integration_name": "Help Scout",
+      "category": "support",
+      "aliases": [
+        "help scout",
+        "helpscout"
+      ]
+    },
+    {
+      "integration_name": "ServiceNow",
+      "category": "support",
+      "aliases": [
+        "servicenow",
+        "service now"
+      ]
+    },
+    {
+      "integration_name": "Snowflake",
+      "category": "warehouse",
+      "aliases": [
+        "snowflake"
+      ]
+    },
+    {
+      "integration_name": "BigQuery",
+      "category": "warehouse",
+      "aliases": [
+        "bigquery",
+        "big query"
+      ]
+    },
+    {
+      "integration_name": "Redshift",
+      "category": "warehouse",
+      "aliases": [
+        "redshift"
+      ]
+    },
+    {
+      "integration_name": "Databricks",
+      "category": "warehouse",
+      "aliases": [
+        "databricks"
+      ]
+    },
+    {
+      "integration_name": "Segment",
+      "category": "warehouse",
+      "aliases": [
+        "segment"
+      ]
+    },
+    {
+      "integration_name": "Amplitude",
+      "category": "analytics",
+      "aliases": [
+        "amplitude"
+      ]
+    },
+    {
+      "integration_name": "Mixpanel",
+      "category": "analytics",
+      "aliases": [
+        "mixpanel"
+      ]
+    },
+    {
+      "integration_name": "Pendo",
+      "category": "analytics",
+      "aliases": [
+        "pendo"
+      ]
+    },
+    {
+      "integration_name": "FullStory",
+      "category": "analytics",
+      "aliases": [
+        "fullstory",
+        "full story"
+      ]
+    },
+    {
+      "integration_name": "Heap",
+      "category": "analytics",
+      "aliases": [
+        "heap analytics",
+        "heap"
+      ]
+    },
+    {
+      "integration_name": "Google Analytics",
+      "category": "analytics",
+      "aliases": [
+        "google analytics",
+        "ga4"
+      ]
+    },
+    {
+      "integration_name": "Hotjar",
+      "category": "analytics",
+      "aliases": [
+        "hotjar"
+      ]
+    },
+    {
+      "integration_name": "PostHog",
+      "category": "analytics",
+      "aliases": [
+        "posthog",
+        "post hog"
+      ]
+    },
+    {
+      "integration_name": "Gong",
+      "category": "conversation_intelligence",
+      "aliases": [
+        "gong"
+      ]
+    },
+    {
+      "integration_name": "Chorus",
+      "category": "conversation_intelligence",
+      "aliases": [
+        "chorus.ai",
+        "chorus"
+      ]
+    },
+    {
+      "integration_name": "Clari",
+      "category": "conversation_intelligence",
+      "aliases": [
+        "clari"
+      ]
+    },
+    {
+      "integration_name": "Outreach",
+      "category": "sales_engagement",
+      "aliases": [
+        "outreach"
+      ]
+    },
+    {
+      "integration_name": "Salesloft",
+      "category": "sales_engagement",
+      "aliases": [
+        "salesloft",
+        "sales loft"
+      ]
+    },
+    {
+      "integration_name": "Apollo",
+      "category": "sales_engagement",
+      "aliases": [
+        "apollo.io",
+        "apollo"
+      ]
+    },
+    {
+      "integration_name": "Marketo",
+      "category": "marketing",
+      "aliases": [
+        "marketo",
+        "marketo engage"
+      ]
+    },
+    {
+      "integration_name": "Pardot",
+      "category": "marketing",
+      "aliases": [
+        "pardot",
+        "salesforce marketing cloud account engagement"
+      ]
+    },
+    {
+      "integration_name": "Mailchimp",
+      "category": "marketing",
+      "aliases": [
+        "mailchimp"
+      ]
+    },
+    {
+      "integration_name": "HubSpot Marketing",
+      "category": "marketing",
+      "aliases": [
+        "hubspot marketing",
+        "hubspot email"
+      ]
+    },
+    {
+      "integration_name": "ActiveCampaign",
+      "category": "marketing",
+      "aliases": [
+        "activecampaign",
+        "active campaign"
+      ]
+    },
+    {
+      "integration_name": "Brevo",
+      "category": "marketing",
+      "aliases": [
+        "brevo",
+        "sendinblue"
+      ]
+    },
+    {
+      "integration_name": "SendGrid",
+      "category": "email_infra",
+      "aliases": [
+        "sendgrid",
+        "send grid"
+      ]
+    },
+    {
+      "integration_name": "Twilio",
+      "category": "email_infra",
+      "aliases": [
+        "twilio"
+      ]
+    },
+    {
+      "integration_name": "Postmark",
+      "category": "email_infra",
+      "aliases": [
+        "postmark"
+      ]
+    },
+    {
+      "integration_name": "Resend",
+      "category": "email_infra",
+      "aliases": [
+        "resend"
+      ]
+    },
+    {
+      "integration_name": "Stripe",
+      "category": "billing",
+      "aliases": [
+        "stripe"
+      ]
+    },
+    {
+      "integration_name": "Chargebee",
+      "category": "billing",
+      "aliases": [
+        "chargebee",
+        "charge bee"
+      ]
+    },
+    {
+      "integration_name": "Recurly",
+      "category": "billing",
+      "aliases": [
+        "recurly"
+      ]
+    },
+    {
+      "integration_name": "Paddle",
+      "category": "billing",
+      "aliases": [
+        "paddle"
+      ]
+    },
+    {
+      "integration_name": "Zuora",
+      "category": "billing",
+      "aliases": [
+        "zuora"
+      ]
+    },
+    {
+      "integration_name": "Notion",
+      "category": "docs",
+      "aliases": [
+        "notion"
+      ]
+    },
+    {
+      "integration_name": "Confluence",
+      "category": "docs",
+      "aliases": [
+        "confluence",
+        "atlassian confluence"
+      ]
+    },
+    {
+      "integration_name": "Google Docs",
+      "category": "docs",
+      "aliases": [
+        "google docs"
+      ]
+    },
+    {
+      "integration_name": "Coda",
+      "category": "docs",
+      "aliases": [
+        "coda.io",
+        "coda"
+      ]
+    },
+    {
+      "integration_name": "Google Sheets",
+      "category": "spreadsheet",
+      "aliases": [
+        "google sheets"
+      ]
+    },
+    {
+      "integration_name": "Airtable",
+      "category": "spreadsheet",
+      "aliases": [
+        "airtable"
+      ]
+    },
+    {
+      "integration_name": "Smartsheet",
+      "category": "spreadsheet",
+      "aliases": [
+        "smartsheet"
+      ]
+    },
+    {
+      "integration_name": "Tableau",
+      "category": "bi",
+      "aliases": [
+        "tableau"
+      ]
+    },
+    {
+      "integration_name": "Looker",
+      "category": "bi",
+      "aliases": [
+        "looker",
+        "google looker"
+      ]
+    },
+    {
+      "integration_name": "Power BI",
+      "category": "bi",
+      "aliases": [
+        "power bi",
+        "microsoft power bi",
+        "powerbi"
+      ]
+    },
+    {
+      "integration_name": "Metabase",
+      "category": "bi",
+      "aliases": [
+        "metabase"
+      ]
+    },
+    {
+      "integration_name": "Domo",
+      "category": "bi",
+      "aliases": [
+        "domo"
+      ]
+    },
+    {
+      "integration_name": "Zoom",
+      "category": "video",
+      "aliases": [
+        "zoom"
+      ]
+    },
+    {
+      "integration_name": "Loom",
+      "category": "video",
+      "aliases": [
+        "loom"
+      ]
+    },
+    {
+      "integration_name": "Webex",
+      "category": "video",
+      "aliases": [
+        "webex",
+        "cisco webex"
+      ]
+    },
+    {
+      "integration_name": "Front",
+      "category": "support",
+      "aliases": [
+        "front",
+        "front app"
+      ]
+    },
+    {
+      "integration_name": "Kustomer",
+      "category": "support",
+      "aliases": [
+        "kustomer"
+      ]
+    },
+    {
+      "integration_name": "Gorgias",
+      "category": "support",
+      "aliases": [
+        "gorgias"
+      ]
+    },
+    {
+      "integration_name": "Gladly",
+      "category": "support",
+      "aliases": [
+        "gladly"
+      ]
+    },
+    {
+      "integration_name": "Dixa",
+      "category": "support",
+      "aliases": [
+        "dixa"
+      ]
+    },
+    {
+      "integration_name": "Qualtrics",
+      "category": "survey",
+      "aliases": [
+        "qualtrics"
+      ]
+    },
+    {
+      "integration_name": "SurveyMonkey",
+      "category": "survey",
+      "aliases": [
+        "surveymonkey",
+        "survey monkey"
+      ]
+    },
+    {
+      "integration_name": "Typeform",
+      "category": "survey",
+      "aliases": [
+        "typeform"
+      ]
+    },
+    {
+      "integration_name": "Delighted",
+      "category": "survey",
+      "aliases": [
+        "delighted"
+      ]
+    },
+    {
+      "integration_name": "AskNicely",
+      "category": "survey",
+      "aliases": [
+        "asknicely",
+        "ask nicely"
+      ]
+    },
+    {
+      "integration_name": "GitHub",
+      "category": "devops",
+      "aliases": [
+        "github"
+      ]
+    },
+    {
+      "integration_name": "GitLab",
+      "category": "devops",
+      "aliases": [
+        "gitlab"
+      ]
+    },
+    {
+      "integration_name": "Jira Service Management",
+      "category": "devops",
+      "aliases": [
+        "jira service management",
+        "jira service desk"
+      ]
+    },
+    {
+      "integration_name": "Clearbit",
+      "category": "enrichment",
+      "aliases": [
+        "clearbit"
+      ]
+    },
+    {
+      "integration_name": "ZoomInfo",
+      "category": "enrichment",
+      "aliases": [
+        "zoominfo",
+        "zoom info"
+      ]
+    },
+    {
+      "integration_name": "6sense",
+      "category": "enrichment",
+      "aliases": [
+        "6sense"
+      ]
+    },
+    {
+      "integration_name": "Demandbase",
+      "category": "enrichment",
+      "aliases": [
+        "demandbase"
+      ]
+    }
+  ],
+  "integration_count": 100,
+  "category_count": 21,
+  "categories": [
+    "analytics",
+    "bi",
+    "billing",
+    "communication",
+    "conversation_intelligence",
+    "crm",
+    "csp",
+    "devops",
+    "docs",
+    "email/calendar",
+    "email_infra",
+    "enrichment",
+    "marketing",
+    "pm",
+    "sales_engagement",
+    "spreadsheet",
+    "support",
+    "survey",
+    "video",
+    "warehouse",
+    "workflow"
+  ],
+  "source": "services/extraction/vendor_intel.py::INTEGRATION_BRAND_RULES",
+  "source_note": "Generated static fallback catalog for admin website."
+}

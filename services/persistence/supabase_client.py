@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 
 from services.extraction.vendor_intel import (
+    INTEGRATION_BRAND_RULES,
     VendorIntelligence,
     normalize_email_address,
     normalize_email_list,
@@ -19,6 +20,10 @@ from services.extraction.vendor_intel import (
 
 if TYPE_CHECKING:
     from supabase import Client
+
+
+INTEGRATION_CATALOG_TABLE = "integration_catalog"
+INTEGRATION_CATALOG_SELECT = "integration_name,category,aliases,source,active,updated_at"
 
 
 VENDOR_PROFILE_SELECT = ",".join(
@@ -80,6 +85,17 @@ VENDOR_PROFILE_SELECT = ",".join(
         "funding_stage",
         "total_funding",
         "use_case_details",
+        "g2_url",
+        "g2_rating",
+        "g2_review_count",
+        "g2_market_segment",
+        "g2_categories",
+        "has_public_pricing_page",
+        "pricing_source",
+        "last_enriched_at",
+        "last_enriched_pipeline",
+        "enrichment_count",
+        "enrichment_pipeline_counts",
         "last_updated",
         "is_new",
     ]
@@ -143,6 +159,17 @@ VENDOR_WRITE_COLUMNS = (
     "funding_stage",
     "total_funding",
     "use_case_details",
+    "g2_url",
+    "g2_rating",
+    "g2_review_count",
+    "g2_market_segment",
+    "g2_categories",
+    "has_public_pricing_page",
+    "pricing_source",
+    "last_enriched_at",
+    "last_enriched_pipeline",
+    "enrichment_count",
+    "enrichment_pipeline_counts",
     "raw_description",
     "last_updated",
     "is_new",
@@ -267,12 +294,31 @@ def upsert_vendor_result(
     vendor: dict[str, str],
     homepage_payload: dict[str, str | int],
     intelligence: VendorIntelligence,
+    *,
+    enrichment_pipeline: str | None = None,
+    preserve_existing: bool = False,
     client: "Client | None" = None,
 ) -> dict[str, Any]:
-    """Upsert a Phase 2 enriched vendor profile into cs_vendors using website as the conflict key."""
+    """Upsert a Phase 2 enriched vendor profile into cs_vendors using website as the conflict key.
+
+    When ``preserve_existing=True`` empty/null fields are stripped from the row before upserting
+    so that previously-enriched data is not overwritten by empty defaults from a partial run.
+    """
     supabase = client or get_supabase_client()
     row = build_vendor_row(vendor, homepage_payload, intelligence)
-    supabase.table("cs_vendors").upsert(row, on_conflict="website").execute()
+    if preserve_existing:
+        row = _strip_empty_row_fields(row)
+    row = _apply_integration_catalog_validation(supabase, row)
+    pipeline_name = _normalize_pipeline_name(
+        enrichment_pipeline or _infer_enrichment_pipeline_name(vendor, homepage_payload)
+    )
+    row = _apply_enrichment_tracking(
+        supabase,
+        website=str(row.get("website") or ""),
+        row=row,
+        pipeline_name=pipeline_name,
+    )
+    _upsert_vendor_row_with_tracking_fallback(supabase, row)
     return row
 
 
@@ -298,6 +344,50 @@ def list_vendor_profiles(*, limit: int = 200, client: "Client | None" = None) ->
         query = query.order("last_updated", desc=True)
     response = query.limit(limit).execute()
     return list(response.data or [])
+
+
+def list_integration_catalog(*, limit: int = 2000, client: "Client | None" = None) -> list[dict[str, Any]]:
+    """Return integration catalog rows from Supabase."""
+    supabase = client or get_supabase_client()
+    response = (
+        supabase.table(INTEGRATION_CATALOG_TABLE)
+        .select(INTEGRATION_CATALOG_SELECT)
+        .order("integration_name", desc=False)
+        .limit(limit)
+        .execute()
+    )
+    rows = list(response.data or [])
+    return [row for row in rows if isinstance(row, dict)]
+
+
+def upsert_integration_catalog_rows(
+    rows: list[dict[str, Any]],
+    *,
+    client: "Client | None" = None,
+) -> int:
+    """Upsert integration catalog rows keyed by integration_name."""
+    if not rows:
+        return 0
+    supabase = client or get_supabase_client()
+    normalized_rows = [_normalize_catalog_row(row) for row in rows if isinstance(row, dict)]
+    if not normalized_rows:
+        return 0
+    supabase.table(INTEGRATION_CATALOG_TABLE).upsert(
+        normalized_rows,
+        on_conflict="integration_name",
+    ).execute()
+    return len(normalized_rows)
+
+
+def sync_default_integration_catalog(*, client: "Client | None" = None) -> dict[str, Any]:
+    """Sync the repo's canonical integration rules into Supabase integration_catalog."""
+    rows = _default_integration_catalog_rows()
+    written = upsert_integration_catalog_rows(rows, client=client)
+    return {
+        "ok": True,
+        "rows_written": written,
+        "source": "services/extraction/vendor_intel.py::INTEGRATION_BRAND_RULES",
+    }
 
 
 def update_vendor_admin_fields(
@@ -394,6 +484,18 @@ def is_persistence_unavailable_error(error: Exception) -> bool:
             "schema cache",
         ]
     )
+
+
+def is_integration_catalog_unavailable_error(error: Exception) -> bool:
+    """Return True when integration_catalog is missing/unavailable."""
+    error_message = str(error).lower()
+    if f"column {INTEGRATION_CATALOG_TABLE}." in error_message and "does not exist" in error_message:
+        return True
+    if f"could not find the '{INTEGRATION_CATALOG_TABLE}' column" in error_message:
+        return True
+    if INTEGRATION_CATALOG_TABLE in error_message and ("does not exist" in error_message or "schema cache" in error_message):
+        return True
+    return _is_connectivity_error_message(error_message)
 
 
 def get_vendor_profile_columns() -> tuple[str, ...]:
@@ -555,10 +657,271 @@ def build_vendor_row(
         "funding_stage": intelligence.funding_stage or None,
         "total_funding": intelligence.total_funding or None,
         "use_case_details": intelligence.use_case_details or [],
+        "g2_url": intelligence.g2_url or None,
+        "g2_rating": intelligence.g2_rating,
+        "g2_review_count": intelligence.g2_review_count,
+        "g2_market_segment": intelligence.g2_market_segment or None,
+        "g2_categories": intelligence.g2_categories or [],
+        "has_public_pricing_page": intelligence.has_public_pricing_page,
+        "pricing_source": intelligence.pricing_source or None,
         "raw_description": raw_description or None,
         "last_updated": datetime.now(timezone.utc).isoformat(),
         "is_new": True,
     }
+
+
+_TRACKING_COLUMNS = (
+    "last_enriched_at",
+    "last_enriched_pipeline",
+    "enrichment_count",
+    "enrichment_pipeline_counts",
+)
+
+
+def _infer_enrichment_pipeline_name(
+    vendor: dict[str, str],
+    homepage_payload: dict[str, str | int],
+) -> str:
+    source = str(vendor.get("source") or homepage_payload.get("source") or "").strip().lower()
+    fetch_backend = str(homepage_payload.get("fetch_backend") or "").strip().lower()
+    if fetch_backend == "apify":
+        return "apify"
+    if "g2" in source:
+        return "g2"
+    if "tracxn" in source:
+        return "tracxn"
+    if "pricing" in source:
+        return "pricing"
+    if "apify" in source:
+        return "apify"
+    if source:
+        return source
+    return "pipeline_phase2"
+
+
+def _normalize_pipeline_name(value: str) -> str:
+    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(value or "").strip())
+    while "__" in normalized:
+        normalized = normalized.replace("__", "_")
+    normalized = normalized.strip("_")
+    return normalized or "unknown"
+
+
+def _apply_enrichment_tracking(
+    supabase: "Client",
+    *,
+    website: str,
+    row: dict[str, Any],
+    pipeline_name: str,
+) -> dict[str, Any]:
+    now_iso = datetime.now(timezone.utc).isoformat()
+    updated = dict(row)
+    updated["last_enriched_at"] = now_iso
+    updated["last_enriched_pipeline"] = pipeline_name
+    updated["enrichment_count"] = 1
+    updated["enrichment_pipeline_counts"] = {pipeline_name: 1}
+
+    if not website:
+        return updated
+
+    try:
+        response = (
+            supabase.table("cs_vendors")
+            .select("enrichment_count,enrichment_pipeline_counts")
+            .eq("website", website)
+            .limit(1)
+            .execute()
+        )
+    except Exception:
+        return updated
+
+    rows = list(response.data or [])
+    if not rows:
+        return updated
+
+    existing = rows[0] if isinstance(rows[0], dict) else {}
+    existing_count = existing.get("enrichment_count")
+    try:
+        base_count = int(existing_count) if existing_count is not None else 0
+    except (TypeError, ValueError):
+        base_count = 0
+
+    existing_pipeline_counts = existing.get("enrichment_pipeline_counts")
+    base_pipeline_counts: dict[str, int] = {}
+    if isinstance(existing_pipeline_counts, dict):
+        for key, value in existing_pipeline_counts.items():
+            pipeline_key = _normalize_pipeline_name(key)
+            try:
+                base_pipeline_counts[pipeline_key] = max(int(value), 0)
+            except (TypeError, ValueError):
+                continue
+
+    base_pipeline_counts[pipeline_name] = base_pipeline_counts.get(pipeline_name, 0) + 1
+    updated["enrichment_count"] = base_count + 1
+    updated["enrichment_pipeline_counts"] = base_pipeline_counts
+    return updated
+
+
+_ALWAYS_WRITE_FIELDS = frozenset({"website", "name", "last_updated"})
+
+
+def _strip_empty_row_fields(row: dict[str, Any]) -> dict[str, Any]:
+    """Remove None and empty collection values, keeping required identifier fields.
+
+    Used for partial enrichment writes so existing data is not overwritten by empty defaults.
+    """
+    result = {}
+    for k, v in row.items():
+        if k in _ALWAYS_WRITE_FIELDS:
+            result[k] = v
+        elif v is None:
+            continue
+        elif isinstance(v, (list, dict)) and not v:
+            continue
+        else:
+            result[k] = v
+    return result
+
+
+def _upsert_vendor_row_with_tracking_fallback(supabase: "Client", row: dict[str, Any]) -> None:
+    payload = dict(row)
+    stripped: list[str] = []
+    while True:
+        try:
+            supabase.table("cs_vendors").upsert(payload, on_conflict="website").execute()
+            if stripped:
+                logger.warning("Vendor upsert succeeded after stripping unknown columns: %s", stripped)
+            return
+        except Exception as error:
+            missing = _missing_vendor_write_column_name(error, payload.keys())
+            if not missing:
+                raise
+            payload.pop(missing, None)
+            stripped.append(missing)
+            if len(stripped) > 10:
+                raise
+
+
+def _missing_vendor_write_column_name(error: Exception, candidate_columns: Any) -> str | None:
+    error_message = str(error).lower()
+    for column in candidate_columns:
+        lowered = str(column).lower()
+        if f"column cs_vendors.{lowered} does not exist" in error_message:
+            return str(column)
+        if f"could not find the '{lowered}' column of 'cs_vendors'" in error_message:
+            return str(column)
+    return None
+
+
+def _default_integration_catalog_rows() -> list[dict[str, Any]]:
+    now_iso = datetime.now(timezone.utc).isoformat()
+    rows: list[dict[str, Any]] = []
+    for integration_name, category, aliases in INTEGRATION_BRAND_RULES:
+        rows.append(
+            {
+                "integration_name": str(integration_name).strip(),
+                "category": str(category).strip().lower(),
+                "aliases": sorted({str(alias).strip().lower() for alias in aliases if str(alias).strip()}),
+                "source": "n8n_catalog_curated",
+                "active": True,
+                "updated_at": now_iso,
+            }
+        )
+    return rows
+
+
+def _normalize_catalog_row(row: dict[str, Any]) -> dict[str, Any]:
+    integration_name = str(row.get("integration_name") or "").strip()
+    category = str(row.get("category") or "").strip().lower()
+    aliases = row.get("aliases")
+    alias_values = aliases if isinstance(aliases, list) else []
+    normalized_aliases = sorted({str(alias).strip().lower() for alias in alias_values if str(alias).strip()})
+    return {
+        "integration_name": integration_name,
+        "category": category or "other",
+        "aliases": normalized_aliases,
+        "source": str(row.get("source") or "integration_catalog").strip() or "integration_catalog",
+        "active": bool(row.get("active", True)),
+        "updated_at": str(row.get("updated_at") or datetime.now(timezone.utc).isoformat()),
+    }
+
+
+def _integration_catalog_rules(supabase: "Client") -> tuple[dict[str, str], dict[str, str]]:
+    """Return alias->canonical and canonical->category rules from Supabase or fallback constants."""
+    alias_to_canonical: dict[str, str] = {}
+    canonical_to_category: dict[str, str] = {}
+
+    try:
+        rows = list_integration_catalog(client=supabase)
+    except Exception as error:
+        if not is_integration_catalog_unavailable_error(error):
+            raise
+        rows = _default_integration_catalog_rows()
+
+    if not rows:
+        rows = _default_integration_catalog_rows()
+
+    for row in rows:
+        canonical = str(row.get("integration_name") or "").strip()
+        if not canonical:
+            continue
+        category = str(row.get("category") or "").strip().lower()
+        aliases = row.get("aliases") if isinstance(row.get("aliases"), list) else []
+        canonical_to_category[canonical.lower()] = category
+        alias_to_canonical[canonical.lower()] = canonical
+        for alias in aliases:
+            lowered_alias = str(alias).strip().lower()
+            if lowered_alias:
+                alias_to_canonical[lowered_alias] = canonical
+
+    if not alias_to_canonical:
+        for canonical, category, aliases in INTEGRATION_BRAND_RULES:
+            alias_to_canonical[str(canonical).lower()] = canonical
+            canonical_to_category[str(canonical).lower()] = str(category).lower()
+            for alias in aliases:
+                alias_to_canonical[str(alias).lower()] = canonical
+    return alias_to_canonical, canonical_to_category
+
+
+def _apply_integration_catalog_validation(
+    supabase: "Client",
+    row: dict[str, Any],
+) -> dict[str, Any]:
+    """Normalize integration fields against integration_catalog source-of-truth."""
+    alias_to_canonical, canonical_to_category = _integration_catalog_rules(supabase)
+    normalized = dict(row)
+
+    raw_integrations = row.get("integrations")
+    integration_values = raw_integrations if isinstance(raw_integrations, list) else []
+    canonical_integrations: list[str] = []
+    for value in integration_values:
+        cleaned = str(value or "").strip()
+        if not cleaned:
+            continue
+        canonical = alias_to_canonical.get(cleaned.lower())
+        if canonical and canonical not in canonical_integrations:
+            canonical_integrations.append(canonical)
+
+    raw_categories = row.get("integration_categories")
+    category_values = raw_categories if isinstance(raw_categories, list) else []
+    categories: list[str] = []
+    for value in category_values:
+        normalized_category = str(value or "").strip().lower()
+        if normalized_category and normalized_category not in categories:
+            categories.append(normalized_category)
+    for integration_name in canonical_integrations:
+        category = canonical_to_category.get(integration_name.lower(), "")
+        if category and category not in categories:
+            categories.append(category)
+
+    normalized["integrations"] = canonical_integrations
+    normalized["integration_categories"] = categories
+    normalized["integration_taxonomy"] = normalize_integration_taxonomy(
+        normalized.get("integration_taxonomy"),
+        integrations=canonical_integrations,
+        categories=categories,
+    )
+    return normalized
 
 
 def _extract_mission(text: str) -> str | None:

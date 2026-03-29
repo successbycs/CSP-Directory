@@ -1,7 +1,7 @@
 # Lead Capture — User Guide & Architecture
 
 **Status:** Live at vendors.successbycs.com
-**Last updated:** 2026-03-26
+**Last updated:** 2026-03-29
 
 ---
 
@@ -11,8 +11,29 @@
 
 1. Start the admin panel on your laptop: `python3 -m services.admin.admin_api`
 2. Open `http://127.0.0.1:8787`
-3. Go to the **Lead capture** section
+3. Lead Capture is near the top of the page, directly under Pipeline Control
 4. Every form submission appears here with name, email, company, intent, and full attribution context
+
+### Admin panel contract (what it shows, when, and wiring)
+
+What the Lead Capture panel displays:
+- Newest leads first (`created_at` descending)
+- Created timestamp in NZ time (`Pacific/Auckland`)
+- Lead identity: name, email, company
+- Intent + priority + follow-up status metadata
+- Source/attribution context (`entry_page`, CTA fields, UTM fields)
+- Notification status column: `n8n Discord and email sent`
+
+When rows appear:
+- A successful POST to `/api/lead-capture` writes a row immediately
+- The row is returned by `/admin/leads` on the next admin dashboard load
+- Admin panel currently fetches leads on load; refresh the page to pull newly captured rows
+
+Data wiring:
+- Primary table: Supabase `lead_captures`
+- Admin endpoint: `GET /admin/leads` in `services/admin/admin_api.py`
+- Backing function: `services.persistence.lead_capture_store.export_lead_capture_dashboard(...)`
+- Fallback artifact when persistence is unavailable: `outputs/lead_capture_dataset.json`
 
 ### What the visitor sees
 
@@ -24,6 +45,7 @@ When any CTA button is clicked on the live site, a modal opens with:
 - **Notes** — optional, what are they evaluating right now?
 
 Visitor submits → row lands in Supabase → visible immediately in `/admin/leads`.
+Lead notification workflow is triggered via n8n (`csp-lead-capture-intake`).
 
 ### Updating live vendor data
 
@@ -35,7 +57,12 @@ Visitor submits → row lands in Supabase → visible immediately in `/admin/lea
 
 ### Following up on a lead
 
-In the admin panel leads table, use the follow-up status dropdown to mark leads as:
+In the current admin UI, Lead Capture is read-focused:
+- `created_at` is shown in NZ time (`Pacific/Auckland`)
+- notification column shows: `n8n Discord and email sent`
+- no follow-up action buttons are shown in the table
+
+Follow-up status values still exist in persistence:
 `new` → `in_progress` → `contacted` → `qualified` → `closed`
 
 High-priority leads (shortlist / advisory intent) are automatically flagged with `follow_up_priority: high`.
@@ -71,6 +98,8 @@ Function writes row to Supabase table: lead_captures
 Browser receives {ok: true} → modal shows success message
   ↓
 Lead visible in admin panel → /admin/leads
+  ↓
+Lead row shows notification state: "n8n Discord and email sent"
 ```
 
 ---
@@ -127,7 +156,7 @@ The landing page has buttons in four places, each tagged with context so you kno
 | `api/lead-capture.py` | Vercel serverless | Accepts POST, validates, writes to Supabase |
 | `lead-magnet.js` | Browser (static JS) | Modal UI, form submit, success/error state |
 | `lead_captures` table | Supabase | Persistent storage |
-| Admin panel `/admin/leads` | Docker (local) | Review and follow-up queue |
+| Admin panel `/admin/leads` | Docker (local) | Review queue, attribution context, and notification visibility |
 
 ---
 

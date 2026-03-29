@@ -37,6 +37,7 @@ The admin surface does not need to be public-facing. Only the directory and lead
 - Runs locally, not public-facing
 - Admin API serves the admin panel at `http://127.0.0.1:8787`
 - Pipeline enrichment, Apify calls, and Supabase writes all happen here
+- Admin panel includes a Pipeline Control surface for manual pipeline execution and progress viewing
 
 **Data update workflow**
 
@@ -66,6 +67,7 @@ The directory could fetch vendor data directly from Supabase at runtime instead 
 ## Consequences
 
 - To update live data, you must run the pipeline, click Publish, and push to git. There is no automatic sync.
+- Pipeline schedules should be conservative by default (weekly discovery/enrichment) with extra runs triggered manually when needed, to avoid unnecessary Apify credit burn.
 - Lead capture is the only live API call from the public site. Everything else is static.
 - The admin panel is never exposed publicly — access requires being on the same network as the Docker host.
 - `docs/website/data/directory_dataset.json` is tracked in git. It will grow as the vendor count grows. At current size (50 vendors, ~48KB) this is not a concern.

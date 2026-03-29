@@ -143,6 +143,7 @@ def test_build_directory_dataset_falls_back_to_current_profiles_when_supabase_is
             "evidence_urls": [],
             "directory_fit": "high",
             "directory_category": "cs_core",
+            "use_case_details": [],
         }
     ]
 

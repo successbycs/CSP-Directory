@@ -33,6 +33,7 @@ DIRECTORY_DATASET_FIELDS = (
     "evidence_urls",
     "directory_fit",
     "directory_category",
+    "use_case_details",
 )
 
 
@@ -105,6 +106,7 @@ def _normalize_vendor_row(row: dict[str, Any]) -> dict[str, Any]:
         "evidence_urls": _list_value(row.get("evidence_urls")),
         "directory_fit": _string_value(row.get("directory_fit")),
         "directory_category": _string_value(row.get("directory_category")),
+        "use_case_details": _use_case_details_value(row.get("use_case_details")),
     }
 
 
@@ -131,6 +133,33 @@ def _profile_to_vendor_row(profile: VendorIntelligence) -> dict[str, Any]:
         "directory_category": profile.directory_category,
     }
 
+
+
+def _use_case_details_value(value: object) -> list[dict[str, Any]]:
+    """Return normalized use_case_details list with {label, url, summary}."""
+    if not value:
+        return []
+    if isinstance(value, str):
+        try:
+            import json as _json
+            value = _json.loads(value)
+        except Exception:
+            return []
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value:
+        if not isinstance(item, dict):
+            continue
+        label = str(item.get("label") or "").strip()
+        if not label:
+            continue
+        result.append({
+            "label": label,
+            "url": str(item.get("url") or "").strip(),
+            "summary": str(item.get("summary") or "")[:200].strip(),
+        })
+    return result
 
 
 def _case_study_details_value(value: object) -> list[dict[str, Any]]:

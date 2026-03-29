@@ -4,26 +4,115 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | SuccessByCS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./admin.css">
 </head>
 <body>
+  <nav>
+    <a class="nav-brand" href="./landing.html">
+      <div class="nav-dot">
+        <svg viewBox="0 0 16 16"><path d="M8 2a6 6 0 100 12A6 6 0 008 2zm0 1.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9z"/></svg>
+      </div>
+      <span class="nav-name">SuccessByCS</span>
+      <span class="nav-tag">Internal ops</span>
+    </a>
+    <div class="nav-links">
+      <a href="./landing.html">Public directory</a>
+      <a href="/outputs/vendor_review.html">Vendor review</a>
+      <a href="/outputs/search_visibility_report.html">Search visibility</a>
+      <a href="/outputs/lead_capture_dataset.json">Lead export</a>
+    </div>
+  </nav>
+
   <main class="dashboard-shell">
     <header class="dashboard-header">
       <div>
         <p class="eyebrow">Internal operations</p>
         <h1>Pipeline admin dashboard</h1>
         <p class="subheadline">Inspect discovery candidates, enriched vendors, captured leads, and recent pipeline runs. Apply lightweight quality-control actions without a full admin UI.</p>
-        <p class="subheadline">
-          <a href="./landing.html">Open public directory</a>
-          ·
-          <a href="../../outputs/vendor_review.html">Open latest vendor review report</a>
-          ·
-          <a href="../../outputs/search_visibility_report.html">Open search visibility report</a>
-          ·
-          <a href="../../outputs/lead_capture_dataset.json">Open lead capture export</a>
-        </p>
       </div>
     </header>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Pipeline control</p>
+          <h2>Run pipelines and monitor progress</h2>
+          <p id="pipeline-control-metrics" class="subheadline">Loading pipeline controls.</p>
+          <p class="subheadline"><a href="/discovery-queries.html">View pipeline runners and discovery query set</a></p>
+          <p class="subheadline"><a href="/integration-catalog.html">View integration catalog (n8n-derived, read-only)</a></p>
+          <p class="subheadline"><a href="/n8n-integrations.html">View n8n integrations (read-only)</a></p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>order</th>
+              <th>phase</th>
+              <th>runner</th>
+              <th>details</th>
+              <th>config</th>
+            </tr>
+          </thead>
+          <tbody id="pipeline-runners-body"></tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>pipeline</th>
+              <th>status</th>
+              <th>last_triggered_nz</th>
+              <th>last_finished_nz</th>
+              <th>actions</th>
+              <th>progress</th>
+            </tr>
+          </thead>
+          <tbody id="pipelines-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Lead capture</p>
+          <h2>Attribution and follow-up queue</h2>
+          <p id="lead-capture-metrics" class="subheadline">Loading captured lead summary.</p>
+          <p class="subheadline">Source: <code>lead_captures</code> via <code>/admin/leads</code> (fallback: <code>/outputs/lead_capture_dataset.json</code>).</p>
+        </div>
+        <div class="toolbar">
+          <input id="lead-search" type="search" placeholder="Search lead email or company">
+          <select id="lead-status-filter">
+            <option value="">All statuses</option>
+            <option value="new">new</option>
+            <option value="in_progress">in_progress</option>
+            <option value="contacted">contacted</option>
+            <option value="qualified">qualified</option>
+            <option value="closed">closed</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>created_at</th>
+              <th>lead</th>
+              <th>intent</th>
+              <th>source</th>
+              <th>attribution</th>
+              <th>follow_up</th>
+              <th>notification</th>
+            </tr>
+          </thead>
+          <tbody id="leads-body"></tbody>
+        </table>
+      </div>
+    </section>
 
     <section class="panel">
       <div class="panel-header">
@@ -64,6 +153,7 @@
         <div>
           <p class="eyebrow">Enriched vendors</p>
           <h2>Directory inclusion controls</h2>
+          <p id="enrichment-metrics" class="subheadline">Loading enrichment metrics.</p>
         </div>
         <div class="toolbar">
           <input id="vendor-search" type="search" placeholder="Search vendor name">
@@ -88,43 +178,6 @@
             </tr>
           </thead>
           <tbody id="vendors-body"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Lead capture</p>
-          <h2>Attribution and follow-up queue</h2>
-          <p id="lead-capture-metrics" class="subheadline">Loading captured lead summary.</p>
-        </div>
-        <div class="toolbar">
-          <input id="lead-search" type="search" placeholder="Search lead email or company">
-          <select id="lead-status-filter">
-            <option value="">All statuses</option>
-            <option value="new">new</option>
-            <option value="in_progress">in_progress</option>
-            <option value="contacted">contacted</option>
-            <option value="qualified">qualified</option>
-            <option value="closed">closed</option>
-          </select>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>created_at</th>
-              <th>lead</th>
-              <th>intent</th>
-              <th>source</th>
-              <th>attribution</th>
-              <th>follow_up</th>
-              <th>actions</th>
-            </tr>
-          </thead>
-          <tbody id="leads-body"></tbody>
         </table>
       </div>
     </section>
@@ -160,7 +213,7 @@
           <h2>Buyer-role ranking review</h2>
           <p id="search-visibility-metrics" class="subheadline">Loading search visibility summary.</p>
           <p class="subheadline">
-            <a href="../../outputs/search_visibility_report.html">Open full search visibility report</a>
+            <a href="/outputs/search_visibility_report.html">Open full search visibility report</a>
           </p>
         </div>
       </div>

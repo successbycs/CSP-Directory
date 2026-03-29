@@ -50,7 +50,7 @@ def rerun_vendor_enrichment(
     extract_vendor_intelligence_llm_fn: Callable[[dict[str, object]], object | None] | None = None,
     merge_vendor_intelligence_fn: Callable[[vendor_intel.VendorIntelligence, object | None], vendor_intel.VendorIntelligence] | None = None,
     build_vendor_profile_fn: Callable[[dict[str, str], dict[str, object], vendor_intel.VendorIntelligence], vendor_intel.VendorIntelligence] | None = None,
-    upsert_vendor_result_fn: Callable[[dict[str, str], dict[str, str | int], vendor_intel.VendorIntelligence], object] | None = None,
+    upsert_vendor_result_fn: Callable[..., object] | None = None,
 ) -> dict[str, Any]:
     """Re-run enrichment for one vendor and persist the updated profile."""
     find_vendor_by_lookup_fn = find_vendor_by_lookup_fn or supabase_client.find_vendor_by_lookup
@@ -85,7 +85,15 @@ def rerun_vendor_enrichment(
     llm_result = extract_vendor_intelligence_llm_fn(explored_pages)
     intelligence = merge_vendor_intelligence_fn(deterministic, llm_result)
     profile = build_vendor_profile_fn(vendor_candidate, explored_pages, intelligence)
-    upsert_vendor_result_fn(vendor_candidate, homepage_payload, profile)
+    try:
+        upsert_vendor_result_fn(
+            vendor_candidate,
+            homepage_payload,
+            profile,
+            enrichment_pipeline="manual_admin_rerun",
+        )
+    except TypeError:
+        upsert_vendor_result_fn(vendor_candidate, homepage_payload, profile)
     logger.info("Admin reran enrichment for vendor: %s", vendor_lookup)
     return {
         "ok": True,

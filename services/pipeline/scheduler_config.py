@@ -15,6 +15,7 @@ SCHEDULER_CONFIG_PATH = PROJECT_ROOT / "config" / "scheduler.toml"
 
 @dataclass(frozen=True)
 class DiscoveryScheduleConfig:
+    day_of_week: str = "mon"
     hour: int = 7
     minute: int = 0
 
@@ -52,6 +53,12 @@ def load_scheduler_config(config_path: Path | None = None) -> SchedulerConfig:
 
     return SchedulerConfig(
         discovery=DiscoveryScheduleConfig(
+            day_of_week=_normalized_string(
+                _read_dict_value(discovery_config, "day_of_week"),
+                setting_name="discovery_schedule.day_of_week",
+                config_path=config_path,
+                default="mon",
+            ),
             hour=_bounded_int(
                 _read_dict_value(discovery_config, "hour"),
                 setting_name="discovery_schedule.hour",
