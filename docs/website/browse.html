@@ -338,11 +338,12 @@
     <h2>Your directory access is one step away</h2>
     <p>Drop your email to browse 48+ customer success vendors, organized by lifecycle stage and enriched with practical signals.</p>
     <form class="gate-form" id="gate-form" onsubmit="gateSubmit(event)">
+      <input type="text" id="gate-name" placeholder="Your name" required autocomplete="name" />
       <input type="email" id="gate-email" placeholder="Work email" required autocomplete="email" />
-      <input type="text" id="gate-company" placeholder="Company (optional)" autocomplete="organization" />
+      <input type="text" id="gate-company" placeholder="Company" required autocomplete="organization" />
       <button type="submit">Get instant access &rarr;</button>
     </form>
-    <p class="gate-note">No password. No spam. Just the directory.</p>
+    <p class="gate-note" id="gate-note">No password. No spam. Just the directory.</p>
   </div>
 </div>
 
@@ -402,18 +403,47 @@
       document.getElementById('gate').style.display = 'flex';
     }
   }
-  function gateSubmit(e) {
+  async function gateSubmit(e) {
     e.preventDefault();
-    const email   = document.getElementById('gate-email').value.trim();
+    const name = document.getElementById('gate-name').value.trim();
+    const email = document.getElementById('gate-email').value.trim().toLowerCase();
     const company = document.getElementById('gate-company').value.trim();
-    if (!email) return;
-    localStorage.setItem('csp_access', email);
-    fetch('/api/lead-capture', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, company, intent: 'browse_directory', source: 'browse_gate' }),
-    }).catch(() => {});
-    document.getElementById('gate').style.display = 'none';
+    const note = document.getElementById('gate-note');
+    const submitButton = document.querySelector('#gate-form button[type="submit"]');
+    if (!name || !email || !company) {
+      return;
+    }
+
+    if (submitButton) submitButton.disabled = true;
+    if (note) note.textContent = 'Saving your access request...';
+
+    try {
+      const response = await fetch('/api/lead-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          company,
+          intent: 'browse_directory',
+          entry_page: 'browse.html',
+          cta_surface: 'browse-gate',
+          cta_variant: 'directory_gate',
+          cta_label: 'Get instant access',
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok === false) {
+        throw new Error(result.error || `Request failed: ${response.status}`);
+      }
+
+      localStorage.setItem('csp_access', email);
+      document.getElementById('gate').style.display = 'none';
+    } catch (error) {
+      if (note) note.textContent = `Lead capture failed: ${error.message}`;
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   }
 
   // ---- Data ----

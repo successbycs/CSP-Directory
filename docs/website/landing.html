@@ -768,15 +768,7 @@
 </div>
 
 <script>
-  function hasDirectoryAccess() {
-    return Boolean(localStorage.getItem('csp_access'));
-  }
-
   function openModal() {
-    if (hasDirectoryAccess()) {
-      window.location.href = '/browse';
-      return;
-    }
     document.getElementById('modal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
