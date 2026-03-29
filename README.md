@@ -17,7 +17,7 @@ cp .env.example .env  # then fill in keys
 Required environment variables:
 
 - `OPENAI_API_KEY` — LLM extraction
-- `SUPABASE_URL` + `SUPABASE_KEY` — persistence
+- `SUPABASE_URL` + `SUPABASE_KEY` — server-side Supabase persistence
 - `GOOGLE_SHEETS_ID` + `GOOGLE_SHEETS_CREDENTIALS_JSON` — optional, ops review layer
 
 Runtime config lives in `config/pipeline_config.json` (discovery, enrichment, LLM, export) and `config/scheduler.toml` (scheduler timing).
@@ -26,6 +26,12 @@ Runtime config lives in `config/pipeline_config.json` (discovery, enrichment, LL
 
 ```sh
 .venv/bin/python -m pytest
+```
+
+Default test runs exclude `@pytest.mark.live` network canaries. Run them explicitly with:
+
+```sh
+.venv/bin/python -m pytest -m live
 ```
 
 ## Run the Pipeline
@@ -132,3 +138,4 @@ Current focus: `M35` — Human test and operator validation. Fix milestones will
 - `docs/architecture.md` — system architecture
 - `docs/project_brain.md` — operator knowledge base
 - `docs/solution_enhancement_workflow.md` — enhancement request workflow
+- `docs/production_checklist.md` — production deployment checklist

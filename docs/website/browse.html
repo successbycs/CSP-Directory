@@ -408,7 +408,7 @@
     const company = document.getElementById('gate-company').value.trim();
     if (!email) return;
     localStorage.setItem('csp_access', email);
-    fetch('https://vendors.successbycs.com/api/lead-capture', {
+    fetch('/api/lead-capture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, company, intent: 'browse_directory', source: 'browse_gate' }),
@@ -503,7 +503,7 @@
     const domain    = (v.website || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
     const mission   = v.mission || '';
     const conf      = v.confidence || '';
-    const vendor_slug = encodeURIComponent(v.website || v.vendor_name);
+    const vendor_slug = encodeURIComponent(vendorSlug(v));
 
     return `
     <a class="vendor-card" href="./vendor.html?vendor=${vendor_slug}">
@@ -528,6 +528,11 @@
 
   function esc(str) {
     return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function vendorSlug(v) {
+    const base = String(v.vendor_name || v.website || 'vendor').toLowerCase();
+    return base.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
 
   loadData();

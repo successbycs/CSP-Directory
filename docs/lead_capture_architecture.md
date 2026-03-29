@@ -135,7 +135,7 @@ The landing page has buttons in four places, each tagged with context so you kno
 
 Set as environment variables in the Vercel project settings (not in code):
 - `SUPABASE_URL` — the Supabase project URL
-- `SUPABASE_KEY` — the publishable/anon key
+- `SUPABASE_KEY` — the server-side key used by the Vercel function to write to `lead_captures`
 
 ---
 

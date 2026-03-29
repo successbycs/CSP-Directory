@@ -464,7 +464,8 @@
       "id": "M50",
       "title": "G2 enrichment: augment all vendors with G2 profile data",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "complete",
+      "notes": "Python side complete (g2_enricher.py, 43 tests passing, schema migrated). n8n workflow spec at n8n/workflows/framework-g2-enrichment.workflow.json. AF must build and deploy via n8n_adapter.py. Python trigger (trigger_g2_via_n8n) is wired and ready.",
       "dependencies": [
         "M46"
       ],
@@ -661,7 +662,7 @@
       "id": "M54",
       "title": "Home laptop Docker runbook: end-to-end pipeline on local machine",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "deferred",
       "dependencies": [
         "M53"
       ],
@@ -681,7 +682,8 @@
       "verify": [
         "docker compose up -d && curl http://localhost:8787/admin/vendors",
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "deferred_reason": "Paused per operator decision 2026-03-28 \u2014 Docker runbook and AF sub-pipeline not in active execution scope"
     },
     {
       "id": "M53",
@@ -712,7 +714,7 @@
       "id": "M54",
       "title": "AF execution sub-pipeline: decomposer role + controller chunking (Solution B)",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "deferred",
       "dependencies": [
         "M53"
       ],
@@ -729,7 +731,8 @@
       ],
       "verify": [
         "python3 scripts/autonomous_audit.py"
-      ]
+      ],
+      "deferred_reason": "Paused per operator decision 2026-03-28 \u2014 Docker runbook and AF sub-pipeline not in active execution scope"
     },
     {
       "id": "M55",
@@ -783,7 +786,9 @@
       "executor": "af",
       "proof_description": "case_studies no longer stores detection keywords. Detection signals moved to internal case_study_signals field (not exported). case_study_details populated with {url, summary} objects where URLs are confirmed fetchable. DIRECTORY_DATASET_FIELDS updated to export case_study_details instead of case_studies.",
       "proof_artifact": "runs/proofs/M56_case_studies_fix.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [],
       "verify": [
@@ -797,7 +802,9 @@
       "executor": "af",
       "proof_description": "Integration categories extraction bounded to integration-relevant page sections. ToS and prose text no longer captured. INTEGRATION_BRAND_RULES used as canonical output vocabulary. At least 60% of vendors with previous non-empty integration data return at least one valid mapped integration.",
       "proof_artifact": "runs/proofs/M57_integration_fix.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [],
       "verify": [
@@ -811,7 +818,9 @@
       "executor": "af",
       "proof_description": "Supabase pricing column migrated from TEXT to TEXT[]. VendorIntelligence.pricing type and supabase_client upsert mapping confirmed consistent. directory_dataset.py _list_value confirmed to handle array correctly. Existing pricing data preserved through migration.",
       "proof_artifact": "runs/proofs/M58_pricing_type_fix.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [],
       "verify": [
@@ -825,7 +834,9 @@
       "executor": "claude_code",
       "proof_description": "Architecture doc written: scraped_ (HTML-extracted), llm_ (LLM-inferred), operator_ (no prefix, operator-set). auto_directory_fit, auto_directory_category, auto_include_in_directory renamed to llm_ equivalents via dual-write migration. All 20+ touch points updated atomically across vendor_intel.py, supabase_client.py, vendor_review_dataset.py, vendor_profile_builder.py, enrich_vendors_deterministic.py, apply_schema_migration.py, both test files, both SQL schema files, admin.js, vendor_schema.md. auto_ columns dropped after verification.",
       "proof_artifact": "runs/proofs/M59_llm_rename.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [
         "M58"
@@ -841,7 +852,9 @@
       "executor": "af",
       "proof_description": "/about added to site_explorer crawl targets. LLM_RESULT_SCHEMA extended with ceo_name, ceo_linkedin, company_address, leadership array {name, title, linkedin}. Supabase columns added. At least 3 vendors with confirmed about pages show populated leadership fields after enrichment re-run.",
       "proof_artifact": "runs/proofs/M60_about_page_crawl.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
@@ -869,7 +882,9 @@
       "executor": "af",
       "proof_description": "VendorIntelligence dataclass extended with youtube_channel_url, funding_stage, total_funding, use_case_details. LLM_RESULT_SCHEMA updated. Supabase migration applied. supabase_client.py upsert mapping updated. use_case_details kept internal until M67.",
       "proof_artifact": "runs/proofs/M61_new_fields_schema.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
@@ -895,7 +910,9 @@
       "executor": "af",
       "proof_description": "Enrichment pipeline extracts youtube_channel_url by: (1) crawling about/contact pages for YouTube links, (2) validating URL returns HTTP 200, (3) if not found or invalid, Google search query site:youtube.com channel vendor_name. At least 5 vendors with known YouTube channels show populated youtube_channel_url after enrichment re-run.",
       "proof_artifact": "runs/proofs/M62_youtube_extraction.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
@@ -919,7 +936,9 @@
       "executor": "af",
       "proof_description": "external_enrichment JSONB record schema extended with field and url keys alongside existing source/value/retrieved_at. normalize_external_enrichment_records and summarize_external_enrichment updated. Replaces need for standalone pricing_source and pricing_reference_url columns. Existing records preserved.",
       "proof_artifact": "runs/proofs/M63_provenance_model.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
@@ -943,7 +962,9 @@
       "executor": "af",
       "proof_description": "POST /admin/enrich-write endpoint added to admin_api.py. Accepts n8n enrichment payload, instantiates VendorIntelligence, runs __post_init__ normalization, then calls supabase_client upsert. Returns ok, vendor, fields_written, validation_errors. n8n workflows must route structured JSONB field writes through this endpoint. Tested with a sample icp_buyer payload.",
       "proof_artifact": "runs/proofs/M64_n8n_write_contract.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "completed_at": "2026-03-27T00:00:00+00:00",
       "dependencies": [
@@ -965,10 +986,13 @@
       "title": "Pricing n8n workflow: content-quality gate, nullable schema, llm_inferred source flag",
       "delivery_type": "capability_delivering",
       "executor": "af",
+      "notes": "Workflow spec authored by Claude Code at n8n/workflows/framework-pricing-enrichment.workflow.json. AF must build and deploy via n8n_adapter.py \u2014 do not hand-import the spec JSON directly. Schema, fields, and write contract are ready.",
       "proof_description": "n8n workflow for pricing enrichment. Stage 1: crawl /pricing page with content-quality gate (min 200 visible-text words). Stage 2 fallback: LLM prompt with nullable tier fields, additionalProperties false, no URL citation required. Output: pricing array, has_public_pricing_page bool, free_trial bool, pricing_source scraped or llm_inferred. Writes via M64 validation endpoint. Tested on 10 vendors (5 with known public pricing, 5 without). LLM-inferred pricing shown on public site with llm_inferred label.",
-      "proof_artifact": "runs/proofs/M65_pricing_workflow.json",
-      "interaction_targets": [],
-      "status": "not_started",
+      "proof_artifact": "runs/proofs/M65_pricing_n8n_workflow.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "status": "in_progress",
       "dependencies": [
         "M58",
         "M63",
@@ -985,7 +1009,9 @@
       "executor": "af",
       "proof_description": "Enrichment pipeline crawls tracxn.com/d/companies/{slug}/ teaser for each vendor. Extracts founded, hq_address, funding_stage, total_funding. Safe-upsert mode: only writes to null or empty fields, never overwrites operator-set values. Canary check on one known-good Tracxn URL before each batch; abort if canary fails. Miss-rate logged per run.",
       "proof_artifact": "runs/proofs/M66_tracxn_enrichment.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [
         "M61"
@@ -1002,8 +1028,10 @@
       "executor": "af",
       "proof_description": "Enrichment pipeline extracts use_case_details as array of {label, url, summary max 200 words} from vendor website crawl. use_case_details added to DIRECTORY_DATASET_FIELDS for public export. use_cases flat labels retained for filtering. At least 5 vendors show populated use_case_details with valid URLs after enrichment re-run.",
       "proof_artifact": "runs/proofs/M67_use_case_details.json",
-      "interaction_targets": [],
-      "status": "not_started",
+      "interaction_targets": [
+        "system"
+      ],
+      "status": "complete",
       "dependencies": [
         "M61"
       ],
@@ -1018,7 +1046,9 @@
       "executor": "af",
       "proof_description": "n8n-nodes-base catalog parsed for Name, Description, Category. New entries identified that are not already in INTEGRATION_BRAND_RULES added. Re-run integration extraction on 5 vendors previously showing empty or garbage integrations to verify improvement.",
       "proof_artifact": "runs/proofs/M68_integration_rules_expansion.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [
         "M57"
@@ -1035,10 +1065,163 @@
       "executor": "af",
       "proof_description": "build_directory_dataset filters out vendors where directory_category is other or empty. Enrichment prompt updated to enforce valid category from approved list. Vendors currently categorised as other flagged in admin panel. Public dataset export confirmed contains zero other category entries.",
       "proof_artifact": "runs/proofs/M69_category_cleanup.json",
-      "interaction_targets": [],
+      "interaction_targets": [
+        "system"
+      ],
       "status": "complete",
       "dependencies": [
         "M59"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ]
+    },
+    {
+      "id": "M70",
+      "title": "Refactor Python enrichment steps to n8n workflows",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M50"
+      ],
+      "proof_description": "Migrate Python-side enrichment logic (G2, Tracxn, pricing, and other external enrichment steps) into n8n Cloud workflows. Python becomes a thin trigger layer; n8n handles fetch, extract, and write-back via POST /admin/enrich-write. Each migrated step must have an n8n workflow deployed and a corresponding n8n_client webhook constant.",
+      "acceptance_criteria": [
+        "Each enrichment step has a named n8n webhook constant in n8n_client.py",
+        "Python trigger functions replace full Python enrichment implementations",
+        "n8n workflows call POST /admin/enrich-write for all field writes",
+        "Existing enrich-write validation (VendorIntelligence) covers all written fields",
+        "Pipeline health check still passes after migration"
+      ],
+      "proof_artifact": "runs/proofs/M70_n8n_enrichment_migration.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 -m pytest tests/ -v",
+        "python3 scripts/pipeline_health_check.py"
+      ]
+    },
+    {
+      "id": "M71",
+      "title": "Trustpilot rating enrichment via static HTML crawl",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M50"
+      ],
+      "proof_description": "Plain HTTP GET of trustpilot.com/review/{slug} extracts AggregateRating JSON-LD block. Populates trustpilot_rating (float) and trustpilot_review_count (int) for vendors with a Trustpilot presence. n8n workflow csp-trustpilot-enrichment deployed to n8n cloud. Run against 10 vendors, show at least 3 hits with valid rating values written to Supabase via /admin/enrich-write.",
+      "acceptance_criteria": [
+        "VendorIntelligence has trustpilot_rating (float | None) and trustpilot_review_count (int | None) fields",
+        "admin_api.py _SCALAR_FIELDS includes trustpilot_rating and trustpilot_review_count",
+        "Supabase cs_vendors table has trustpilot_rating and trustpilot_review_count columns",
+        "csp-trustpilot-enrichment n8n workflow deployed and activated on n8n cloud",
+        "Workflow uses plain HTTP GET (no Apify) \u2014 Trustpilot serves static HTML",
+        "JSON-LD AggregateRating block extracted with regex; graceful miss if not found",
+        "At least 3 of 10 sampled vendors return valid trustpilot_rating values"
+      ],
+      "proof_artifact": "runs/proofs/M71_trustpilot_enrichment.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_trustpilot_enrichment.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Trustpilot serves fully static HTML with schema.org AggregateRating JSON-LD \u2014 no Cloudflare, no JS execution needed. B2B SaaS coverage is thin (many CS tools have <10 reviews) so this is a secondary signal, not a primary rating. Use as fallback when g2_rating is empty. Slug derivation: lowercase vendor name, replace spaces/special chars with hyphens."
+    },
+    {
+      "id": "M72",
+      "title": "G2 enrichment via RapidAPI G2 Data Api (Chetan11-dev)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M50"
+      ],
+      "proof_description": "Update CSP G2 Enrichment n8n workflow to call RapidAPI G2 Data Api (Chetan11-dev, host: g2-data-api.p.rapidapi.com) instead of direct G2 crawl via Apify. RAPIDAPI_KEY and RAPIDAPI_G2_HOST added to environment. Run against 5 vendors including Gainsight. At least 3 return valid g2_rating and g2_review_count written to Supabase.",
+      "acceptance_criteria": [
+        "RAPIDAPI_KEY and RAPIDAPI_G2_HOST documented in .env.example",
+        "CSP G2 Enrichment workflow updated: Crawl G2 Page node replaced with RapidAPI HTTP call",
+        "RapidAPI call uses X-RapidAPI-Key and X-RapidAPI-Host headers",
+        "Response mapping: rating -> g2_rating, reviews -> g2_review_count, segment -> g2_market_segment, categories -> g2_categories",
+        "Existing Extract G2 Fields and Write to Admin API nodes reused unchanged",
+        "Workflow redeployed and activated on n8n cloud (update existing IDuXnG5LxQybhTr3 or create new)",
+        "At least 3 of 5 test vendors return valid g2_rating values",
+        "Free tier rate limit respected: 1 request per vendor, no retry loops"
+      ],
+      "proof_artifact": "runs/proofs/M72_g2_rapidapi_enrichment.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_g2_enrichment.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "RapidAPI endpoint: playground at /apiendpoint_452c117f-94ea-4d03-a158-4953226954aa. G2 cannot be scraped directly (Cloudflare Bot Management v2/v3 + JS rendering). RapidAPI free tier sufficient for ~100 vendor catalog enriched once. See docs/decisions/enrichment_data_sources.md Decision 1 for full rationale. biegehydra/Advanced-G2-Scraper kept as backup if Chetan11-dev degrades."
+    },
+    {
+      "id": "M73",
+      "title": "Internal feature-depth score from vendor help/docs site crawl",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M60",
+        "M70"
+      ],
+      "proof_description": "Crawl each vendor's help_center_url (or developer_docs_url fallback) via Framework Website Content Crawl. LLM extracts structured feature taxonomy across 6 dimensions. feature_depth_score (0-100, category-relative) and feature_signals (list of detected capabilities) computed and written to Supabase. Run against all vendors in a single directory_category; show ranked output with scores spread across the 0-100 range.",
+      "acceptance_criteria": [
+        "VendorIntelligence has feature_depth_score (int | None) and feature_signals (list[str]) fields",
+        "admin_api.py _SCALAR_FIELDS includes feature_depth_score; feature_signals in list fields",
+        "Supabase cs_vendors table has feature_depth_score (int) and feature_signals (text[]) columns",
+        "csp-feature-depth-enrichment n8n workflow deployed to n8n cloud",
+        "Workflow crawls help_center_url, falls back to developer_docs_url, then website/help",
+        "LLM extraction covers 6 taxonomy dimensions: integrations, automation, reporting, onboarding, collaboration, API/developer",
+        "Scoring is category-relative: rank vendors within same directory_category, map to 0-100",
+        "feature_signals list contains detected capabilities as plain-English strings (max 20 per vendor)",
+        "Vendors with no accessible help content score null, not 0",
+        "Public directory browse page shows feature_depth_score as a sortable column"
+      ],
+      "proof_artifact": "runs/proofs/M73_feature_depth_score.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_feature_depth_enrichment.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "This produces a first-party signal unique to SuccessByCS \u2014 not available anywhere else. More actionable for CS buyers than G2 star rating: tells you whether a vendor has 47 documented integration articles or 3. Scoring algorithm: (1) crawl help site, collect article titles + snippets; (2) LLM maps content to taxonomy dimensions; (3) raw dimension scores (0-10 each) summed; (4) percentile-rank within category -> 0-100 integer. Requires help_center_url to be populated first (M60 prerequisite). See docs/decisions/enrichment_data_sources.md Decision 3 for full rationale."
+    },
+    {
+      "id": "M-BP1",
+      "title": "CSP\u2192AF backport: web_page_fetch, site_explorer, health_check ported to AF recipes",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M46",
+        "M47"
+      ],
+      "proof_description": "Track completion of AF milestones M17M, M17N, M17O which port CSP-Directory's core enrichment infrastructure into the Autonomous Framework as reusable recipes. When complete, AF agents running other products can reuse the same tiered fetch, site explorer, and health check patterns without duplicating CSP code. Also includes M17P: G2 profile extraction recipe.",
+      "acceptance_criteria": [
+        "AF M17M complete: web_page_fetch recipe operational",
+        "AF M17N complete: site_explorer recipe operational",
+        "AF M17O complete: pipeline_health_check recipe operational",
+        "AF M17I complete: LLM structured extraction recipe operational",
+        "AF M17J complete: admin panel recipe operational",
+        "AF M17K complete: three-tier field taxonomy documented",
+        "AF M17L complete: safe upsert pattern documented",
+        "AF M17P complete: G2 enricher recipe operational",
+        "AF M17Q complete: Tracxn teaser enrichment recipe operational (founded, hq_address, funding_stage, total_funding)",
+        "AF M17R complete: CSP enrichment n8n workflows (G2, Tracxn, Pricing) ported to AF \u2014 use Framework Website Content Crawl + Framework OpenAI Nano Text Ops adapters instead of direct HTTP. Deployed to n8n cloud: CSP G2 Enrichment [IDuXnG5LxQybhTr3], CSP Tracxn Enrichment [2JUmTOYl96XXVMvE], CSP Pricing Enrichment [OTuT6jmuBJZsrGSq]. Requires n8n vars: FRAMEWORK_BASE, APIFY_TOKEN, OPENAI_API_KEY, ADMIN_API_BASE_URL, ADMIN_API_TOKEN.",
+        "AF M17S complete: Trustpilot enrichment recipe operational (trustpilot_rating, trustpilot_review_count via static JSON-LD crawl)",
+        "AF M17T complete: G2 enrichment via RapidAPI recipe operational (g2-data-api.p.rapidapi.com, Chetan11-dev)",
+        "AF M17U complete: Internal feature-depth score recipe operational (help site crawl + LLM taxonomy + category-relative scoring)"
+      ],
+      "proof_artifact": "runs/proofs/M-BP1_af_backport.json",
+      "interaction_targets": [
+        "system"
       ],
       "verify": [
         "python3 scripts/autonomous_audit.py"
