@@ -35,6 +35,7 @@
     }
 
     html { scroll-behavior: smooth; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -931,7 +932,15 @@
 
     const submitButton = document.querySelector('#access-form .btn-submit');
     const disclaimer = document.querySelector('.modal-disclaimer');
-    if (submitButton) submitButton.disabled = true;
+
+    // Immediate feedback — acknowledge the click right away
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.innerHTML = `
+        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5" style="animation:spin .8s linear infinite;width:16px;height:16px;flex-shrink:0"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+        Stand by&hellip;`;
+    }
+    if (disclaimer) disclaimer.textContent = 'Saving your details — this takes a moment.';
 
     try {
       const response = await fetch('https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake', {
@@ -959,6 +968,10 @@
         localStorage.removeItem('csp_access');
       }
       if (intent === 'browse_directory') {
+        if (submitButton) submitButton.innerHTML = `
+          <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5" style="animation:spin .8s linear infinite;width:16px;height:16px;flex-shrink:0"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+          Opening the directory&hellip;`;
+        if (disclaimer) disclaimer.textContent = 'Access confirmed — loading the directory now.';
         window.location.href = '/browse';
         return;
       }
@@ -976,7 +989,10 @@
       if (disclaimer) {
         disclaimer.textContent = `Lead capture failed: ${error.message}`;
       }
-      if (submitButton) submitButton.disabled = false;
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.innerHTML = `Get access <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+      }
       return;
     }
 
