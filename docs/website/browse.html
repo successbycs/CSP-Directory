@@ -137,8 +137,38 @@
       transition: all .15s;
       white-space: nowrap;
     }
+    .pill { position: relative; }
     .pill:hover { border-color: var(--green-500); color: var(--green-700); }
     .pill.active { background: var(--green-700); color: #fff; border-color: var(--green-700); }
+    .pill[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 7px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-900);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.4;
+      white-space: nowrap;
+      padding: 5px 10px;
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    }
+    .pill[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--green-900);
+      pointer-events: none;
+      z-index: 200;
+    }
     .filter-sep { width: 1px; height: 20px; background: var(--border); }
     .filter-select {
       padding: 5px 10px;
@@ -378,6 +408,16 @@
 <script>
   const DATASET_URL = './data/directory_dataset.json';
   const STAGE_ORDER = ['Sign-up','Onboarding','Activate','Adopt','Support','Expand','Renew','Advocate'];
+  const STAGE_DESC  = {
+    'Sign-up':    'Converts prospects into new customers',
+    'Onboarding': 'Gets new customers live and ready to use the product',
+    'Activate':   'Drives first value moments and early engagement',
+    'Adopt':      'Builds deep, habitual product usage across the team',
+    'Support':    'Resolves issues and keeps customers unblocked',
+    'Expand':     'Grows revenue through upsells and cross-sells',
+    'Renew':      'Retains customers and secures contract renewals',
+    'Advocate':   'Turns happy customers into referrers and champions',
+  };
   const CAT_LABELS  = { cs_core: 'CS Core', cs_adjacent: 'CS Adjacent', other: 'Other' };
 
   let allVendors = [];
@@ -409,6 +449,7 @@
       if (!hasVendors) return;
       const btn = document.createElement('button');
       btn.className = 'pill';
+      btn.setAttribute('data-tooltip', STAGE_DESC[stage] || '');
       btn.textContent = stage;
       btn.onclick = () => toggleStage(stage, btn);
       container.appendChild(btn);

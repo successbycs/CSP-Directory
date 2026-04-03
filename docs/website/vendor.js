@@ -158,7 +158,7 @@ function renderVendor(container, vendor) {
           </div>
           <div class="detail-grid">
             ${renderDetailItem("Ideal customer profile", formatList(vendor.icp))}
-            ${renderUseCaseLinks("Use cases", vendor.use_cases)}
+            ${renderUseCaseLinks("Use cases", vendor.use_cases, vendor.use_case_details, vendor.website)}
             ${renderDetailItem("Lifecycle stages", formatList(vendor.lifecycle_stages))}
             ${renderPricingItem("Pricing", vendor.pricing)}
           </div>
@@ -214,13 +214,26 @@ function renderDetailItem(label, value) {
   `;
 }
 
-function renderUseCaseLinks(label, useCases) {
+function renderUseCaseLinks(label, useCases, useCaseDetails, vendorWebsite) {
   if (!Array.isArray(useCases) || !useCases.length) {
     return renderDetailItem(label, null);
   }
-  const links = useCases
-    .map(u => `<a href="./browse.html?q=${encodeURIComponent(u)}" class="use-case-link">${escapeHtml(u)}</a>`)
-    .join('');
+  // Build a lookup from label (lowercased) → specific url from use_case_details
+  const detailMap = {};
+  if (Array.isArray(useCaseDetails)) {
+    useCaseDetails.forEach(d => {
+      const key = String(d.label || d.title || "").trim().toLowerCase();
+      if (key && d.url) detailMap[key] = d.url;
+    });
+  }
+  const links = useCases.map(u => {
+    const detailUrl = detailMap[u.trim().toLowerCase()];
+    const href = detailUrl || vendorWebsite || null;
+    if (href) {
+      return `<a href="${escapeAttribute(href)}" target="_blank" rel="noreferrer" class="use-case-link" title="See ${escapeHtml(u)} on vendor site">${escapeHtml(u)} ↗</a>`;
+    }
+    return `<span class="use-case-link">${escapeHtml(u)}</span>`;
+  }).join('');
   return `
     <dl class="detail-item">
       <dt>${escapeHtml(label)}</dt>
