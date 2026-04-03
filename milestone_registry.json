@@ -2096,6 +2096,27 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "User request from vendor page review. Requires RAG (vendor_page_embeddings) to be populated first. Complements M65 pricing enrichment."
+    },
+    {
+      "id": "M-AF18",
+      "title": "AF fix: replace cascading background monitors with single polling loop",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [],
+      "proof_description": "Add a reusable monitor script (scripts/af_monitor.sh) that polls an AF cycle output file in a loop with a configurable interval and max-wait, rather than spawning multiple staggered sleep+check background tasks. Update CLAUDE.md to document the correct monitoring pattern.",
+      "rationale": "Previous sessions spawned 15+ cascading background monitors (sleep 60, sleep 90 ... sleep 900) for a single AF cycle. After context reset, all fire as stale notifications flooding the next session and requiring manual intervention to clean up.",
+      "acceptance_criteria": [
+        "scripts/af_monitor.sh exists: takes output_file, interval (default 60s), max_wait (default 900s) as args",
+        "Script polls every interval seconds, exits when output_file shows cycle complete or max_wait exceeded",
+        "Single invocation replaces all staggered sleep+check background tasks",
+        "CLAUDE.md documents: max 2 background monitors per AF cycle, use af_monitor.sh for cycle tracking",
+        "CLAUDE.md documents: kill pattern for cleaning stale processes and checkpoints"
+      ],
+      "proof_artifact": "runs/proofs/M-AF18_monitor_fix.json",
+      "interaction_targets": ["system"],
+      "verify": ["python3 scripts/autonomous_audit.py"],
+      "notes": "Root cause: Claude Code spawned 15+ staggered background monitoring tasks in a single session. When context reset, all fired as stale notifications. Fix: single reusable polling script + CLAUDE.md rule limiting monitors to max 2 per AF cycle."
     }
   ]
 }
