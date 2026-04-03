@@ -47,7 +47,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, help="Limit vendors per step")
     parser.add_argument("--vendor", help="Run for a single vendor website")
-    parser.add_argument("--skip", default="", help="Comma-separated steps to skip: crawl,llm,datagma,linkedin,g2,export")
+    parser.add_argument("--skip", default="", help="Comma-separated steps to skip: crawl,embed,summary,datagma,linkedin,g2,export")
     args = parser.parse_args()
 
     skip = {s.strip().lower() for s in args.skip.split(",") if s.strip()}
@@ -58,12 +58,13 @@ def main() -> int:
         extra += ["--vendor", args.vendor]
 
     steps = [
-        ("crawl",    "Site Crawl (Tier 1)",           "scripts/enrich_site_crawl.py",    extra + ["--tier", "1"]),
-        ("llm",      "Batch LLM Enrichment (GPT-4o)", "scripts/run_batch_enrichment.py", extra),
-        ("datagma",  "Firmographic (Datagma)",         "scripts/enrich_firmographic.py",  extra),
-        ("linkedin", "LinkedIn Enrichment",            "scripts/enrich_linkedin.py",      extra),
-        ("g2",       "G2 RapidAPI Enrichment",         "scripts/enrich_g2_rapidapi.py",   extra),
-        ("export",   "Export Dataset → Vercel",        "scripts/export_directory_dataset.py", []),
+        ("crawl",    "Site Crawl (Tier 1 → vendor_pages)",     "scripts/enrich_site_crawl.py",       extra + ["--tier", "1"]),
+        ("embed",    "Embed + LLM Extract (RAG → GPT-4o mini)","scripts/enrich_llm_extraction.py",   extra),
+        ("summary",  "AI Summary (GPT-4o mini)",               "scripts/enrich_ai_summary.py",       extra),
+        ("datagma",  "Firmographic (Datagma)",                  "scripts/enrich_firmographic.py",     extra),
+        ("linkedin", "LinkedIn Enrichment",                     "scripts/enrich_linkedin.py",         extra),
+        ("g2",       "G2 RapidAPI Enrichment",                  "scripts/enrich_g2_rapidapi.py",      extra),
+        ("export",   "Export Dataset → Vercel",                 "scripts/export_directory_dataset.py",[]),
     ]
 
     results: dict[str, int] = {}
