@@ -45,31 +45,51 @@
     }
 
     /* — NAV — */
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(250,249,247,.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--gray-300);
+    .nav-wrapper {
+      position: sticky; top: 16px; z-index: 100;
       padding: 0 24px;
-      height: 60px;
-      display: flex; align-items: center; justify-content: space-between;
+      pointer-events: none;
     }
-    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    nav {
+      max-width: 960px; margin: 0 auto;
+      background: var(--green-900);
+      border-radius: 50px;
+      padding: 0 8px 0 20px;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 24px rgba(0,0,0,.25);
+      pointer-events: all;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
     .nav-dot {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--green-800);
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--green-600);
       display: flex; align-items: center; justify-content: center;
     }
-    .nav-dot svg { width: 16px; height: 16px; fill: white; }
-    .nav-name { font-weight: 700; font-size: 15px; color: var(--gray-900); letter-spacing: -.3px; }
-    .nav-sub { font-size: 12px; color: var(--gray-500); font-weight: 400; }
-    .nav-cta {
-      background: var(--green-800); color: white;
-      border: none; border-radius: 8px;
-      padding: 8px 18px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: background .15s;
+    .nav-dot svg { width: 14px; height: 14px; fill: white; }
+    .nav-name { font-weight: 700; font-size: 14px; color: white; letter-spacing: -.3px; }
+    .nav-links {
+      display: flex; align-items: center; gap: 4px;
+      position: absolute; left: 50%; transform: translateX(-50%);
     }
-    .nav-cta:hover { background: var(--green-700); }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: rgba(255,255,255,.7);
+      text-decoration: none; padding: 6px 14px; border-radius: 99px;
+      transition: color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: white; background: rgba(255,255,255,.1); }
+    .nav-cta {
+      background: var(--green-500); color: white;
+      border: none; border-radius: 99px;
+      padding: 9px 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .15s; flex-shrink: 0;
+    }
+    .nav-cta:hover { background: var(--green-600); }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-wrapper { top: 12px; padding: 0 12px; }
+    }
 
     /* — HERO — */
     .hero {
@@ -274,6 +294,34 @@
     }
     .teaser-overlay p { font-size: 14px; color: var(--gray-700); margin-bottom: 20px; }
 
+    /* — SPIDER CHART — */
+    .spider-wrap {
+      margin: 16px 0 4px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .spider-svg { flex-shrink: 0; }
+    .spider-legend {
+      display: flex; flex-direction: column; gap: 3px;
+      font-size: 10px; color: var(--gray-500);
+    }
+    .spider-legend-item { display: flex; align-items: center; gap: 5px; }
+    .spider-legend-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-500); flex-shrink: 0;
+    }
+    .vendor-meta-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .vendor-meta-pill {
+      font-size: 10px; font-weight: 600; padding: 2px 8px;
+      border-radius: 99px; background: var(--gray-100);
+      color: var(--gray-700); border: 1px solid var(--gray-300);
+    }
+    .vendor-meta-pill.green { background: var(--green-100); color: var(--green-700); border-color: var(--green-200); }
+    .vendor-icp { font-size: 12px; color: var(--gray-600); margin-bottom: 10px; line-height: 1.5; }
+    .vendor-icp strong { color: var(--gray-800); }
+
     /* — FINAL CTA — */
     .final-cta {
       background: var(--green-900);
@@ -436,21 +484,25 @@
 <body>
 
 <!-- NAV -->
+<div class="nav-wrapper">
 <nav>
   <a href="#" class="nav-brand">
     <div class="nav-dot">
       <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
     </div>
-    <div>
-      <div class="nav-name">SuccessByCS</div>
-      <div class="nav-sub">Vendor Directory</div>
-    </div>
+    <div class="nav-name">SuccessByCS</div>
   </a>
+  <div class="nav-links">
+    <a href="#what-inside" class="nav-link">What's Inside</a>
+    <a href="#framework" class="nav-link">The Framework</a>
+    <a href="#preview" class="nav-link">Directory Preview</a>
+  </div>
   <button class="nav-cta" type="button" data-open-access-modal>Access the Directory</button>
 </nav>
+</div>
 
 <!-- HERO -->
-<section class="hero" style="padding-top:80px;padding-bottom:64px;max-width:860px;margin:0 auto;text-align:center;">
+<section class="hero" style="padding-top:96px;padding-bottom:64px;max-width:860px;margin:0 auto;text-align:center;">
   <div class="hero-badge">
     <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
     48 Vendors &nbsp;&middot;&nbsp; 8 Lifecycle Stages &nbsp;&middot;&nbsp; Updated 2026
@@ -459,14 +511,11 @@
   <p class="hero-sub">
     A curated intelligence layer for post-sale software &mdash; every vendor mapped by lifecycle stage, enriched with ICP signals, pricing cues, and proof.
   </p>
-  <div class="hero-actions">
+  <div class="hero-actions" style="justify-content:center;">
     <button class="btn-primary" type="button" data-open-access-modal>
       Access the Directory
       <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
-    <a href="#what-inside" class="btn-ghost" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-      See what's inside
-    </a>
   </div>
   <p class="hero-note">Free to access &nbsp;&middot;&nbsp; No credit card required</p>
 </section>
@@ -493,47 +542,8 @@
   </div>
 </div>
 
-<!-- WHAT'S INSIDE -->
-<section id="what-inside" class="features">
-  <div class="section-inner">
-    <div class="section-label">What's inside</div>
-    <h2 class="section-title">Built for real evaluation,<br>not just discovery</h2>
-    <p class="section-sub">Most vendor lists stop at names. This directory gives you the context you actually need to shortlist.</p>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" stroke-linecap="round"/><path d="M3 9h18M9 21V9"/></svg>
-        </div>
-        <h3>Lifecycle-first vendor mapping</h3>
-        <p>Every vendor is mapped to the 8-stage SuccessByCS lifecycle &mdash; Sign, Onboard, Activate, Adopt, Support, Expand, Renew, Advocate &mdash; so you can find tools by where they fit, not just what they are.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-        <h3>Structured ICP &amp; fit signals</h3>
-        <p>Each profile surfaces ICP signals, use cases, pricing cues, free trial availability, SOC2 status, and customer proof &mdash; structured so you can compare without bouncing between vendor sites.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke-linecap="round"/></svg>
-        </div>
-        <h3>Search &amp; filter by what matters</h3>
-        <p>Filter by lifecycle stage, use case, ICP, pricing signals, customer proof, and trust signals. The directory is designed to take you from browsing to shortlist without extra research.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z" stroke-linecap="round"/></svg>
-        </div>
-        <h3>Market map &amp; shortlist briefs</h3>
-        <p>Access the 2026 AI Customer Success market map as a gated artifact, or request a shortlist brief tailored to your current evaluation context and advisory follow-up.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- LIFECYCLE STAGES -->
-<section class="lifecycle">
+<section id="framework" class="lifecycle">
   <div class="section-inner">
     <div class="section-label">The framework</div>
     <h2 class="section-title">Organized around the<br>8-stage lifecycle model</h2>
@@ -541,12 +551,12 @@
     <div class="stages-grid">
       <div class="stage-card">
         <div class="stage-num">Stage 01</div>
-        <h4>Sign</h4>
+        <h4>Sign-up</h4>
         <p>Capture context, conversations, and handoff signals before ownership fully shifts.</p>
       </div>
       <div class="stage-card">
         <div class="stage-num">Stage 02</div>
-        <h4>Onboard</h4>
+        <h4>Onboarding</h4>
         <p>Coordinate implementation, onboarding, and time-to-value work across teams.</p>
       </div>
       <div class="stage-card">
@@ -583,14 +593,53 @@
   </div>
 </section>
 
+<!-- WHAT'S INSIDE -->
+<section id="what-inside" class="features">
+  <div class="section-inner">
+    <div class="section-label">What's inside</div>
+    <h2 class="section-title">Built for real evaluation,<br>not just discovery</h2>
+    <p class="section-sub">Most vendor lists stop at names. This directory gives you the context you actually need to shortlist.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" stroke-linecap="round"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <h3>Lifecycle-first vendor mapping</h3>
+        <p>Every vendor is mapped to the 8-stage SuccessByCS lifecycle &mdash; Sign-up, Onboarding, Activate, Adopt, Support, Expand, Renew, Advocate &mdash; so you can find tools by where they fit, not just what they are.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <h3>Structured ICP &amp; fit signals</h3>
+        <p>Each profile surfaces ICP signals, use cases, pricing cues, free trial availability, SOC2 status, and customer proof &mdash; structured so you can compare without bouncing between vendor sites.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Search &amp; filter by what matters</h3>
+        <p>Filter by lifecycle stage, use case, ICP, pricing signals, customer proof, and trust signals. The directory is designed to take you from browsing to shortlist without extra research.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z" stroke-linecap="round"/></svg>
+        </div>
+        <h3>Market map &amp; shortlist briefs</h3>
+        <p>Access the 2026 AI Customer Success market map as a gated artifact, or request a shortlist brief tailored to your current evaluation context and advisory follow-up.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- VENDOR TEASER -->
-<section class="vendor-teaser">
+<section id="preview" class="vendor-teaser">
   <div class="section-inner">
     <div class="section-label">Directory preview</div>
     <h2 class="section-title">A sample of what's inside</h2>
-    <p class="section-sub">48 structured vendor profiles, each with lifecycle stage, ICP signals, pricing, and fit scores.</p>
+    <p class="section-sub"><span id="vendor-count-display">48</span> structured vendor profiles, each with lifecycle stage, ICP signals, pricing, and fit scores.</p>
     <div class="teaser-grid">
-      <!-- Card 1 - visible -->
+      <!-- Card 1 - Gainsight expanded -->
       <div class="vendor-card">
         <div class="vendor-card-header">
           <div>
@@ -600,13 +649,25 @@
           <span class="fit-badge fit-high">High fit</span>
         </div>
         <div class="vendor-stages">
-          <span class="stage-tag">Onboard</span>
+          <span class="stage-tag">Onboarding</span>
           <span class="stage-tag">Adopt</span>
           <span class="stage-tag">Expand</span>
           <span class="stage-tag">Renew</span>
         </div>
-        <p class="vendor-desc">Customer Success and Product Experience platform helping companies reduce churn, grow revenue, and align around the customer.</p>
-        <div class="vendor-pricing"><strong>Pricing:</strong> Contact sales</div>
+        <p class="vendor-desc">Enterprise Customer Success and Product Experience platform — helps post-sale teams reduce churn, run digital-led motions, and prove revenue impact across the full lifecycle.</p>
+        <div class="vendor-meta-row">
+          <span class="vendor-meta-pill green">SOC2 Type II</span>
+          <span class="vendor-meta-pill green">Free trial</span>
+          <span class="vendor-meta-pill">Enterprise ICP</span>
+          <span class="vendor-meta-pill">Contact sales</span>
+        </div>
+        <div class="vendor-icp"><strong>Best fit:</strong> Enterprise SaaS, 200+ CS headcount, complex renewal + expansion motions</div>
+        <!-- Spider chart: scores out of 5 per lifecycle stage -->
+        <div class="spider-wrap">
+          <svg class="spider-svg" id="spider-gainsight" width="110" height="110" viewBox="0 0 110 110"></svg>
+          <div class="spider-legend" id="legend-gainsight"></div>
+        </div>
+        <div class="vendor-pricing" style="margin-top:6px;"><strong>Customers:</strong> Hubspot, Box, SAP &nbsp;&middot;&nbsp; <a href="/browse" style="color:var(--green-600);font-size:12px;">View full profile →</a></div>
       </div>
       <!-- Card 2 - blurred -->
       <div class="vendor-card blurred">
@@ -646,7 +707,7 @@
           <div class="teaser-lock">
             <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <h3>47 more vendor profiles</h3>
+          <h3><span id="vendor-remaining-display">47</span> more vendor profiles</h3>
           <p>Access the full directory with filters, fit scores, ICP signals, and pricing data.</p>
           <button class="btn-primary" type="button" data-open-access-modal>
             Access the Directory
@@ -701,7 +762,7 @@
       <div class="footer-tagline">Customer Success Technology Directory</div>
     </div>
   </div>
-  <div class="footer-note">Curated vendor intelligence for the post-sale software landscape.</div>
+  <div class="footer-note">Curated vendor intelligence for the post-sale software landscape. &nbsp;&middot;&nbsp; <a href="/website/top-vendors-by-stage" style="color:var(--green-200);">Top vendors by stage →</a></div>
 </footer>
 
 <!-- MODAL -->
@@ -768,6 +829,82 @@
 </div>
 
 <script>
+  /* ── SPIDER CHART ── */
+  const STAGES = ['Sign-up','Onboarding','Activate','Adopt','Support','Expand','Renew','Advocate'];
+  const N = STAGES.length;
+  const CX = 55, CY = 55, R_MAX = 42, R_GRID = [10.5, 21, 31.5, 42];
+
+  function polarPt(cx, cy, r, i) {
+    const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+  }
+
+  function buildSpider(svgEl, legendEl, scores) {
+    // grid rings
+    R_GRID.forEach(r => {
+      const pts = Array.from({length: N}, (_, i) => polarPt(CX, CY, r, i).join(','));
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      poly.setAttribute('points', pts.join(' '));
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', '#e5e7eb');
+      poly.setAttribute('stroke-width', '1');
+      svgEl.appendChild(poly);
+    });
+    // axes
+    for (let i = 0; i < N; i++) {
+      const [x, y] = polarPt(CX, CY, R_MAX, i);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', CX); line.setAttribute('y1', CY);
+      line.setAttribute('x2', x); line.setAttribute('y2', y);
+      line.setAttribute('stroke', '#e5e7eb'); line.setAttribute('stroke-width', '1');
+      svgEl.appendChild(line);
+    }
+    // data polygon
+    const dataPts = scores.map((s, i) => polarPt(CX, CY, (s / 5) * R_MAX, i).join(','));
+    const dataPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    dataPoly.setAttribute('points', dataPts.join(' '));
+    dataPoly.setAttribute('fill', 'rgba(58,125,90,.25)');
+    dataPoly.setAttribute('stroke', '#3a7d5a');
+    dataPoly.setAttribute('stroke-width', '1.5');
+    svgEl.appendChild(dataPoly);
+    // dots
+    scores.forEach((s, i) => {
+      const [x, y] = polarPt(CX, CY, (s / 5) * R_MAX, i);
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+      circle.setAttribute('r', '3');
+      circle.setAttribute('fill', '#3a7d5a');
+      svgEl.appendChild(circle);
+    });
+    // legend
+    if (legendEl) {
+      legendEl.innerHTML = scores.map((s, i) =>
+        `<div class="spider-legend-item"><div class="spider-legend-dot" style="opacity:${s>0?1:.3}"></div>${STAGES[i]}: ${s}/5</div>`
+      ).join('');
+    }
+  }
+
+  /* ── DYNAMIC VENDOR COUNT ── */
+  // Counts from the same dataset browse.html uses — always in sync
+  async function loadVendorCount() {
+    try {
+      const res = await fetch('./data/directory_dataset.json');
+      const data = await res.json();
+      const total = Array.isArray(data) ? data.length : 0;
+      if (total > 1) {
+        document.querySelectorAll('#vendor-count-display').forEach(el => el.textContent = total);
+        document.querySelectorAll('#vendor-remaining-display').forEach(el => el.textContent = Math.max(total - 1, 0));
+        document.querySelectorAll('.stat-num').forEach(el => {
+          if (el.textContent.trim() === '48') el.textContent = total;
+        });
+        // update hero badge
+        document.querySelectorAll('.hero-badge').forEach(el => {
+          el.innerHTML = el.innerHTML.replace(/\d+ Vendors/, total + ' Vendors');
+        });
+      }
+    } catch (_) { /* silently fail — static fallback numbers remain */ }
+  }
+
   const ALWAYS_GATE_EMAIL = 'chris@successbycs.com';
 
   function shouldPersistAccess(email) {
@@ -849,6 +986,16 @@
     if (submitButton) submitButton.disabled = false;
   }
   document.addEventListener('DOMContentLoaded', () => {
+    // Spider charts — scores[stage index 0..7] out of 5
+    // Stages: Sign-up, Onboarding, Activate, Adopt, Support, Expand, Renew, Advocate
+    buildSpider(
+      document.getElementById('spider-gainsight'),
+      document.getElementById('legend-gainsight'),
+      [1, 3, 5, 5, 2, 4, 5, 3]
+    );
+
+    loadVendorCount();
+
     document.querySelectorAll('[data-open-access-modal]').forEach(button => {
       button.addEventListener('click', openModal);
     });

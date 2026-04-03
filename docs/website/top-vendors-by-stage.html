@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top CS Vendors by Lifecycle Stage — SuccessByCS Directory</title>
+  <meta name="description" content="The best Customer Success tools mapped to each lifecycle stage: Sign-up, Onboarding, Activate, Adopt, Support, Expand, Renew, Advocate." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-900: #0f2318; --green-800: #1a3329; --green-700: #1e3d2f;
+      --green-600: #2a5c3f; --green-500: #3a7d5a; --green-200: #b6d5c3;
+      --green-100: #dceee4; --green-50: #f0f7f3; --sage: #e8ede9;
+      --cream: #faf9f7; --white: #ffffff;
+      --gray-900: #111827; --gray-700: #374151; --gray-500: #6b7280;
+      --gray-300: #d1d5db; --gray-100: #f3f4f6;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--cream); color: var(--gray-900); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+    /* NAV */
+    .nav-wrapper { position: sticky; top: 16px; z-index: 100; padding: 0 24px; pointer-events: none; }
+    nav { max-width: 960px; margin: 0 auto; background: var(--green-900); border-radius: 50px; padding: 0 8px 0 20px; height: 56px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 24px rgba(0,0,0,.25); pointer-events: all; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--green-600); display: flex; align-items: center; justify-content: center; }
+    .nav-dot svg { width: 14px; height: 14px; fill: white; }
+    .nav-name { font-weight: 700; font-size: 14px; color: white; letter-spacing: -.3px; }
+    .nav-cta { background: var(--green-500); color: white; border: none; border-radius: 99px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; text-decoration: none; }
+    .nav-cta:hover { background: var(--green-600); }
+
+    /* HERO */
+    .post-hero { max-width: 760px; margin: 0 auto; padding: 72px 24px 48px; }
+    .post-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-600); margin-bottom: 16px; }
+    .post-hero h1 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(30px, 5vw, 52px); font-weight: 800; color: var(--green-900); line-height: 1.12; letter-spacing: -1.2px; margin-bottom: 20px; }
+    .post-hero h1 em { font-style: italic; color: var(--green-600); }
+    .post-lead { font-size: 18px; color: var(--gray-700); line-height: 1.75; margin-bottom: 32px; max-width: 680px; }
+    .post-meta { display: flex; align-items: center; gap: 20px; font-size: 13px; color: var(--gray-500); border-top: 1px solid var(--gray-300); padding-top: 20px; }
+    .post-meta strong { color: var(--gray-700); }
+
+    /* BODY */
+    .post-body { max-width: 760px; margin: 0 auto; padding: 0 24px 80px; }
+    .post-body p { font-size: 16px; color: var(--gray-700); line-height: 1.8; margin-bottom: 20px; }
+    .post-body h2 { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(22px, 3vw, 32px); font-weight: 800; color: var(--green-900); margin: 48px 0 16px; letter-spacing: -.5px; }
+    .post-body h2 .stage-pill { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; background: var(--green-100); color: var(--green-700); border-radius: 99px; padding: 3px 10px; vertical-align: middle; margin-left: 10px; }
+    .post-body .intro-note { background: var(--green-50); border-left: 3px solid var(--green-500); border-radius: 0 8px 8px 0; padding: 16px 20px; margin-bottom: 32px; font-size: 15px; color: var(--gray-700); }
+
+    /* VENDOR CARDS */
+    .stage-block { margin-bottom: 12px; }
+    .vendor-row { background: var(--white); border: 1px solid var(--gray-300); border-radius: 16px; padding: 24px 28px; margin-bottom: 16px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; transition: box-shadow .2s; }
+    .vendor-row:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .vr-name { font-size: 18px; font-weight: 700; color: var(--gray-900); margin-bottom: 2px; }
+    .vr-url { font-size: 12px; color: var(--gray-500); margin-bottom: 10px; }
+    .vr-desc { font-size: 14px; color: var(--gray-700); line-height: 1.65; margin-bottom: 12px; }
+    .vr-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .vr-tag { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--green-100); color: var(--green-700); }
+    .vr-tag.grey { background: var(--gray-100); color: var(--gray-600); }
+    .fit-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 99px; text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+    .fit-high { background: #dcfce7; color: #166534; }
+    .fit-medium { background: #fef9c3; color: #854d0e; }
+    .vr-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+    .vr-pricing { font-size: 11px; color: var(--gray-500); text-align: right; }
+
+    /* CTA */
+    .post-cta { background: var(--green-900); border-radius: 20px; padding: 48px 40px; text-align: center; margin: 48px 0; }
+    .post-cta p { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--green-200); margin-bottom: 12px; }
+    .post-cta h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 800; color: white; margin-bottom: 12px; }
+    .post-cta .sub { font-size: 15px; color: var(--green-200); margin-bottom: 28px; font-family: 'Inter', sans-serif; }
+    .btn-cta { background: white; color: var(--green-900); border: none; border-radius: 99px; padding: 14px 32px; font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; transition: transform .15s, box-shadow .15s; }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+
+    footer { background: var(--green-900); border-top: 1px solid rgba(255,255,255,.08); padding: 28px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-name { font-size: 14px; font-weight: 700; color: white; }
+    .footer-note { font-size: 12px; color: var(--green-200); }
+
+    @media (max-width: 600px) {
+      .vendor-row { grid-template-columns: 1fr; }
+      .vr-right { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="nav-wrapper">
+<nav>
+  <a href="/" class="nav-brand">
+    <div class="nav-dot">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    <div class="nav-name">SuccessByCS</div>
+  </a>
+  <a href="/browse" class="nav-cta">Browse the Directory</a>
+</nav>
+</div>
+
+<div class="post-hero">
+  <div class="post-eyebrow">2026 Market Analysis</div>
+  <h1>Top CS Vendors <em>by Lifecycle Stage</em></h1>
+  <p class="post-lead">
+    The Customer Success tech landscape has grown to over 200 vendors — but most tools are built for a specific moment in the post-sale journey. This guide maps the best options at each of the 8 SuccessByCS lifecycle stages so you can shortlist by where you actually need help.
+  </p>
+  <div class="post-meta">
+    <div><strong>By</strong> Chris Sparshott, SuccessByCS</div>
+    <div>Updated April 2026</div>
+    <div><strong>48</strong> vendors catalogued</div>
+  </div>
+</div>
+
+<div class="post-body">
+
+  <div class="intro-note">
+    Vendors are rated on fit within each stage. <strong>High fit</strong> = purpose-built or dominant here. <strong>Medium fit</strong> = capable but not the primary use case. All profiles are available in the full directory with ICP signals, pricing, SOC2 status, and integration coverage.
+  </div>
+
+  <!-- ── SIGN-UP ── -->
+  <h2>Stage 01 &mdash; Sign-up <span class="stage-pill">Pre-CS handoff</span></h2>
+  <p>Sign-up tooling captures sales context, deal notes, and handoff signals before the customer relationship formally moves to CS. The best tools here reduce the gap between closed-won and first CS touch.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Salesloft</div>
+        <div class="vr-url">salesloft.com</div>
+        <div class="vr-desc">Revenue orchestration platform with deal rooms, handoff notes, and the ability to route post-sale context directly to CS. Strong where sales and CS share a workspace.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Handoff capture</span>
+          <span class="vr-tag">Deal context</span>
+          <span class="vr-tag grey">CRM-connected</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gong</div>
+        <div class="vr-url">gong.io</div>
+        <div class="vr-desc">Revenue intelligence platform that records and transcribes sales conversations. CS teams use Gong to review pre-signature calls and surface commitment and expectation signals before onboarding starts.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Conversation intelligence</span>
+          <span class="vr-tag">Expectation signals</span>
+          <span class="vr-tag grey">AI-powered</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-medium">Medium fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ONBOARDING ── -->
+  <h2>Stage 02 &mdash; Onboarding <span class="stage-pill">Time-to-value</span></h2>
+  <p>Onboarding platforms coordinate implementation tasks, customer milestones, and internal CS workflows during the critical first-value window. Speed here directly impacts long-term retention.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Rocketlane</div>
+        <div class="vr-url">rocketlane.com</div>
+        <div class="vr-desc">Purpose-built customer onboarding platform with shared project plans, milestone tracking, and customer-facing portals. The clearest category leader for implementation-heavy SaaS.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Project plans</span>
+          <span class="vr-tag">Customer portals</span>
+          <span class="vr-tag">Milestone tracking</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">From $19/user/mo</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gainsight</div>
+        <div class="vr-url">gainsight.com</div>
+        <div class="vr-desc">Gainsight's Journey Orchestrator and playbook engine can run structured onboarding motions at scale. Best fit where onboarding is part of a broader lifecycle program rather than a standalone project.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Playbooks</span>
+          <span class="vr-tag">Journey orchestration</span>
+          <span class="vr-tag grey">Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-medium">Medium fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Arrows</div>
+        <div class="vr-url">arrows.to</div>
+        <div class="vr-desc">HubSpot-native customer onboarding tool with shared action plans that sit inside the CRM. Strong for CRM-led onboarding motions and SMB/mid-market SaaS with existing HubSpot investment.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">HubSpot-native</span>
+          <span class="vr-tag">Action plans</span>
+          <span class="vr-tag grey">SMB–Mid-market</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">From $300/mo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACTIVATE ── -->
+  <h2>Stage 03 &mdash; Activate <span class="stage-pill">First value</span></h2>
+  <p>Activation tooling helps users reach the "aha moment" — the point where they've experienced meaningful product value. In-app guidance, education, and targeted nudges are the primary mechanics here.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Pendo</div>
+        <div class="vr-url">pendo.io</div>
+        <div class="vr-desc">Product experience platform with in-app guides, tooltips, NPS surveys, and usage analytics. Strong activation layer for product-led SaaS where activation is measurable via in-app behaviour.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">In-app guides</span>
+          <span class="vr-tag">Usage analytics</span>
+          <span class="vr-tag">NPS</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Appcues</div>
+        <div class="vr-url">appcues.com</div>
+        <div class="vr-desc">User onboarding and activation platform focused on no-code in-app flows, checklists, and announcements. Lower implementation overhead than Pendo — a strong choice for product teams without a dedicated CS tooling budget.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">No-code flows</span>
+          <span class="vr-tag">Checklists</span>
+          <span class="vr-tag grey">Mid-market</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">From $249/mo</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gainsight PX</div>
+        <div class="vr-url">gainsight.com/product-experience</div>
+        <div class="vr-desc">Product experience module within Gainsight — guides, analytics, and feedback loops designed for enterprise teams that already use Gainsight CS. Native data sharing between the two products is the key differentiator.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">In-app guides</span>
+          <span class="vr-tag">Gainsight-native</span>
+          <span class="vr-tag grey">Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADOPT ── -->
+  <h2>Stage 04 &mdash; Adopt <span class="stage-pill">Health &amp; engagement</span></h2>
+  <p>Adoption platforms track usage depth, health scores, and sentiment signals to identify which accounts are truly embedded versus which are at risk of shallow usage and early churn.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gainsight</div>
+        <div class="vr-url">gainsight.com</div>
+        <div class="vr-desc">The market leader for adoption and health scoring at enterprise scale. Gainsight's health scorecards, timeline events, and Cockpit workflows are purpose-built for this stage — and the data model is the most mature in the category.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Health scoring</span>
+          <span class="vr-tag">Cockpit workflows</span>
+          <span class="vr-tag">Usage analytics</span>
+          <span class="vr-tag grey">Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Vitally</div>
+        <div class="vr-url">vitally.io</div>
+        <div class="vr-desc">All-in-one CS platform with strong adoption dashboards, task automation, and health scoring. Built with a modern UX and faster time-to-value than Gainsight — the top alternative for mid-market SaaS teams.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Health scoring</span>
+          <span class="vr-tag">Task automation</span>
+          <span class="vr-tag grey">Mid-market</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">ChurnZero</div>
+        <div class="vr-url">churnzero.net</div>
+        <div class="vr-desc">CS platform with real-time customer health tracking, churn risk signals, and CS automation. Popular in B2B SaaS for its balance of depth and usability — positioned squarely in the adoption and retention space.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Churn risk</span>
+          <span class="vr-tag">Real-time health</span>
+          <span class="vr-tag grey">SMB–Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SUPPORT ── -->
+  <h2>Stage 05 &mdash; Support <span class="stage-pill">Issue resolution</span></h2>
+  <p>Support tooling spans from traditional ticketing to AI-powered deflection and knowledge bases. The CS angle is less about ticket volume and more about using support signals as health indicators.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Zendesk</div>
+        <div class="vr-url">zendesk.com</div>
+        <div class="vr-desc">The dominant enterprise support suite — ticketing, live chat, help centre, and AI-powered agent tools. CS teams use Zendesk data as a health signal layer, especially for high-volume accounts or scaled support motions.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Ticketing</span>
+          <span class="vr-tag">AI deflection</span>
+          <span class="vr-tag">Knowledge base</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">From $19/agent/mo</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Intercom</div>
+        <div class="vr-url">intercom.com</div>
+        <div class="vr-desc">Conversational support platform with Fin AI agent, inbox, and help centre. Strong for product-led SaaS where support is in-app and the CS team operates as a blend of support and success.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">AI agent (Fin)</span>
+          <span class="vr-tag">In-app messaging</span>
+          <span class="vr-tag grey">PLG-forward</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">From $29/seat/mo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EXPAND ── -->
+  <h2>Stage 06 &mdash; Expand <span class="stage-pill">Revenue growth</span></h2>
+  <p>Expansion tooling surfaces upsell and cross-sell signals within existing accounts. The best tools connect usage data, health scores, and product signals to identify the right moment and the right motion.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gainsight</div>
+        <div class="vr-url">gainsight.com</div>
+        <div class="vr-desc">Gainsight's Expansion playbooks and C360 timeline connect health and usage data to expansion opportunities. The most complete expansion workflow layer for enterprise CS teams running structured upsell motions.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Expansion playbooks</span>
+          <span class="vr-tag">Usage signals</span>
+          <span class="vr-tag grey">Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Clari</div>
+        <div class="vr-url">clari.com</div>
+        <div class="vr-desc">Revenue platform with expansion forecasting, account intelligence, and pipeline management across renewal and upsell. Strong where the CS team has quota responsibility for expansion and needs forecast accuracy.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Expansion forecast</span>
+          <span class="vr-tag">Account intelligence</span>
+          <span class="vr-tag grey">Revenue-focused</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-medium">Medium fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RENEW ── -->
+  <h2>Stage 07 &mdash; Renew <span class="stage-pill">Retention</span></h2>
+  <p>Renewal tools combine churn risk scoring, early warning alerts, and renewal workflow automation. The goal is to reach at-risk accounts before they've mentally churned — signals need to be 60–90 days ahead.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Gainsight</div>
+        <div class="vr-url">gainsight.com</div>
+        <div class="vr-desc">Industry-standard for enterprise renewal management — risk scores, renewal playbooks, EBR scheduling, and executive alignment tools. The renewal workflow layer is the most mature in the market for CS-owned renewal motions.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Risk scoring</span>
+          <span class="vr-tag">Renewal playbooks</span>
+          <span class="vr-tag">EBR workflows</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">ChurnZero</div>
+        <div class="vr-url">churnzero.net</div>
+        <div class="vr-desc">Built with churn prevention as the primary use case. Real-time health scores, automated playbooks at risk thresholds, and renewal dashboards make ChurnZero a focused alternative to Gainsight for retention-first teams.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Churn prevention</span>
+          <span class="vr-tag">Risk playbooks</span>
+          <span class="vr-tag grey">SMB–Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADVOCATE ── -->
+  <h2>Stage 08 &mdash; Advocate <span class="stage-pill">Proof &amp; growth</span></h2>
+  <p>Advocacy tools turn successful customers into proof — references, case studies, reviews, and peer-to-peer recommendations. This stage closes the loop on the lifecycle and feeds back into pipeline and trust.</p>
+
+  <div class="stage-block">
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">Influitive</div>
+        <div class="vr-url">influitive.com</div>
+        <div class="vr-desc">Customer advocacy and community platform — helps CS and marketing teams manage reference programs, incentivise reviews, and surface advocates for sales. The most purpose-built platform in this stage.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Reference programs</span>
+          <span class="vr-tag">Review incentives</span>
+          <span class="vr-tag">Community</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-high">High fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+
+    <div class="vendor-row">
+      <div>
+        <div class="vr-name">ReferenceEdge</div>
+        <div class="vr-url">pointofrefernce.net</div>
+        <div class="vr-desc">Salesforce-native reference management tool. Allows CS teams to track advocate status, manage reference requests from sales, and protect the same customers from over-referencing.</div>
+        <div class="vr-tags">
+          <span class="vr-tag">Reference management</span>
+          <span class="vr-tag">Salesforce-native</span>
+          <span class="vr-tag grey">Enterprise</span>
+        </div>
+      </div>
+      <div class="vr-right">
+        <span class="fit-badge fit-medium">Medium fit</span>
+        <div class="vr-pricing">Contact sales</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="post-cta">
+    <p>SuccessByCS Directory</p>
+    <h3>Browse all 48 vendor profiles</h3>
+    <div class="sub">Filter by stage, ICP, pricing, SOC2, and fit signal. Free access — no credit card.</div>
+    <a href="/browse" class="btn-cta">Open the full directory →</a>
+  </div>
+
+  <p style="font-size:14px;color:var(--gray-500);">This guide is maintained by Chris Sparshott at SuccessByCS and is updated as vendor profiles in the directory are enriched. Vendor descriptions are based on publicly available information and directory research. No vendor has paid for placement.</p>
+
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="nav-dot" style="width:26px;height:26px;"><svg viewBox="0 0 24 24" style="width:12px;height:12px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="white"/></svg></div>
+    <div class="footer-name">SuccessByCS</div>
+  </div>
+  <div class="footer-note">Customer Success Technology Directory &nbsp;&middot;&nbsp; <a href="/" style="color:var(--green-200);">vendors.successbycs.com</a></div>
+</footer>
+
+</body>
+</html>
