@@ -64,6 +64,34 @@ const DEFAULT_PIPELINE_CONTROLS = [
     description:
       "G2 product data via RapidAPI G2 Data API. Fills g2_url, g2_rating, g2_review_count, g2_categories. Currently 20/119 vendors covered — run to fill remaining 99.",
   },
+  {
+    pipeline_id: "trustpilot_enrichment",
+    name: "Trustpilot Enrichment",
+    group: "enrichment",
+    description:
+      "Scrapes Trustpilot review pages for all include_in_directory vendors. Fills trustpilot_rating and trustpilot_review_count. Triggered via n8n csp-trustpilot-enrichment workflow.",
+  },
+  {
+    pipeline_id: "feature_depth_enrichment",
+    name: "Feature Depth Enrichment",
+    group: "enrichment",
+    description:
+      "Crawls vendor help/docs site and runs LLM feature taxonomy extraction across 6 dimensions. Computes category-relative feature_depth_score (0–100) and feature_signals list. Triggered via n8n csp-feature-depth-enrichment workflow.",
+  },
+  {
+    pipeline_id: "ops_llm_enrichment_batch",
+    name: "Batch LLM Enrichment — All Vendors",
+    group: "enrichment",
+    description:
+      "Runs full crawl → embed → GPT-4o extraction pipeline for every vendor not yet enriched. Saves progress after each vendor — safe to interrupt and resume. ~$0.05–0.10 per vendor.",
+  },
+  {
+    pipeline_id: "ops_export_dataset",
+    name: "Export Dataset → Vercel",
+    group: "enrichment",
+    description:
+      "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to publish changes to the live directory.",
+  },
 ];
 const DEFAULT_PIPELINE_RUNNERS = [
   {
@@ -1277,8 +1305,34 @@ async function opsRunBatch(btn) {
   }
 }
 
+async function opsRunN8nEnrichment(webhookPath, statusId, btn) {
+  const statusEl = document.getElementById(statusId);
+  if (!_opsVendor) {
+    if (statusEl) statusEl.textContent = 'Set a vendor first';
+    return;
+  }
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Running…';
+  if (statusEl) statusEl.textContent = 'Triggering n8n…';
+  try {
+    const resp = await fetch(`https://successbycs.app.n8n.cloud/webhook/${webhookPath}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({vendors: [{website: _opsVendor}]}),
+    });
+    const result = await resp.json().catch(() => ({}));
+    if (statusEl) statusEl.textContent = resp.ok ? 'Triggered — check Supabase for results' : `Error: ${result.message || resp.status}`;
+  } catch (e) {
+    if (statusEl) statusEl.textContent = `Failed: ${e.message}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
 async function opsExportPublish(btn) {
-  const statusEl = document.getElementById('ops-step8-status');
+  const statusEl = document.getElementById('ops-step10-status');
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = 'Publishing…';

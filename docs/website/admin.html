@@ -209,6 +209,40 @@
         <div class="ops-step-card">
           <div class="ops-step-header">
             <span class="ops-step-number">Step 8</span>
+            <span class="ops-step-title">Trustpilot Enrichment</span>
+            <span class="ops-step-source source-g2">Trustpilot (HTTP scrape)</span>
+            <span class="ops-step-writes">→ trustpilot_rating, trustpilot_review_count</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Scrapes the Trustpilot review page for the vendor domain. Fills <code>trustpilot_rating</code> and <code>trustpilot_review_count</code>. Triggered via the <code>csp-trustpilot-enrichment</code> n8n workflow.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" onclick="opsRunN8nEnrichment('csp-trustpilot-enrichment', 'ops-step8-status', this)">Run</button>
+              <span class="ops-step-status" id="ops-step8-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 9 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 9</span>
+            <span class="ops-step-title">Feature Depth Enrichment</span>
+            <span class="ops-step-source source-llm">Help site crawl + GPT-4o mini</span>
+            <span class="ops-step-writes">→ feature_depth_score, feature_signals</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Crawls vendor <code>help_center_url</code> (fallback: <code>developer_docs_url</code>), extracts feature taxonomy across 6 dimensions (integrations, automation, reporting, onboarding, collaboration, API/dev), computes category-relative <code>feature_depth_score</code> (0–100) and <code>feature_signals</code> list.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" onclick="opsRunN8nEnrichment('csp-feature-depth-enrichment', 'ops-step9-status', this)">Run</button>
+              <span class="ops-step-status" id="ops-step9-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 10 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 10</span>
             <span class="ops-step-title">Export Dataset → Vercel</span>
             <span class="ops-step-source source-merge">Supabase → JSON</span>
             <span class="ops-step-writes">→ docs/website/data/directory_dataset.json</span>
@@ -217,7 +251,7 @@
             <p class="ops-step-desc">Pull latest vendor data from Supabase and write the static directory_dataset.json that powers the Vercel browse + vendor pages. Run after any enrichment to publish changes.</p>
             <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
               <button class="action-btn" onclick="opsExportPublish(this)">Export &amp; publish</button>
-              <span class="ops-step-status" id="ops-step8-status"></span>
+              <span class="ops-step-status" id="ops-step10-status"></span>
             </div>
           </div>
         </div>

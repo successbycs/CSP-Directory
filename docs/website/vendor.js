@@ -273,7 +273,7 @@ function renderPricingItem(label, pricingArray) {
 
 function renderBlogPostsSection(posts) {
   if (!Array.isArray(posts) || !posts.length) return "";
-  const items = posts.slice(0, 6).map(p => {
+  const items = posts.slice(0, 3).map(p => {
     const url = escapeAttribute(p.source_url || "");
     const title = escapeHtml(p.title || "");
     const summary = escapeHtml((p.summary || "").slice(0, 160));
