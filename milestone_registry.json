@@ -1475,6 +1475,76 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "DEFERRED: Excluded from M76 by design decision. The 100-page website crawl (M76 Step 2) surfaces ceo_name and leadership from /about and /team pages without API cost. The only unique LinkedIn value is personal profile URLs (ceo_linkedin) \u2014 not required for directory at this stage. Gate: run M76 proof (single vendor Gainsight), measure ceo_name/leadership miss rate. Only proceed with M78 if miss rate is unacceptably high. If M78 proceeds: use LinkedIn Data API on RapidAPI (linkedin-data-api.p.rapidapi.com) \u2014 NOT Apify LinkedIn Company Scraper (two-step approach adds failure mode). Firmographic fields (founded, HQ, funding) are now covered by M75 Datagma \u2014 M78 scope is limited to: linkedin_url, ceo_linkedin, leadership array."
+    },
+    {
+      "id": "M79",
+      "title": "Stage filter pill tooltips on browse directory",
+      "status": "completed",
+      "description": "Hover over any lifecycle stage pill shows a one-line definition (e.g. Support \u2192 Resolves issues and keeps customers unblocked). CSS ::after tooltip via data-tooltip attribute.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M80",
+      "title": "Use-case pills link to vendor website",
+      "status": "completed",
+      "description": "Use-case pills on vendor profile pages now link directly to the vendor website (opens in new tab with \u2197). When use_case_details gains a specific URL for a use case, that URL is used instead.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M81",
+      "title": "LLM enrichment pipeline \u2014 GPT-4o tiered extraction",
+      "status": "completed",
+      "description": "run_vendor_enrichment.py \u2014 crawl \u2192 embed (nomic-embed-text/Ollama) \u2192 RAG \u2192 GPT-4o extraction. Tiered: tries Ollama (45s timeout) first, falls back to OpenAI GPT-4o. Extracts mission, usp, how_it_works, key_features, workflows, icp, outcomes, metrics, integrations, free_trial.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M82",
+      "title": "G2 ratings and reviews surfaced in directory",
+      "status": "completed",
+      "description": "Merged G2 data from Supabase (20 vendors with g2_rating, g2_review_count, g2_url, g2_categories) into directory_dataset.json. Browse cards show orange G2 badge. Vendor profiles show G2 chip linking to G2 page + full G2 block in Operational Signals.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M83",
+      "title": "System architecture diagram (M77 implementation)",
+      "status": "completed",
+      "description": "Mermaid source + PNG at docs/architecture/ covering all 7 layers: UI, Python services, Ollama, GPT-4o, n8n, external APIs, Supabase, Vercel. Fixed to show Vercel (not GitHub Pages).",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M84",
+      "title": "Admin pipeline reset \u2014 fix stuck running state",
+      "status": "completed",
+      "description": "full_pipeline was stuck as running since 30/03/2026 (PID died, state never cleaned). Added reset_pipeline_state() to pipeline_control.py, POST /admin/pipelines/reset endpoint, and Reset button on running pipeline rows in admin panel. Also directly fixed the state file.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M85",
+      "title": "Missing enrichment scripts \u2014 LinkedIn and Firmographic",
+      "status": "completed",
+      "description": "scripts/enrich_linkedin.py (RapidAPI LinkedIn Scraper) and scripts/enrich_firmographic.py (Datagma via RapidAPI) were missing, causing pipeline failures. Both created with full implementation including dry-run, limit, and vendor filter options.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M86",
+      "title": "Batch LLM enrichment \u2014 all vendors from admin panel",
+      "status": "completed",
+      "description": "scripts/run_batch_enrichment.py loops all 81 vendors, calls GPT-4o extraction, saves incrementally. Admin panel Steps 7 (Batch LLM) and 8 (Export to Vercel) added with Run controls. opsRunBatch() JS handler added.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M87",
+      "title": "Pricing token human-readable labels on vendor profiles",
+      "status": "completed",
+      "description": "PRICING_LABELS map in vendor.js translates raw tokens (\\$, per month, contact sales etc.) to readable text. Free trial chip becomes clickable anchor scrolling to Operational Signals section.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M88",
+      "title": "Fix: Fit pill removed from vendor profiles",
+      "status": "completed",
+      "description": "Removed Fit: medium/high chip from all vendor profile hero rows \u2014 redundant given confidence chip.",
+      "completed_at": "2026-04-03"
     }
   ]
 }
