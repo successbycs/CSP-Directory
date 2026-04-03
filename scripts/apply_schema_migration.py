@@ -59,6 +59,9 @@ REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
     # M71 — Trustpilot enrichment fields
     ("trustpilot_rating", "float", True),
     ("trustpilot_review_count", "integer", True),
+    # M73b — feature depth enrichment fields
+    ("feature_depth_score", "integer", True),
+    ("feature_signals", "text[]", True),
     # M51 — deep crawl fields
     ("raw_crawl_blob", "text", True),
     ("crawl_page_count", "integer", True),

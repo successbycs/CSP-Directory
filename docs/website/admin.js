@@ -132,11 +132,6 @@ const state = {
     items: [],
   },
   runs: [],
-  searchVisibility: {
-    metrics: {},
-    role_query_rankings: [],
-    vendor_visibility_summary: [],
-  },
   enrichmentMetrics: {
     metrics: {},
     pipeline_counts: {},
@@ -148,7 +143,6 @@ const state = {
     vendors: "",
     leads: "",
     runs: "",
-    searchVisibility: "",
     enrichmentMetrics: "",
     pipelineRunners: "",
     pipelines: "",
@@ -169,12 +163,11 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadDashboard() {
   try {
     state.apiBase = await detectApiBase();
-    const [candidates, vendors, leads, runs, searchVisibility, enrichmentMetrics, pipelineRunners, pipelines] = await Promise.all([
+    const [candidates, vendors, leads, runs, enrichmentMetrics, pipelineRunners, pipelines] = await Promise.all([
       fetchJson("/admin/candidates"),
       fetchJson("/admin/vendors"),
       fetchJson("/admin/leads"),
       fetchJson("/admin/runs"),
-      fetchJson("/admin/search-visibility"),
       fetchJson("/admin/enrichment-metrics").catch(() => ({metrics: {}, pipeline_counts: {}, error: "enrichment_metrics_unavailable"})),
       fetchJson("/admin/pipeline-runners").catch(() => ({items: [], error: "pipeline_runners_unavailable"})),
       fetchJson("/admin/pipelines").catch(() => ({items: [], error: "pipelines_unavailable"})),
@@ -187,11 +180,6 @@ async function loadDashboard() {
       items: leads.items || [],
     };
     state.runs = runs.items || [];
-    state.searchVisibility = {
-      metrics: searchVisibility.metrics || {},
-      role_query_rankings: searchVisibility.role_query_rankings || [],
-      vendor_visibility_summary: searchVisibility.vendor_visibility_summary || [],
-    };
     state.enrichmentMetrics = {
       metrics: enrichmentMetrics.metrics || {},
       pipeline_counts: enrichmentMetrics.pipeline_counts || {},
@@ -202,7 +190,6 @@ async function loadDashboard() {
     state.errors.vendors = formatApiError(vendors);
     state.errors.leads = formatApiError(leads);
     state.errors.runs = formatApiError(runs);
-    state.errors.searchVisibility = formatApiError(searchVisibility);
     state.errors.enrichmentMetrics = formatApiError(enrichmentMetrics);
     state.errors.pipelineRunners = formatApiError(pipelineRunners);
     state.errors.pipelines = formatApiError(pipelines);
@@ -212,7 +199,6 @@ async function loadDashboard() {
     renderVendors();
     renderLeads();
     renderRuns();
-    renderSearchVisibility();
     renderEnrichmentMetrics();
     renderPipelineRunners();
     renderPipelines();
@@ -325,7 +311,7 @@ function renderVendors() {
   body.innerHTML = rows.map((vendor) => {
     const includeValue = vendor.include_in_directory === true;
     const rowClass = includeValue ? "" : "is-excluded";
-    const vendorName = vendor.name || vendor.vendor_name || "";
+    const vendorName = vendor.name || vendor.vendor_name || vendor.website || "";
     const productSummary = summarizeProductNames(vendor.products);
     return `
       <tr class="${rowClass}">
@@ -467,57 +453,11 @@ function formatRunQuery(run) {
   `;
 }
 
-function renderSearchVisibility() {
-  const summaryBody = document.getElementById("search-visibility-summary-body");
-  const rankingsBody = document.getElementById("search-visibility-rankings-body");
-  const metricsNode = document.getElementById("search-visibility-metrics");
-  if (!summaryBody || !rankingsBody || !metricsNode) {
-    return;
-  }
-  if (state.errors.searchVisibility) {
-    metricsNode.textContent = state.errors.searchVisibility;
-    summaryBody.innerHTML = `<tr><td colspan="6" class="message">${escapeHtml(state.errors.searchVisibility)}</td></tr>`;
-    rankingsBody.innerHTML = `<tr><td colspan="7" class="message">${escapeHtml(state.errors.searchVisibility)}</td></tr>`;
-    return;
-  }
-
-  const metrics = state.searchVisibility.metrics || {};
-  metricsNode.textContent = `${metrics.query_count || 0} queries, ${metrics.ranking_count || 0} rankings, ${metrics.vendor_count || 0} surfaced vendors.`;
-
-  const summaryRows = (state.searchVisibility.vendor_visibility_summary || []).slice(0, 10);
-  summaryBody.innerHTML = summaryRows.map((row) => `
-    <tr>
-      <td>${escapeHtml(row.surfaced_vendor_name || "")}</td>
-      <td>${escapeHtml(String(row.appearances ?? ""))}</td>
-      <td>${escapeHtml(String(row.best_rank ?? ""))}</td>
-      <td>${escapeHtml(String(row.average_visibility_score ?? ""))}</td>
-      <td>${escapeHtml(formatList(row.buyer_roles))}</td>
-      <td>${escapeHtml(formatList(row.search_channels))}</td>
-    </tr>
-  `).join("") || '<tr><td colspan="6" class="message">No vendor visibility summary rows found.</td></tr>';
-
-  const rankingRows = (state.searchVisibility.role_query_rankings || []).slice(0, 12);
-  rankingsBody.innerHTML = rankingRows.map((row) => `
-    <tr>
-      <td>${escapeHtml(row.run_timestamp || "")}</td>
-      <td>${escapeHtml(row.buyer_role || "")}</td>
-      <td>${escapeHtml(row.search_channel_label || "")}</td>
-      <td>${escapeHtml(row.query_text || "")}</td>
-      <td>${escapeHtml(String(row.observed_rank ?? ""))}</td>
-      <td>${escapeHtml(row.surfaced_vendor_name || "")}</td>
-      <td>${escapeHtml(String(row.visibility_score ?? ""))}</td>
-    </tr>
-  `).join("") || '<tr><td colspan="7" class="message">No role-by-query ranking rows found.</td></tr>';
-}
-
 function renderFailureState(message) {
   const candidatesBody = document.getElementById("candidates-body");
   const vendorsBody = document.getElementById("vendors-body");
   const leadsBody = document.getElementById("leads-body");
   const runsBody = document.getElementById("runs-body");
-  const searchVisibilitySummaryBody = document.getElementById("search-visibility-summary-body");
-  const searchVisibilityRankingsBody = document.getElementById("search-visibility-rankings-body");
-  const searchVisibilityMetrics = document.getElementById("search-visibility-metrics");
   const leadCaptureMetrics = document.getElementById("lead-capture-metrics");
   const enrichmentMetrics = document.getElementById("enrichment-metrics");
   const pipelineControlMetrics = document.getElementById("pipeline-control-metrics");
@@ -533,15 +473,6 @@ function renderFailureState(message) {
   }
   if (runsBody) {
     runsBody.innerHTML = `<tr><td colspan="6" class="message">${escapeHtml(message)}</td></tr>`;
-  }
-  if (searchVisibilitySummaryBody) {
-    searchVisibilitySummaryBody.innerHTML = `<tr><td colspan="6" class="message">${escapeHtml(message)}</td></tr>`;
-  }
-  if (searchVisibilityRankingsBody) {
-    searchVisibilityRankingsBody.innerHTML = `<tr><td colspan="7" class="message">${escapeHtml(message)}</td></tr>`;
-  }
-  if (searchVisibilityMetrics) {
-    searchVisibilityMetrics.textContent = message;
   }
   if (leadCaptureMetrics) {
     leadCaptureMetrics.textContent = message;

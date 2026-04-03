@@ -497,6 +497,14 @@
       return true;
     });
 
+    // High confidence before medium before others
+    const confRank = { high: 0, medium: 1 };
+    filtered.sort((a, b) => {
+      const ra = confRank[a.confidence] ?? 2;
+      const rb = confRank[b.confidence] ?? 2;
+      return ra - rb;
+    });
+
     renderGrid(filtered);
     document.getElementById('nav-count').textContent = `${filtered.length} vendor${filtered.length !== 1 ? 's' : ''}`;
     document.getElementById('status-text').innerHTML =

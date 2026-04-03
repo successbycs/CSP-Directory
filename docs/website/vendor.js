@@ -126,13 +126,8 @@ function renderVendor(container, vendor) {
               LinkedIn
             </a>
             <a href="https://successbycs.com" target="_blank" rel="noreferrer"
-               style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;background:#0d1a12;border-radius:20px;text-decoration:none;font-size:13px;font-weight:600;color:#fff;line-height:1;">
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#22c55e;border-radius:50%;flex-shrink:0;">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <rect x="2" y="2.5" width="2.2" height="5" rx="0.8" fill="#fff"/>
-                  <rect x="5.8" y="2.5" width="2.2" height="5" rx="0.8" fill="#fff"/>
-                </svg>
-              </span>
+               style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--border);border-radius:20px;text-decoration:none;font-size:13px;color:var(--text-muted);line-height:1;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               SuccessByCS
             </a>
           </div>
@@ -163,7 +158,7 @@ function renderVendor(container, vendor) {
           </div>
         </section>
 
-        ${renderStorySection("Case-study details", vendor.case_study_details, formatCaseStudy)}
+        ${renderStorySection("Case-study details", prioritiseCaseStudies(vendor.case_study_details, vendor.website), formatCaseStudy)}
         ${renderStorySection("Use-case detail objects", vendor.use_case_details, formatUseCaseDetail)}
         ${renderSimpleListSection("Value statements", vendor.value_statements)}
         ${renderBlogPostsSection(vendor.blog_posts)}
@@ -179,7 +174,7 @@ function renderVendor(container, vendor) {
             ${renderDetailItem("Website", websiteLabel)}
             ${renderDetailItem("Founded", founded)}
             ${renderDetailItem("Free trial", formatBoolean(vendor.free_trial))}
-            ${renderDetailItem("SOC 2", formatBoolean(vendor.soc2))}
+            ${renderDetailItem("SOC 2", vendor.soc2 === true ? "Yes" : vendor.soc2 === false ? "No signal" : "Not captured")}
             ${vendor.g2_rating ? renderG2Item(vendor) : ""}
           </div>
         </section>
@@ -236,10 +231,10 @@ function renderUseCaseLinks(label, useCases, useCaseDetails, vendorWebsite) {
     });
   }
   const links = useCases.map(u => {
+    // Only link if we have a specific deep URL — never link to the domain root
     const detailUrl = detailMap[u.trim().toLowerCase()];
-    const href = detailUrl || vendorWebsite || null;
-    if (href) {
-      return `<a href="${escapeAttribute(href)}" target="_blank" rel="noreferrer" class="use-case-link" title="See ${escapeHtml(u)} on vendor site">${escapeHtml(u)} ↗</a>`;
+    if (detailUrl) {
+      return `<a href="${escapeAttribute(detailUrl)}" target="_blank" rel="noreferrer" class="use-case-link" title="See ${escapeHtml(u)} on vendor site">${escapeHtml(u)} ↗</a>`;
     }
     return `<span class="use-case-link">${escapeHtml(u)}</span>`;
   }).join('');
@@ -332,6 +327,19 @@ function renderSimpleListSection(title, items) {
   `;
 }
 
+function prioritiseCaseStudies(items, vendorWebsite) {
+  if (!Array.isArray(items) || !items.length) return items;
+  const root = (vendorWebsite || '').replace(/\/$/, '').replace(/^https?:\/\//, '');
+  const isRootUrl = (url) => {
+    if (!url) return true;
+    const stripped = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return stripped === root || stripped === 'www.' + root;
+  };
+  const withUrl = items.filter(i => i.source_url && !isRootUrl(i.source_url));
+  const rest = items.filter(i => !i.source_url || isRootUrl(i.source_url));
+  return [...withUrl, ...rest].slice(0, 3);
+}
+
 function renderStorySection(title, items, formatter) {
   if (!Array.isArray(items) || !items.length) {
     return "";
@@ -381,7 +389,7 @@ function renderEvidenceList(urls) {
 
   return `
     <ul class="evidence-list">
-      ${urls.map((url) => `<li><a href="${escapeAttribute(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a></li>`).join("")}
+      ${urls.slice(0, 5).map((url) => `<li><a href="${escapeAttribute(url)}" target="_blank" rel="noreferrer">${escapeHtml(url)}</a></li>`).join("")}
     </ul>
   `;
 }

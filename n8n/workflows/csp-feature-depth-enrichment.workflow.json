@@ -1,0 +1,306 @@
+{
+  "name": "CSP Feature Depth Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "csp-feature-depth-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "fde-0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "csp-feature-depth-enrichment"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || (body.website ? [{\n  vendor_name: body.vendor_name || '',\n  website: body.website,\n  help_center_url: body.help_center_url || '',\n  developer_docs_url: body.developer_docs_url || '',\n  directory_category: body.directory_category || ''\n}] : []);\nif (!vendors.length) return [{ json: { _no_vendors: true } }];\nconst admin_url = (body.admin_url || 'http://127.0.0.1:8787').trim();\nconst openai_key = (body.openai_key || '').trim();\nif (!openai_key) throw new Error('openai_key required in request body');\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    help_center_url: v.help_center_url || '',\n    developer_docs_url: v.developer_docs_url || '',\n    directory_category: v.directory_category || '',\n    admin_url,\n    openai_key,\n  }\n}));"
+      },
+      "id": "fde-0002-0002-0002-0002-000000000002",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n// Resolve crawl URL: help_center_url -> developer_docs_url -> {website}/help\nlet crawl_url = '';\nif (item.help_center_url && item.help_center_url.startsWith('http')) {\n  crawl_url = item.help_center_url;\n} else if (item.developer_docs_url && item.developer_docs_url.startsWith('http')) {\n  crawl_url = item.developer_docs_url;\n} else if (item.website) {\n  crawl_url = item.website.replace(/\\/$/, '') + '/help';\n}\nreturn [{ json: { ...item, crawl_url, crawl_attempted: !!crawl_url } }];"
+      },
+      "id": "fde-0003-0003-0003-0003-000000000003",
+      "name": "Resolve Crawl URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-crawl",
+              "leftValue": "={{ $json.crawl_attempted }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fde-0004-0004-0004-0004-000000000004",
+      "name": "Has Crawl URL?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [720, 0]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.crawl_url }}",
+        "options": {
+          "response": { "response": { "responseFormat": "text", "fullResponse": false } },
+          "timeout": 15000,
+          "redirect": { "redirect": { "followRedirects": true, "maxRedirects": 3 } }
+        }
+      },
+      "id": "fde-0005-0005-0005-0005-000000000005",
+      "name": "Crawl Help Site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, -80],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract visible text from HTML — strip tags, collapse whitespace, cap at 6000 chars\nconst html = $input.first().json.data || $input.first().json || '';\nconst upstream = $input.first().json;\nconst text = String(html)\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, 6000);\nconst crawl_ok = text.length > 150;\nreturn [{ json: { ...upstream.passthroughData, crawl_text: text, crawl_ok } }];"
+      },
+      "id": "fde-0006-0006-0006-0006-000000000006",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// No crawl URL available — pass through with null score\nconst item = $input.first().json;\nreturn [{ json: { ...item, crawl_text: '', crawl_ok: false } }];"
+      },
+      "id": "fde-0007-0007-0007-0007-000000000007",
+      "name": "No URL — Null Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge crawl result branches\nconst item = $input.first().json;\nreturn [{ json: item }];"
+      },
+      "id": "fde-0008-0008-0008-0008-000000000008",
+      "name": "Merge Branches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "cond-crawl-ok",
+              "leftValue": "={{ $json.crawl_ok }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fde-0009-0009-0009-0009-000000000009",
+      "name": "Crawl Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1680, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.openai_key }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0,\n  \"max_tokens\": 600,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a B2B software analyst evaluating Customer Success Platform vendors. Score the vendor's help/docs content across 6 feature dimensions. Return ONLY valid JSON with no extra text.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Vendor: {{ $json.vendor_name }}\\nHelp site content (excerpt):\\n{{ $json.crawl_text }}\\n\\nScore this vendor's feature depth across these 6 dimensions (0-10 each, 0=no evidence, 10=deep documented feature set):\\n1. integrations - documented integrations with third-party tools\\n2. automation - workflow automation, playbook, trigger/action capabilities\\n3. reporting - analytics, dashboards, custom reports\\n4. onboarding - guided onboarding, implementation support features\\n5. collaboration - team collaboration, internal notes, shared views\\n6. api_developer - API access, webhooks, developer documentation\\n\\nAlso extract up to 10 specific feature signals (plain English capability names found in the content).\\n\\nReturn JSON: {\\\"scores\\\": {\\\"integrations\\\": N, \\\"automation\\\": N, \\\"reporting\\\": N, \\\"onboarding\\\": N, \\\"collaboration\\\": N, \\\"api_developer\\\": N}, \\\"feature_signals\\\": [\\\"signal1\\\", ...]}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "fde-0010-0010-0010-0010-000000000010",
+      "name": "LLM Extract Features",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1920, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM response and compute raw score (sum of 6 dimensions, max 60)\nconst item = $input.first().json;\nlet scores = null;\nlet feature_signals = [];\ntry {\n  const content = item.choices?.[0]?.message?.content || '';\n  // Strip markdown code fences if present\n  const clean = content.replace(/```json\\s*/gi, '').replace(/```/g, '').trim();\n  const parsed = JSON.parse(clean);\n  scores = parsed.scores || null;\n  feature_signals = (parsed.feature_signals || []).slice(0, 20);\n} catch(e) {\n  scores = null;\n}\nconst upstream = item.passthroughData || item;\nif (!scores) {\n  return [{ json: { ...upstream, raw_score: null, feature_signals: [], llm_ok: false } }];\n}\nconst dims = ['integrations', 'automation', 'reporting', 'onboarding', 'collaboration', 'api_developer'];\nconst raw_score = dims.reduce((sum, d) => sum + (Number(scores[d]) || 0), 0);\nreturn [{ json: { ...upstream, raw_score, feature_signals, llm_ok: true, scores } }];"
+      },
+      "id": "fde-0011-0011-0011-0011-000000000011",
+      "name": "Parse LLM Scores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2160, -80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Crawl failed — emit null score\nconst item = $input.first().json;\nreturn [{ json: { ...item, raw_score: null, feature_signals: [], llm_ok: false } }];"
+      },
+      "id": "fde-0012-0012-0012-0012-000000000012",
+      "name": "Crawl Failed — Null",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1920, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge LLM and null-score branches\nconst item = $input.first().json;\nreturn [{ json: item }];"
+      },
+      "id": "fde-0013-0013-0013-0013-000000000013",
+      "name": "Merge Score Branches",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2400, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Note: category-relative percentile ranking (0-100) requires all vendors in the same\n// directory_category to be processed in one batch. This node collects all items and\n// computes percentile ranks within each category group.\n// For single-vendor calls, raw_score is mapped linearly (raw/60 * 100).\nconst items = $input.all();\nconst groups = {};\nfor (const item of items) {\n  const cat = item.json.directory_category || '__unknown';\n  if (!groups[cat]) groups[cat] = [];\n  groups[cat].push(item.json);\n}\nconst results = [];\nfor (const [cat, vendors] of Object.entries(groups)) {\n  const scored = vendors.filter(v => v.raw_score !== null && v.raw_score !== undefined);\n  const total = scored.length;\n  for (const vendor of vendors) {\n    let feature_depth_score = null;\n    if (vendor.raw_score !== null && vendor.raw_score !== undefined) {\n      if (total <= 1) {\n        // Single vendor: linear mapping\n        feature_depth_score = Math.round((vendor.raw_score / 60) * 100);\n      } else {\n        // Percentile rank within category\n        const rank = scored.filter(v => v.raw_score < vendor.raw_score).length;\n        feature_depth_score = Math.round((rank / (total - 1)) * 100);\n      }\n    }\n    results.push({ json: { ...vendor, feature_depth_score } });\n  }\n}\nreturn results;"
+      },
+      "id": "fde-0014-0014-0014-0014-000000000014",
+      "name": "Compute Category Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.admin_url }}/admin/enrich",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"website\": \"{{ $json.website }}\",\n  \"vendor_name\": \"{{ $json.vendor_name }}\",\n  \"source\": \"csp_feature_depth_enrichment\",\n  \"feature_depth_score\": {{ $json.feature_depth_score !== null ? $json.feature_depth_score : 'null' }},\n  \"feature_signals\": {{ JSON.stringify($json.feature_signals || []) }}\n}",
+        "options": {}
+      },
+      "id": "fde-0015-0015-0015-0015-000000000015",
+      "name": "Write to Admin API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2880, 0],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all().map(item => ({\n  vendor: item.json.vendor_name,\n  website: item.json.website,\n  feature_depth_score: item.json.feature_depth_score,\n  feature_signals_count: (item.json.feature_signals || []).length,\n  crawl_ok: item.json.crawl_ok,\n  llm_ok: item.json.llm_ok,\n  write_status: item.json.ok !== false ? 'ok' : 'error'\n}));\nreturn [{ json: { ok: true, results, total: results.length, scored: results.filter(r => r.feature_depth_score !== null).length } }];"
+      },
+      "id": "fde-0016-0016-0016-0016-000000000016",
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3120, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "fde-0017-0017-0017-0017-000000000017",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [3360, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Split Vendors", "type": "main", "index": 0 }]]
+    },
+    "Split Vendors": {
+      "main": [[{ "node": "Resolve Crawl URL", "type": "main", "index": 0 }]]
+    },
+    "Resolve Crawl URL": {
+      "main": [[{ "node": "Has Crawl URL?", "type": "main", "index": 0 }]]
+    },
+    "Has Crawl URL?": {
+      "main": [
+        [{ "node": "Crawl Help Site", "type": "main", "index": 0 }],
+        [{ "node": "No URL — Null Score", "type": "main", "index": 0 }]
+      ]
+    },
+    "Crawl Help Site": {
+      "main": [
+        [{ "node": "Extract Text", "type": "main", "index": 0 }],
+        [{ "node": "No URL — Null Score", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Text": {
+      "main": [[{ "node": "Merge Branches", "type": "main", "index": 0 }]]
+    },
+    "No URL — Null Score": {
+      "main": [[{ "node": "Merge Branches", "type": "main", "index": 0 }]]
+    },
+    "Merge Branches": {
+      "main": [[{ "node": "Crawl Succeeded?", "type": "main", "index": 0 }]]
+    },
+    "Crawl Succeeded?": {
+      "main": [
+        [{ "node": "LLM Extract Features", "type": "main", "index": 0 }],
+        [{ "node": "Crawl Failed — Null", "type": "main", "index": 0 }]
+      ]
+    },
+    "LLM Extract Features": {
+      "main": [[{ "node": "Parse LLM Scores", "type": "main", "index": 0 }]]
+    },
+    "Parse LLM Scores": {
+      "main": [[{ "node": "Merge Score Branches", "type": "main", "index": 0 }]]
+    },
+    "Crawl Failed — Null": {
+      "main": [[{ "node": "Merge Score Branches", "type": "main", "index": 0 }]]
+    },
+    "Merge Score Branches": {
+      "main": [[{ "node": "Compute Category Score", "type": "main", "index": 0 }]]
+    },
+    "Compute Category Score": {
+      "main": [[{ "node": "Write to Admin API", "type": "main", "index": 0 }]]
+    },
+    "Write to Admin API": {
+      "main": [
+        [{ "node": "Build Response", "type": "main", "index": 0 }],
+        [{ "node": "Build Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Response": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["csp-enrichment"],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

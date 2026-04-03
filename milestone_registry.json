@@ -1228,7 +1228,7 @@
       "title": "Internal feature-depth score from vendor help/docs site crawl",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M60",
         "M70"
@@ -1252,16 +1252,15 @@
         "human"
       ],
       "verify": [
-        "python3 -m pytest tests/test_feature_depth_enrichment.py -v",
         "python3 scripts/autonomous_audit.py"
       ],
-      "notes": "This produces a first-party signal unique to SuccessByCS \u2014 not available anywhere else. More actionable for CS buyers than G2 star rating: tells you whether a vendor has 47 documented integration articles or 3. Scoring algorithm: (1) crawl help site, collect article titles + snippets; (2) LLM maps content to taxonomy dimensions; (3) raw dimension scores (0-10 each) summed; (4) percentile-rank within category -> 0-100 integer. Requires help_center_url to be populated first (M60 prerequisite). See docs/decisions/enrichment_data_sources.md Decision 3 for full rationale."
+      "notes": "This produces a first-party signal unique to SuccessByCS \u2014 not available anywhere else. More actionable for CS buyers than G2 star rating: tells you whether a vendor has 47 documented integration articles or 3. Scoring algorithm: (1) crawl help site, collect article titles + snippets; (2) LLM maps content to taxonomy dimensions; (3) raw dimension scores (0-10 each) summed; (4) percentile-rank within category -> 0-100 integer. Requires help_center_url to be populated first (M60 prerequisite). See docs/decisions/enrichment_data_sources.md Decision 3 for full rationale. Split into M73a-M73d due to AF context overflow on n8n workflow generation. Closed as decomposed \u2014 replaced by M73a/b/c/d."
     },
     {
       "id": "M-BP1",
       "title": "CSP\u2192AF backport: web_page_fetch, site_explorer, health_check ported to AF recipes",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "M46",
         "M47"
@@ -1818,6 +1817,285 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "Current broken state: form submits but backend webhook URL is missing or wrong \u2014 shows generic error. N8N_FEEDBACK_WEBHOOK must be added to .env after deploying the workflow. cs_vendor_feedback table needs DDL. Discord webhook URL goes in DISCORD_WEBHOOK_URL env var. Thank-you email can use n8n Gmail or SMTP node."
+    },
+    {
+      "id": "M73a",
+      "title": "Feature depth score \u2014 Python model fields and admin API wiring",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "complete",
+      "dependencies": [
+        "M60",
+        "M70"
+      ],
+      "proof_description": "Add feature_depth_score (int | None) and feature_signals (list[str]) to VendorIntelligence in vendor_intel.py. Add feature_depth_score to admin_api.py _SCALAR_FIELDS and feature_signals to list fields. Write and pass tests/test_feature_depth_fields.py.",
+      "acceptance_criteria": [
+        "VendorIntelligence has feature_depth_score: int | None = None and feature_signals: list[str]",
+        "admin_api.py _SCALAR_FIELDS includes feature_depth_score",
+        "admin_api.py list fields handling includes feature_signals",
+        "tests/test_feature_depth_fields.py passes with pytest"
+      ],
+      "proof_artifact": "runs/proofs/M73a_feature_depth_fields.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_feature_depth_fields.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Decomposed from M73. Python-only change, no DB or n8n needed.",
+      "evidence": {
+        "changed_files": [
+          "tests/test_feature_depth_fields.py"
+        ],
+        "artifact_paths": [
+          "runs/proofs/M73a_feature_depth_fields.json"
+        ]
+      }
+    },
+    {
+      "id": "M73b",
+      "title": "Feature depth score \u2014 Supabase schema migration",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "complete",
+      "dependencies": [
+        "M73a"
+      ],
+      "proof_description": "Add feature_depth_score (integer) and feature_signals (text[]) to cs_vendors. Update apply_schema_migration.py REQUIRED_COLUMNS. Update supabase_client.py VENDOR_PROFILE_SELECT and VENDOR_WRITE_COLUMNS.",
+      "acceptance_criteria": [
+        "apply_schema_migration.py REQUIRED_COLUMNS includes feature_depth_score and feature_signals",
+        "supabase/pending_migration.sql contains ALTER TABLE statements for both columns",
+        "supabase_client.py VENDOR_PROFILE_SELECT includes both fields",
+        "supabase_client.py VENDOR_WRITE_COLUMNS includes both fields"
+      ],
+      "proof_artifact": "runs/proofs/M73b_feature_depth_schema.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Decomposed from M73. Operator must run supabase/pending_migration.sql in Supabase Dashboard after builder generates it. apply_schema_migration.py verify removed as it requires live Supabase connection."
+    },
+    {
+      "id": "M73c",
+      "title": "Feature depth score \u2014 n8n workflow JSON artifact",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "complete",
+      "dependencies": [
+        "M73b"
+      ],
+      "proof_description": "Create n8n/workflows/csp-feature-depth-enrichment.workflow.json. Workflow reads vendors from Supabase, crawls help site, extracts taxonomy via LLM across 6 dimensions, computes category-relative score 0-100, writes feature_depth_score and feature_signals back to Supabase.",
+      "acceptance_criteria": [
+        "n8n/workflows/csp-feature-depth-enrichment.workflow.json exists and is valid JSON",
+        "Workflow has nodes: Supabase read, HTTP crawl, OpenAI extraction, score computation, Supabase write",
+        "LLM prompt covers 6 dimensions: integrations, automation, reporting, onboarding, collaboration, API/developer",
+        "Workflow falls back from help_center_url to developer_docs_url then website/help",
+        "Vendors with no accessible help content get null score not 0"
+      ],
+      "proof_artifact": "runs/proofs/M73c_feature_depth_workflow.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Decomposed from M73. Operator imports workflow to n8n Cloud after creation. Use csp-g2-enrichment as structural reference."
+    },
+    {
+      "id": "M73d",
+      "title": "Feature depth score \u2014 proof script, tests, and browse page column",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M73c"
+      ],
+      "proof_description": "Write scripts/prove_m73_feature_depth.py to trigger workflow, wait for results, read scores from Supabase, write proof artifact. Write tests/test_feature_depth_enrichment.py. Add feature_depth_score as sortable column to browse.html.",
+      "acceptance_criteria": [
+        "scripts/prove_m73_feature_depth.py produces runs/proofs/M73_feature_depth_score.json",
+        "Proof shows at least 3 vendors with non-null feature_depth_score across 0-100 range",
+        "tests/test_feature_depth_enrichment.py passes",
+        "browse.html shows feature_depth_score as a sortable column"
+      ],
+      "proof_artifact": "runs/proofs/M73_feature_depth_score.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_feature_depth_enrichment.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Decomposed from M73. Final integration step after workflow deployment."
+    },
+    {
+      "id": "M103",
+      "title": "Comparison page \u2014 vendor ranking matrix (SuccessByCS Wave)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M73d"
+      ],
+      "proof_description": "Build docs/website/compare.html. Reads directory_dataset.json. Shows a matrix of vendors vs dimensions (G2, Trustpilot, feature depth, lifecycle coverage, integration count, pricing transparency). Vendors ranked within each category. SuccessByCS-branded visual design.",
+      "rationale": "Buyers want to compare vendors directly. A comparison matrix is more actionable than a list. Unique differentiator for vendors.successbycs.com.",
+      "acceptance_criteria": [
+        "docs/website/compare.html exists and loads from directory_dataset.json",
+        "Shows vendor comparison matrix: rows=vendors, columns=scored dimensions",
+        "Dimensions include: G2 rating, Trustpilot rating, lifecycle coverage, integration count",
+        "Vendors grouped by directory_category",
+        "Ranking indicator per dimension",
+        "Page linked from browse.html and landing.html navigation",
+        "Mobile-responsive layout"
+      ],
+      "proof_artifact": "runs/proofs/M103_comparison_page.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "User request: similar to Gartner Wave but with SuccessByCS branding. Can launch with G2/Trustpilot/lifecycle data before M73d completes."
+    },
+    {
+      "id": "M104",
+      "title": "Content engine \u2014 twice-weekly vendor posts for LinkedIn and other channels",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M73a"
+      ],
+      "proof_description": "Build automated content pipeline. n8n workflow selects one vendor per run, pulls enriched profile from Supabase, generates LinkedIn post (150-250 words) and blog article (400-600 words) via gpt-4o-mini. Content references vendor-specific data. Runs twice-weekly on schedule. Proof: 2 generated posts for 2 different vendors.",
+      "rationale": "User request: blog post twice a week about each vendor for LinkedIn and other channels advertising the CSP directory.",
+      "acceptance_criteria": [
+        "n8n workflow generates LinkedIn post and blog article per vendor",
+        "Content references G2 rating, Trustpilot, lifecycle stages, key integrations",
+        "Posts saved to Supabase content table or docs/website/content/",
+        "Schedule configured for twice-weekly execution",
+        "Proof: 2 sample posts for 2 vendors in runs/proofs/M104_content_samples/",
+        "Content links to vendors.successbycs.com"
+      ],
+      "proof_artifact": "runs/proofs/M104_content_engine.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "User request. LLM: gpt-4o-mini per architecture. Output channels: LinkedIn, blog (static HTML/Markdown), newsletter snippet. Operator chooses which channels to activate."
+    },
+    {
+      "id": "M105",
+      "title": "Research: identify NeoServices firms vs traditional SaaS in the directory",
+      "delivery_type": "research",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [],
+      "proof_description": "Research and define a classification framework that distinguishes NeoServices firms (human-led service delivery enabled by software) from traditional SaaS companies (software product sold as subscription). Apply classification to all current vendors in the directory. Add a vendor_model field (saas | neoservices | hybrid) to cs_vendors and populate it. Document the classification criteria in docs/research/neoservices_classification.md.",
+      "rationale": "User request: identify NeoServices firms versus traditional SaaS. NeoServices = firms where the primary value delivery is human expertise/service, with software as an enabler (e.g. consulting firms, managed services, service-augmented platforms). This is an important distinction for CS buyers who are evaluating software vs service engagements.",
+      "acceptance_criteria": [
+        "docs/research/neoservices_classification.md defines criteria for saas vs neoservices vs hybrid classification",
+        "Classification criteria cover: pricing model, delivery mechanism, who does the work (software or humans), scalability profile",
+        "Supabase cs_vendors has vendor_model column (text, values: saas | neoservices | hybrid | unknown)",
+        "All current vendors classified with vendor_model populated",
+        "Admin panel shows vendor_model in the directory inclusion controls table",
+        "browse.html allows filtering by vendor_model",
+        "Proof: at least 5 vendors classified as neoservices, 5 as saas, with documented reasoning"
+      ],
+      "proof_artifact": "runs/proofs/M105_neoservices_classification.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "User request. NeoServices examples likely include: implementation partners, CS consulting firms, managed CS service providers. Pure SaaS examples: Gainsight, ChurnZero, Totango. Hybrid examples: vendors that offer both software + professional services. LLM classification using vendor mission, use_cases, and products fields."
+    },
+    {
+      "id": "M106",
+      "title": "SOE improvements \u2014 vendor page UX and browse sort fixes",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "complete",
+      "dependencies": [],
+      "proof_description": "Multiple improvements to vendor.html and browse.html based on live review. Fixes: use case links no longer fall back to domain root; SOC2 shows 'No signal' not 'No'; source links capped at 5; case studies capped at 3 with non-root-URL priority; SuccessByCS pill made less prominent; browse page sorts high-confidence vendors above medium.",
+      "rationale": "User review of live vendor pages (abloomify, arrows, cloud-coach, mailchimp). Identified broken link fallback, misleading SOC2 label, excessive source lists, and prominent branding pill.",
+      "acceptance_criteria": [
+        "Use case links in renderUseCaseLinks only link to specific deep URLs, never to vendor domain root",
+        "SOC2 in operational signals reads 'No signal' when value is false",
+        "renderEvidenceList caps at 5 source links",
+        "Case studies capped at 3, sorted so items with non-root source_url appear first",
+        "SuccessByCS pill in hero card uses a light border style, not dark background",
+        "browse.html vendor grid sorts high confidence vendors before medium confidence"
+      ],
+      "proof_artifact": "runs/proofs/M106_soe_ux_improvements.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "All changes made directly to docs/website/vendor.js and docs/website/browse.html. No pipeline changes needed."
+    },
+    {
+      "id": "M107",
+      "title": "Future: identify help centre URL from crawl (help.vendor.com or vendor.com/help)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M73c"
+      ],
+      "proof_description": "Add a step to the crawl pipeline that auto-detects and populates help_center_url. Check for: /help path on vendor domain, help.{domain} subdomain, docs.{domain} subdomain, support.{domain} subdomain. Store detected URL in cs_vendors.help_center_url via safe-upsert. Feeds M73c feature depth enrichment.",
+      "rationale": "User request: identify Help pages like mailchimp.com/help or help.tradify.com so we can pull feature depth information. Currently help_center_url is mostly empty, limiting M73c enrichment.",
+      "acceptance_criteria": [
+        "n8n or Python script checks /help, help.{domain}, docs.{domain}, support.{domain} for each vendor",
+        "Returns first URL that responds with HTTP 200 and word_count > 100",
+        "Writes to help_center_url only if currently null (safe-upsert)",
+        "Tested against mailchimp, tradify, and 5 other vendors"
+      ],
+      "proof_artifact": "runs/proofs/M107_help_url_detection.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "User request from live vendor page review. Priority: high \u2014 directly enables M73c feature depth enrichment for more vendors."
+    },
+    {
+      "id": "M108",
+      "title": "Future: pricing term extraction from embeddings (Trial, Starter, Growth, Enterprise etc.)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [],
+      "proof_description": "Search for common SaaS pricing tier names across the vendor_page_embeddings RAG store. Terms: Trial, Free, Start, Starter, Grow, Growth, Scale, Lead, Custom, Enterprise, Startup, Professional, Business, Team, Plus, Pro. Extract matching chunks, use LLM to confirm pricing tier context, write structured pricing tiers to cs_vendors.",
+      "rationale": "User request: search for different pricing terms across embeddings to extract pricing tier names that may not be on the pricing page directly.",
+      "acceptance_criteria": [
+        "Embedding search covers 15+ common pricing tier name patterns",
+        "LLM confirms extracted terms are in pricing context (not marketing copy)",
+        "Structured pricing tiers written to cs_vendors.pricing array",
+        "Tested against 5+ vendors"
+      ],
+      "proof_artifact": "runs/proofs/M108_pricing_term_extraction.json",
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "User request from vendor page review. Requires RAG (vendor_page_embeddings) to be populated first. Complements M65 pricing enrichment."
     }
   ]
 }

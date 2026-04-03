@@ -849,6 +849,7 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
         "g2_url", "g2_market_segment", "g2_rating", "g2_review_count",
         "pricing_source", "funding_stage", "total_funding", "youtube_channel_url",
         "company_size", "revenue", "linkedin_url", "ceo_linkedin", "trustpilot_rating", "trustpilot_review_count",
+        "feature_depth_score",
         }
     _BOOL_FIELDS = {"free_trial", "soc2", "include_in_directory", "llm_include_in_directory", "has_public_pricing_page"}
     _LIST_FIELDS = {
@@ -857,6 +858,7 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
         "case_studies", "case_study_signals", "customers", "value_statements",
         "source_urls", "evidence_urls", "phone_numbers", "contact_emails",
         "directory_reasoning", "g2_categories",
+        "feature_signals",
     }
     _DICT_LIST_FIELDS = {
         "icp_buyer", "products", "leadership", "integration_taxonomy",

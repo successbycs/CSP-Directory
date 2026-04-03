@@ -533,9 +533,12 @@ class VendorIntelligence:
     revenue: str = field(default="")
     linkedin_url: str = field(default="")
 
-        # M71: Trustpilot enrichment fields
+    # M71: Trustpilot enrichment fields
     trustpilot_rating: float | None = field(default=None)
     trustpilot_review_count: int | None = field(default=None)
+    # M73a: feature depth enrichment fields
+    feature_depth_score: int | None = field(default=None)
+    feature_signals: list[str] = field(default_factory=list)
     def __post_init__(self) -> None:
         """Normalize structured buyer-persona enrichment into a stable list-of-dicts shape."""
         self.website = normalize_vendor_website(self.website)
