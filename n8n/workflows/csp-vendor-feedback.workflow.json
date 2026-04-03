@@ -1,0 +1,87 @@
+{
+  "name": "CSP Vendor Feedback Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "csp-vendor-feedback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "vfb-0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "csp-vendor-feedback"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendorName = String(body.vendor_name || '').trim() || 'Unknown vendor';\nconst feedbackType = String(body.feedback_type || 'other').trim();\nconst message = String(body.message || '').trim();\nconst submitterEmail = String(body.submitter_email || '').trim();\nconst sourceUrl = String(body.source_url || '').trim();\nconst typeLabels = {\n  data_correction: 'Data correction',\n  missing_info: 'Missing information',\n  suggestion: 'Suggestion',\n  other: 'Other',\n};\nconst typeLabel = typeLabels[feedbackType] || feedbackType;\nconst DISCORD_WEBHOOK = 'https://discordapp.com/api/webhooks/1487579959714382075/W-HF3awATW1bx5XDGMC9O4Be7pBnT2MJS8TMPlrApnPa8iaqPK2eqiKTHBMn-kzknzbR';\nconst discordContent = [\n  '**Vendor feedback received**',\n  `Vendor: ${vendorName}`,\n  `Type: ${typeLabel}`,\n  `Message: ${message}`,\n  submitterEmail ? `From: ${submitterEmail}` : 'Submitter: anonymous',\n  sourceUrl ? `Page: ${sourceUrl}` : '',\n].filter(Boolean).join('\\n');\nconst emailSubject = `[CSP Feedback] ${typeLabel} — ${vendorName}`;\nconst emailBody = [\n  `<p><strong>Vendor:</strong> ${vendorName}</p>`,\n  `<p><strong>Type:</strong> ${typeLabel}</p>`,\n  `<p><strong>Message:</strong></p><p>${message.replace(/\\n/g, '<br>')}</p>`,\n  submitterEmail ? `<p><strong>Submitter:</strong> ${submitterEmail}</p>` : '<p><strong>Submitter:</strong> anonymous</p>',\n  sourceUrl ? `<p><strong>Page:</strong> <a href=\"${sourceUrl}\">${sourceUrl}</a></p>` : '',\n].filter(Boolean).join('');\nreturn [{ json: { vendor_name: vendorName, feedback_type: feedbackType, type_label: typeLabel, message, submitter_email: submitterEmail, source_url: sourceUrl, discord_webhook: DISCORD_WEBHOOK, discord_content: discordContent, email_subject: emailSubject, email_body: emailBody } }];"
+      },
+      "id": "vfb-0002-0002-0002-0002-000000000002",
+      "name": "Normalize Feedback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.discord_webhook }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { content: $json.discord_content } }}",
+        "options": { "timeout": 15000, "response": { "response": { "neverError": true } } }
+      },
+      "id": "vfb-0003-0003-0003-0003-000000000003",
+      "name": "Send Discord Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, -80]
+    },
+    {
+      "parameters": {
+        "sendTo": "chris@successbycs.com",
+        "subject": "={{ $('Normalize Feedback').first().json.email_subject }}",
+        "message": "={{ $('Normalize Feedback').first().json.email_body }}",
+        "options": {}
+      },
+      "id": "vfb-0004-0004-0004-0004-000000000004",
+      "name": "Send Email to Chris",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [520, 80],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "pR08NeWM3CfGEWMU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, received: true } }}",
+        "options": {}
+      },
+      "id": "vfb-0005-0005-0005-0005-000000000005",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Normalize Feedback", "type": "main", "index": 0 }]] },
+    "Normalize Feedback": { "main": [[{ "node": "Send Discord Notification", "type": "main", "index": 0 }, { "node": "Send Email to Chris", "type": "main", "index": 0 }]] },
+    "Send Discord Notification": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] },
+    "Send Email to Chris": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true },
+  "staticData": null,
+  "meta": {
+    "description": "Receives inline vendor feedback from the directory UI. Sends Discord notification and email to chris@successbycs.com. Supabase capture is tracked in M98."
+  },
+  "pinData": {}
+}

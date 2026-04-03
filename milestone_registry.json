@@ -1601,6 +1601,62 @@
       "status": "completed",
       "description": "GPT-4o mini generates a 400-word vendor summary from live web fetch. Stored in ai_summary column in cs_vendors, exported to directory dataset, rendered in vendor profile page as first content section.",
       "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M98",
+      "title": "Vendor feedback capture \u2014 Supabase storage and admin review",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M36"
+      ],
+      "proof_description": "Vendor feedback submitted via the Suggest an edit button is persisted to a Supabase table (vendor_feedback). The n8n csp-vendor-feedback workflow is extended to write to Supabase after sending Discord/email notifications. An admin view lists pending feedback items for operator review.",
+      "acceptance_criteria": [
+        "vendor_feedback table exists in Supabase with columns: id, vendor_name, feedback_type, message, submitter_email, source_url, created_at, status",
+        "n8n csp-vendor-feedback workflow writes each submission to vendor_feedback via admin API or Supabase direct insert",
+        "Admin panel at localhost:8787 includes a /admin/feedback endpoint listing pending feedback",
+        "Feedback status can be updated (pending / reviewed / actioned) via admin API",
+        "Discord and email notifications still fire (existing behaviour preserved)"
+      ],
+      "proof_artifact": "runs/proofs/M98_vendor_feedback_supabase.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 -m pytest tests/ -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "The frontend Suggest an edit button and n8n workflow (csp-vendor-feedback) are already live as of 2026-04-03. This milestone adds Supabase persistence and admin review UI. Schema migration required: CREATE TABLE vendor_feedback (...)."
+    },
+    {
+      "id": "M99",
+      "title": "Vendor feedback workflow \u2014 n8n import, activation, and admin write-back",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M70",
+        "M98"
+      ],
+      "proof_description": "The csp-vendor-feedback n8n workflow is imported to n8n Cloud, activated, and wired to the admin API enrich-write endpoint for Supabase persistence. The Suggest an edit button on vendor pages triggers Discord notification, email to chris@successbycs.com, and a vendor_feedback row in Supabase.",
+      "acceptance_criteria": [
+        "csp-vendor-feedback workflow imported and active in n8n Cloud",
+        "POST to /webhook/csp-vendor-feedback returns ok:true",
+        "Discord notification fires to operator webhook",
+        "Email sent to chris@successbycs.com with feedback details",
+        "vendor_feedback row written to Supabase via POST /admin/store-feedback",
+        "Suggest an edit button on vendor.html successfully submits and shows confirmation"
+      ],
+      "proof_artifact": "runs/proofs/M99_vendor_feedback_activation.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 -m pytest tests/ -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "n8n workflow JSON at n8n/workflows/csp-vendor-feedback.workflow.json. Requires operator to import to n8n Cloud. Admin API needs POST /admin/store-feedback endpoint added to services/admin/admin_api.py. Uses same Gmail credential (pR08NeWM3CfGEWMU) as lead capture workflow."
     }
   ]
 }
