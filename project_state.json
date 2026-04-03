@@ -1,5 +1,5 @@
 {
-  "current_focus": "M70",
+  "current_focus": "M71",
   "verification_script": "scripts/verify_project.sh",
   "runtime_environment": "local",
   "agent_prompts": {
@@ -34,11 +34,16 @@
   "architectural_directives": {
     "capability_first_solution_discovery": true,
     "preferred_workflow_surface": "n8n",
-    "implementation_rule": "All third-party API calls (RapidAPI, Apify, LinkedIn, OpenAI enrichment) must go through n8n workflows. Python scripts are batch orchestrators only — they read Supabase vendor lists and POST to n8n webhooks. Zero direct API calls in Python. See architecture.json for the full boundary contract.",
+    "implementation_rule": "All third-party API calls (RapidAPI, Apify, LinkedIn, OpenAI enrichment) must go through n8n workflows. Python scripts are batch orchestrators only \u2014 they read Supabase vendor lists and POST to n8n webhooks. Zero direct API calls in Python. See architecture.json for the full boundary contract.",
     "n8n_recipe_dir": "/home/chris/SuccessByCS-Builder/Autonomous-Framework/tools/recipes/n8n",
     "architecture_spec": "architecture.json",
     "triad_findings": "runs/development_reviews/triad_2026_04_03.json",
-    "corrective_milestone_sequence": ["M70", "M74", "M76", "M78"]
+    "corrective_milestone_sequence": [
+      "M70",
+      "M74",
+      "M76",
+      "M78"
+    ]
   },
   "delegation_policy": {
     "enabled": true,

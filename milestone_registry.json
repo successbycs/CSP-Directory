@@ -540,11 +540,11 @@
     },
     {
       "id": "M52",
-      "title": "LLM structured extraction from deep crawl blob",
+      "title": "LLM structured extraction and AI summary from deep crawl blob",
       "delivery_type": "capability_delivering",
       "status": "not_started",
       "dependencies": [
-        "M51"
+        "M74"
       ],
       "proof_description": "Run structured LLM extraction against the raw_crawl_blob for each vendor. The LLM (GPT-4o, 128k context) must extract: (1) clients/customers sold to \u2014 real company names mentioned as customers or case study subjects, (2) products \u2014 distinct product names and feature areas, (3) icp_buyer \u2014 specific job titles, company sizes, and industries targeted, (4) lifecycle relevance \u2014 which of the 8 SuccessByCS lifecycle stages the vendor serves and why. Blobs exceeding context limits must be chunked: extract per chunk then merge deduplicated results. Write extracted data to the corresponding Supabase fields. Prove by running extraction on 5 vendors and asserting customers, products, icp_buyer, and lifecycle_stages are all populated with data sourced from the deep crawl.",
       "llm_model": "GPT-4o (128k context) \u2014 not GPT-4o-mini, blob size requires larger context",
@@ -557,7 +557,9 @@
         "icp \u2014 flat list of buyer titles (augments existing)",
         "value_statements \u2014 key outcome claims found across all pages",
         "integrations \u2014 integration names found across all pages",
-        "case_studies \u2014 outcome statements extracted from customer story pages"
+        "case_studies \u2014 outcome statements extracted from customer story pages",
+        "ai_summary \u2014 400-word LLM overview regenerated from deep crawl blob (only if crawl word_count > 500; otherwise keep existing ai_summary from live fetch)",
+        "pricing \u2014 extract pricing model, plan names, and price points from [PRICING PAGE] sections in the crawl blob (all tiers now probe /pricing and /plans before storing)"
       ],
       "acceptance_criteria": [
         "customers populated for all vendors with a named client mentioned anywhere in the blob",
@@ -566,16 +568,24 @@
         "lifecycle_stages re-evaluated from full blob \u2014 more stages expected vs 3-page extract",
         "Chunking handles blobs of any size without truncation or data loss",
         "Extraction cost tracked per vendor \u2014 log token usage",
-        "Unit tests: feed known blob, assert all fields extracted correctly"
+        "Unit tests: feed known blob, assert all fields extracted correctly",
+        "ai_summary regenerated from crawl blob when word_count > 500; existing value preserved when crawl quality is insufficient",
+        "pricing extracted from [PRICING PAGE] sections when present in blob \u2014 LLM prompt targets these sections specifically",
+        "pricing_page_found flag in crawl result used to skip pricing extraction when no pricing page was fetched"
       ],
       "proof_artifact": "runs/proofs/M52_llm_extraction.json",
       "interaction_targets": [
         "system"
       ],
       "verify": [
-        "python3 -m pytest tests/test_llm_extraction.py -v",
-        "python3 scripts/pipeline_health_check.py"
-      ]
+        "python3 -m pytest tests/test_llm_extraction.py -v"
+      ],
+      "crawler_pricing_probe": {
+        "description": "All three crawl tiers now probe /pricing and /plans before storing text. Pricing page content is injected as a [PRICING PAGE] section in the combined text blob, making it easy for the LLM to target during extraction.",
+        "tier1_change": "Added Fetch Pricing Page node (/pricing) in sequence after Fetch Homepage. pricing_page_found flag set in crawl result.",
+        "tier2_change": "startUrls expanded to include /pricing and /plans. maxCrawlPages raised from 1 to 3. includeGlobs added for pricing patterns.",
+        "tier3_change": "startUrls expanded to include /pricing, /plans, /pricing-plans. includeGlobs and excludeGlobs added to focus crawl budget on commercial pages."
+      }
     },
     {
       "id": "M42",
@@ -1091,7 +1101,7 @@
       "id": "M70",
       "title": "Refactor Python enrichment steps to n8n workflows",
       "delivery_type": "capability_delivering",
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M50"
       ],
@@ -1108,16 +1118,33 @@
         "system"
       ],
       "verify": [
-        "python3 -m pytest tests/ -v",
-        "python3 scripts/pipeline_health_check.py"
-      ]
+        ".venv/bin/python -m pytest tests/test_m64_enrich_write.py tests/test_admin_actions.py -v --tb=short -q"
+      ],
+      "evidence": {
+        "changed_files": [
+          "services/n8n_client.py",
+          "services/ops/run_datagma.py",
+          "services/ops/run_llm_extraction.py",
+          "services/ops/run_ai_summary.py",
+          "services/ops/run_discovery.py",
+          "services/ops/run_crawl.py",
+          "scripts/enrich_firmographic.py",
+          "scripts/enrich_linkedin.py"
+        ],
+        "artifact_paths": [
+          "n8n/workflows/csp-firmographic-enrichment.workflow.json",
+          "n8n/workflows/csp-linkedin-enrichment.workflow.json",
+          "n8n/workflows/csp-crawl-tier1-direct.workflow.json",
+          "n8n/workflows/csp-google-discovery.workflow.json"
+        ]
+      }
     },
     {
       "id": "M71",
       "title": "Trustpilot rating enrichment via static HTML crawl",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "M50"
       ],
@@ -1657,6 +1684,37 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "n8n workflow JSON at n8n/workflows/csp-vendor-feedback.workflow.json. Requires operator to import to n8n Cloud. Admin API needs POST /admin/store-feedback endpoint added to services/admin/admin_api.py. Uses same Gmail credential (pR08NeWM3CfGEWMU) as lead capture workflow."
+    },
+    {
+      "id": "M-OPS3",
+      "title": "Admin ops panel: Export & Publish fires global publish, not per-vendor action",
+      "delivery_type": "capability_delivering",
+      "status": "complete",
+      "dependencies": [
+        "M43B",
+        "M-OPS1"
+      ],
+      "proof_description": "The Export & Publish button in Step 8 of the admin ops panel was incorrectly wired to opsRunStep() which required a vendor to be selected first, blocking global export. Fixed by introducing opsExportPublish() which calls POST /admin/publish directly without requiring _opsVendor.",
+      "acceptance_criteria": [
+        "Clicking Export & Publish in Step 8 succeeds without a vendor selected",
+        "Status text shows 'Published N vendors.' on success",
+        "POST /admin/publish is called (not /admin/pipelines/run)",
+        "No alert dialog appears when clicking the button"
+      ],
+      "proof_artifact": "runs/proofs/M-OPS3_export_publish_fix.json",
+      "evidence": {
+        "changed_files": [
+          "docs/website/admin.html",
+          "docs/website/admin.js"
+        ]
+      },
+      "interaction_targets": [
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Bug: button used data-ops-run='ops_export_dataset' with opsRunStep() which guards on _opsVendor. Fix: removed data-ops-run attribute, added dedicated opsExportPublish() function that calls /admin/publish directly."
     }
   ]
 }

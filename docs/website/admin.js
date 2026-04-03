@@ -1346,6 +1346,25 @@ async function opsRunBatch(btn) {
   }
 }
 
+async function opsExportPublish(btn) {
+  const statusEl = document.getElementById('ops-step8-status');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Publishing…';
+  if (statusEl) statusEl.textContent = '';
+  try {
+    const base = (window.state && window.state.apiBase) || API_FALLBACK_BASE;
+    const res = await fetch(`${base}/admin/publish`, { method: 'POST' });
+    const data = await res.json();
+    if (statusEl) statusEl.textContent = data.ok ? `Published ${data.vendor_count} vendors.` : `Error: ${data.error}`;
+  } catch (err) {
+    if (statusEl) statusEl.textContent = `Failed: ${err.message}`;
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+
 async function opsRunCrawlStep() {
   const tierSelect = document.getElementById('ops-step2-tier');
   const maxPagesInput = document.getElementById('ops-step2-maxpages');

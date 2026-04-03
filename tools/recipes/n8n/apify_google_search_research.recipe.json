@@ -1,0 +1,53 @@
+{
+  "id": "n8n_apify_google_search_research",
+  "tool_id": "n8n",
+  "capability_ids": [
+    "external_web_research"
+  ],
+  "version": 1,
+  "artifact_path": "tools/recipes/n8n/apify_google_search_research.workflow.json",
+  "description": "First-pass external web research recipe for approach assessment. Accepts a search query and returns normalized source records through an n8n workflow backed by Apify Google Search. The framework must pass the Apify token at runtime, so n8n instance secrets are not required.",
+  "required_configuration": [
+    "APIFY_API_TOKEN in the framework runtime passed as apify_token/apify_api_token",
+    "optional: actor_id in the webhook payload"
+  ],
+  "verification": [
+    "Confirm the workflow returns source records with title, URL, snippet, and ranking order.",
+    "Confirm the result includes enough evidence to support candidate-approach assessment."
+  ],
+  "status": "draft",
+  "decision_profile": {
+    "run_cost_class": "low",
+    "implementation_speed": "fast",
+    "setup_friction": "medium",
+    "human_intervention_required": [
+      "create or provide an Apify API token"
+    ],
+    "subscription_requirements": [
+      "Apify account"
+    ]
+  },
+  "selection_guidance": {
+    "default_for": [
+      "approach assessment that needs current external information",
+      "web-backed tool or implementation research"
+    ],
+    "avoid_when": [
+      "approved internal docs already answer the question",
+      "the task is static enough to answer from local repo knowledge alone"
+    ]
+  },
+  "output_contract": {
+    "required_fields": [
+      "query",
+      "source_count",
+      "sources"
+    ],
+    "source_fields": [
+      "title",
+      "url",
+      "snippet",
+      "rank"
+    ]
+  }
+}

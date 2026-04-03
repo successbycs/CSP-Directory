@@ -548,6 +548,13 @@ python3 -m pytest tests/ -v
 
 # Run autonomous audit
 python3 scripts/autonomous_audit.py
+
+# Run AF cycle against CSP (from CSP repo)
+python3 /home/chris/SuccessByCS-Builder/Autonomous-Framework/scripts/autonomous_controller.py --root . run-cycle
+
+# Run AF backport cycle against AF itself
+cd /home/chris/SuccessByCS-Builder/Autonomous-Framework
+python3 scripts/autonomous_controller.py run-cycle
 ```
 
 ---

@@ -1,0 +1,160 @@
+{
+  "name": "Framework External Web Research",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "framework-web-research",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "receive-research-request",
+      "webhookId": "a3f4d4fb-7c07-49b9-88a3-5b8c5af07f91",
+      "name": "Receive Research Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst payload = (input.body && typeof input.body === 'object') ? input.body : input;\nconst query = String(payload.query || payload.search_query || '').trim();\nif (!query) {\n  throw new Error('query is required');\n}\nconst maxResults = Number(payload.max_results || 5);\nconst apifyToken = String(\n  payload.apify_token\n  || payload.apify_api_token\n  || payload.token\n  || ''\n).trim();\nif (!apifyToken) {\n  throw new Error('apify_token or apify_api_token is required');\n}\nreturn [{ json: {\n  query,\n  max_results: Number.isFinite(maxResults) && maxResults > 0 ? Math.min(maxResults, 10) : 5,\n  actor_id: String(payload.actor_id || 'apify/google-search-scraper').trim(),\n  apify_token: apifyToken\n} }];"
+      },
+      "id": "prepare-search-request",
+      "name": "Prepare Search Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/{{ encodeURIComponent($json.actor_id) }}/run-sync-get-dataset-items",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $json.apify_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "queries",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "maxPagesPerQuery",
+              "value": 1
+            },
+            {
+              "name": "resultsPerPage",
+              "value": "={{ $json.max_results }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "run-apify-search",
+      "name": "Run Apify Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Prepare Search Request').first().json;\nconst payload = $input.first().json;\nconst organicResults = Array.isArray(payload.organicResults) ? payload.organicResults : [];\nconst fallbackResults = Array.isArray(payload.relatedQueries) ? payload.relatedQueries : [];\nconst rows = organicResults.length > 0 ? organicResults : fallbackResults;\nconst sources = rows.slice(0, request.max_results).map((row, index) => ({\n  title: String(row.title || row.pageTitle || row.name || '').trim(),\n  url: String(row.url || row.link || row.pageUrl || '').trim(),\n  snippet: String(row.description || row.snippet || row.text || '').trim(),\n  rank: Number(row.position || index + 1)\n})).filter((row) => row.url);\nreturn [{ json: {\n  query: request.query,\n  source_count: sources.length,\n  sources\n} }];"
+      },
+      "id": "normalize-results",
+      "name": "Normalize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "return-results",
+      "name": "Return Results",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Receive Research Request": {
+      "main": [
+        [
+          {
+            "node": "Prepare Search Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Search Request": {
+      "main": [
+        [
+          {
+            "node": "Run Apify Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Apify Search": {
+      "main": [
+        [
+          {
+            "node": "Normalize Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Results": {
+      "main": [
+        [
+          {
+            "node": "Return Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "framework-web-research-v1"
+}

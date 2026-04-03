@@ -1,7 +1,7 @@
 {
-  "name": "CSP Crawl Tier 3 \u2014 Apify WCC + Proxy",
+  "name": "CSP Crawl Tier 3 — Apify WCC + Proxy",
   "meta": {
-    "description": "Tier 3 site crawl: Apify Website Content Crawler with Apify proxy (~$0.004/page). Breaks Cloudflare and heavy bot detection. Best effort \u2014 always returns result regardless of quality. Multi-page support. Part of M74 three-tier crawl architecture."
+    "description": "Tier 3 site crawl: Apify Website Content Crawler with Apify proxy (~$0.004/page). Breaks Cloudflare and heavy bot detection. Starts from homepage + /pricing + /plans explicitly. includeGlobs catch any further pricing-related pages discovered during crawl. Multi-page support. Part of M74 three-tier crawl architecture."
   },
   "nodes": [
     {
@@ -9,10 +9,7 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [
-        240,
-        300
-      ],
+      "position": [240, 300],
       "parameters": {
         "path": "csp-crawl-tier3-wcc",
         "httpMethod": "POST",
@@ -24,12 +21,9 @@
       "name": "Validate Input",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        460,
-        300
-      ],
+      "position": [460, 300],
       "parameters": {
-        "jsCode": "const body = $input.first().json;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token is required');\nconst max_pages = parseInt(body.max_pages || '3', 10);\nreturn [{ json: { website, vendor_name: body.vendor_name || '', apify_token, max_pages } }];"
+        "jsCode": "const body = $input.first().json;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token is required');\nconst max_pages = parseInt(body.max_pages || '5', 10);\nconst base = website.replace(/\\/+$/, '');\nreturn [{ json: { website, vendor_name: body.vendor_name || '', apify_token, max_pages, base, admin_url: body.admin_url || '' } }];"
       }
     },
     {
@@ -37,16 +31,13 @@
       "name": "Run WCC",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        680,
-        300
-      ],
+      "position": [680, 300],
       "parameters": {
         "method": "POST",
         "url": "=https://api.apify.com/v2/acts/apify~website-content-crawler/run-sync-get-dataset-items?token={{ $json.apify_token }}&timeout=120",
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify({ startUrls: [{ url: $json.website }], maxCrawlPages: $json.max_pages, proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ['RESIDENTIAL'] } }) }}",
+        "body": "={{ JSON.stringify({ startUrls: [{ url: $json.website }, { url: $json.base + '/pricing' }, { url: $json.base + '/plans' }, { url: $json.base + '/pricing-plans' }], maxCrawlPages: $json.max_pages, includeGlobs: [{ glob: '**/pricing*' }, { glob: '**/plans*' }, { glob: '**/pricing-plans*' }], excludeGlobs: [{ glob: '**/blog/**' }, { glob: '**/docs/**' }, { glob: '**/changelog/**' }, { glob: '**/careers/**' }, { glob: '**/jobs/**' }], proxyConfiguration: { useApifyProxy: true, apifyProxyGroups: ['RESIDENTIAL'] } }) }}",
         "options": {
           "timeout": 150000
         }
@@ -57,12 +48,9 @@
       "name": "Normalize Pages",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        900,
-        300
-      ],
+      "position": [900, 300],
       "parameters": {
-        "jsCode": "const website = $('Validate Input').first().json.website;\nconst inputName = $('Validate Input').first().json.vendor_name || '';\nconst results = $input.first().json;\nconst items = Array.isArray(results) ? results : [results];\n\nconst TAGLINE_SUFFIXES = new Set(['analytics','automation','dashboard','insights','intelligence','management','monitoring','platform','reporting','software','solution','solutions','tracking']);\nfunction isTagline(text) {\n  const lower = (text||'').toLowerCase();\n  if (TAGLINE_SUFFIXES.has(lower.split(/\\s+/).pop())) return true;\n  if (/\\bai[- ]powered\\b|\\b\\w+-powered\\b|\\bpowered by\\b/.test(lower)) return true;\n  if (/\\b\\d{4}\\b/.test(lower)) return true;\n  return false;\n}\nfunction cleanCandidate(raw) {\n  let s = (raw||'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();\n  if (!s) return '';\n  for (const sep of [' | ',' - ',' \u2013 ',' \u2014 ',': ']) {\n    if (s.includes(sep)) { for (const p of s.split(sep)) { const c=cleanCandidate(p); if(c) return c; } }\n  }\n  if (isTagline(s)) return '';\n  if (s.split(/\\s+/).length > 5) return '';\n  if (s.length > 40) return '';\n  return s;\n}\nfunction domainStem(url) {\n  try {\n    const base = new URL(url).hostname.replace(/^www\\./,'').split('.')[0].toLowerCase();\n    for (const p of ['get','try','use','my','the']) {\n      if (base.startsWith(p) && base.length-p.length >= 4)\n        return base.slice(p.length).charAt(0).toUpperCase()+base.slice(p.length+1);\n    }\n    return base.charAt(0).toUpperCase()+base.slice(1);\n  } catch { return ''; }\n}\n\n// Build pages array\nconst pages = items.map(item => ({\n  url: item.url || item.loadedUrl || '',\n  title: item.title || item.metadata?.title || '',\n  text: (item.text || item.markdown || item.content || '').slice(0, 5000)\n})).filter(p => p.url);\n\n// Find best name from all pages (prefer homepage og:site_name if in metadata)\nlet name = '';\nfor (const page of pages) {\n  const c = cleanCandidate(page.title);\n  if (c) { name = c; break; }\n}\nif (!name) name = cleanCandidate(inputName) || domainStem(website);\n\nconst allText = pages.map(p => p.text).join(' ');\nconst word_count = allText ? allText.split(/\\s+/).length : 0;\n\nreturn [{ json: { website, name, word_count, text: allText.slice(0, 10000), pages, tier_used: 'tier3_wcc', ok: true } }];"
+        "jsCode": "const website = $('Validate Input').first().json.website;\nconst inputName = $('Validate Input').first().json.vendor_name || '';\nconst results = $input.first().json;\nconst items = Array.isArray(results) ? results : [results];\n\nconst TAGLINE_SUFFIXES = new Set(['analytics','automation','dashboard','insights','intelligence','management','monitoring','platform','reporting','software','solution','solutions','tracking']);\nfunction isTagline(text) {\n  const lower = (text||'').toLowerCase();\n  if (TAGLINE_SUFFIXES.has(lower.split(/\\s+/).pop())) return true;\n  if (/\\bai[- ]powered\\b|\\b\\w+-powered\\b|\\bpowered by\\b/.test(lower)) return true;\n  if (/\\b\\d{4}\\b/.test(lower)) return true;\n  return false;\n}\nfunction cleanCandidate(raw) {\n  let s = (raw||'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();\n  if (!s) return '';\n  for (const sep of [' | ',' - ',' \u2013 ',' \u2014 ',': ']) {\n    if (s.includes(sep)) { for (const p of s.split(sep)) { const c=cleanCandidate(p); if(c) return c; } }\n  }\n  if (isTagline(s)) return '';\n  if (s.split(/\\s+/).length > 5) return '';\n  if (s.length > 40) return '';\n  return s;\n}\nfunction domainStem(url) {\n  try {\n    const base = new URL(url).hostname.replace(/^www\\./,'').split('.')[0].toLowerCase();\n    for (const p of ['get','try','use','my','the']) {\n      if (base.startsWith(p) && base.length-p.length >= 4)\n        return base.slice(p.length).charAt(0).toUpperCase()+base.slice(p.length+1);\n    }\n    return base.charAt(0).toUpperCase()+base.slice(1);\n  } catch { return ''; }\n}\n\n// Build pages array — tag pricing pages for visibility\nconst pages = items.map(item => {\n  const pageUrl = item.url || item.loadedUrl || '';\n  const isPricing = /\\/pricing|\\/plans|\\/pricing-plans/i.test(pageUrl);\n  return {\n    url: pageUrl,\n    title: item.title || item.metadata?.title || '',\n    text: (item.text || item.markdown || item.content || '').slice(0, 5000),\n    is_pricing_page: isPricing\n  };\n}).filter(p => p.url);\n\n// Find best name from all pages (prefer homepage)\nlet name = '';\nfor (const page of pages) {\n  const c = cleanCandidate(page.title);\n  if (c) { name = c; break; }\n}\nif (!name) name = cleanCandidate(inputName) || domainStem(website);\n\n// Separate homepage and pricing pages for combined text\nconst homepagePages = pages.filter(p => !p.is_pricing_page);\nconst pricingPages = pages.filter(p => p.is_pricing_page);\nconst homepageText = homepagePages.map(p => p.text).join(' ');\nconst pricingText = pricingPages.map(p => p.text).join('\\n\\n[PRICING PAGE]\\n');\nconst pricing_page_found = pricingText.length > 100;\n\nconst allText = homepageText + (pricing_page_found ? '\\n\\n[PRICING PAGE]\\n' + pricingText : '');\nconst word_count = allText ? allText.split(/\\s+/).length : 0;\n\nreturn [{ json: { website, name, word_count, text: allText.slice(0, 12000), pages, tier_used: 'tier3_wcc', ok: true, pricing_page_found, pages_fetched: pages.length } }];"
       }
     },
     {
@@ -70,10 +58,7 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [
-        1560,
-        300
-      ],
+      "position": [1560, 300],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify($json) }}"
@@ -84,23 +69,16 @@
       "name": "Store Pages",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1120,
-        300
-      ],
+      "position": [1120, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $('Validate Input').first().json.admin_url }}/admin/ops/store-pages",
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify({ vendor_website: $json.website, tier_used: 'tier3_wcc', pages: ($json.pages || []).map(p => ({ page_url: p.url || p.loadedUrl || '', title: p.title || '', clean_text: p.text || '', word_count: (p.text || '').split(/\\s+/).filter(Boolean).length, page_depth: p.depth || 1 })).filter(p => p.page_url) }) }}",
+        "body": "={{ JSON.stringify({ vendor_website: $json.website, tier_used: 'tier3_wcc', pages: ($json.pages || []).map(p => ({ page_url: p.url || '', title: p.title || '', clean_text: p.text || '', word_count: (p.text || '').split(/\\s+/).filter(Boolean).length, page_depth: p.is_pricing_page ? 1 : 0 })).filter(p => p.page_url) }) }}",
         "options": {
           "timeout": 30000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
+          "response": { "response": { "neverError": true } }
         }
       }
     },
@@ -109,93 +87,38 @@
       "name": "Store Crawl Result",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1340,
-        300
-      ],
+      "position": [1340, 300],
       "parameters": {
         "method": "POST",
         "url": "={{ $('Validate Input').first().json.admin_url }}/admin/ops/store-crawl-result",
         "sendBody": true,
         "contentType": "json",
-        "body": "={{ JSON.stringify({ vendor_website: $('Normalize Pages').first().json.website, column: 'crawl_tier3_result', payload: { ok: $('Normalize Pages').first().json.ok, pipeline: 'csp-crawl-tier3-wcc', crawled_at: new Date().toISOString(), pages_fetched: ($('Normalize Pages').first().json.pages || []).length, word_count: $('Normalize Pages').first().json.word_count, fields: { name: $('Normalize Pages').first().json.name } } }) }}",
+        "body": "={{ JSON.stringify({ vendor_website: $('Normalize Pages').first().json.website, column: 'crawl_tier3_result', payload: { ok: $('Normalize Pages').first().json.ok, pipeline: 'csp-crawl-tier3-wcc', crawled_at: new Date().toISOString(), pages_fetched: $('Normalize Pages').first().json.pages_fetched, word_count: $('Normalize Pages').first().json.word_count, pricing_page_found: $('Normalize Pages').first().json.pricing_page_found, fields: { name: $('Normalize Pages').first().json.name } } }) }}",
         "options": {
           "timeout": 15000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
+          "response": { "response": { "neverError": true } }
         }
       }
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Validate Input",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]]
     },
     "Validate Input": {
-      "main": [
-        [
-          {
-            "node": "Run WCC",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Run WCC", "type": "main", "index": 0 }]]
     },
     "Run WCC": {
-      "main": [
-        [
-          {
-            "node": "Normalize Pages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Normalize Pages", "type": "main", "index": 0 }]]
     },
     "Normalize Pages": {
-      "main": [
-        [
-          {
-            "node": "Store Pages",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Store Pages", "type": "main", "index": 0 }]]
     },
     "Store Pages": {
-      "main": [
-        [
-          {
-            "node": "Store Crawl Result",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Store Crawl Result", "type": "main", "index": 0 }]]
     },
     "Store Crawl Result": {
-      "main": [
-        [
-          {
-            "node": "Respond",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
     }
   },
   "settings": {

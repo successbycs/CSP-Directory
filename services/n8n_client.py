@@ -37,6 +37,106 @@ WEBHOOK_CSP_CRAWL_TIER1 = "csp-crawl-tier1-direct"
 WEBHOOK_CSP_CRAWL_TIER2 = "csp-crawl-tier2-rag"
 WEBHOOK_CSP_CRAWL_TIER3 = "csp-crawl-tier3-wcc"
 
+# M70: Python trigger functions for enrichment steps
+def trigger_g2_enrichment(vendor_name: str, website: str, rapidapi_key: str) -> dict[str, Any]:
+    """Trigger G2 enrichment via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_G2_ENRICHMENT,
+        {
+            "vendor_name": vendor_name,
+            "website": website,
+            "rapidapi_key": rapidapi_key,
+        }
+    )
+
+def trigger_pricing_enrichment(vendor_name: str, website: str, apify_token: str, openai_api_key: str) -> dict[str, Any]:
+    """Trigger pricing enrichment via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_PRICING_ENRICHMENT,
+        {
+            "vendor_name": vendor_name,
+            "website": website,
+            "apify_token": apify_token,
+            "openai_api_key": openai_api_key,
+        }
+    )
+
+def trigger_tracxn_enrichment(vendor_name: str, website: str, apify_token: str) -> dict[str, Any]:
+    """Trigger Tracxn enrichment via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_TRACXN_ENRICHMENT,
+        {
+            "vendor_name": vendor_name,
+            "website": website,
+            "apify_token": apify_token,
+        }
+    )
+
+def trigger_firmographic_enrichment(vendor_name: str, website: str, rapidapi_key: str) -> dict[str, Any]:
+    """Trigger firmographic enrichment via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_FIRMOGRAPHIC_ENRICHMENT,
+        {
+            "vendor_name": vendor_name,
+            "website": website,
+            "rapidapi_key": rapidapi_key,
+        }
+    )
+
+def trigger_linkedin_enrichment(vendor_name: str, website: str, rapidapi_key: str) -> dict[str, Any]:
+    """Trigger LinkedIn enrichment via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_LINKEDIN_ENRICHMENT,
+        {
+            "vendor_name": vendor_name,
+            "website": website,
+            "rapidapi_key": rapidapi_key,
+        }
+    )
+
+def trigger_google_discovery(queries: list[str], apify_token: str) -> dict[str, Any]:
+    """Trigger Google discovery via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_GOOGLE_DISCOVERY,
+        {
+            "queries": queries,
+            "apify_token": apify_token,
+        }
+    )
+
+def trigger_crawl_tier1(website: str, vendor_name: str = "") -> dict[str, Any]:
+    """Trigger Tier 1 direct HTTP crawl via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_CRAWL_TIER1,
+        {
+            "website": website,
+            "vendor_name": vendor_name,
+        }
+    )
+
+def trigger_crawl_tier2(website: str, vendor_name: str = "", apify_token: str = "") -> dict[str, Any]:
+    """Trigger Tier 2 Apify RAG Web Browser crawl via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_CRAWL_TIER2,
+        {
+            "website": website,
+            "vendor_name": vendor_name,
+            "apify_token": apify_token or get_apify_token(),
+        }
+    )
+
+def trigger_crawl_tier3(website: str, vendor_name: str = "", apify_token: str = "", max_pages: int = 3) -> dict[str, Any]:
+    """Trigger Tier 3 Apify Website Content Crawler crawl via n8n workflow."""
+    return post_webhook(
+        WEBHOOK_CSP_CRAWL_TIER3,
+        {
+            "website": website,
+            "vendor_name": vendor_name,
+            "apify_token": apify_token or get_apify_token(),
+            "max_pages": max_pages,
+        }
+    )
+
 
 def get_n8n_base_url() -> str:
     """Return the n8n base URL from env, raising if not set."""
