@@ -107,6 +107,18 @@ def _normalize_vendor_row(row: dict[str, Any]) -> dict[str, Any]:
         "directory_fit": _string_value(row.get("directory_fit")),
         "directory_category": _string_value(row.get("directory_category")),
         "use_case_details": _use_case_details_value(row.get("use_case_details")),
+        "blog_posts": _blog_posts_value(row.get("blog_posts")),
+        "g2_url": _string_value(row.get("g2_url")),
+        "g2_rating": row.get("g2_rating"),
+        "g2_review_count": row.get("g2_review_count"),
+        "g2_categories": _list_value(row.get("g2_categories")),
+        "linkedin_url": _string_value(row.get("linkedin_url")),
+        "company_size": _string_value(row.get("company_size")),
+        "hq_address": _string_value(row.get("hq_address")),
+        "integrations": _list_value(row.get("integrations")),
+        "how_it_works": _string_value(row.get("how_it_works")),
+        "key_features": _list_value(row.get("key_features")),
+        "outcomes": _list_value(row.get("outcomes")),
     }
 
 
@@ -133,6 +145,40 @@ def _profile_to_vendor_row(profile: VendorIntelligence) -> dict[str, Any]:
         "directory_category": profile.directory_category,
     }
 
+
+
+def _blog_posts_value(value: object) -> list[dict[str, Any]]:
+    """Return a normalized list of blog post objects with {title, summary, source_url}."""
+    if not value:
+        return []
+    if isinstance(value, str):
+        try:
+            import json as _json
+            value = _json.loads(value)
+        except Exception:
+            return []
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value:
+        if isinstance(item, str):
+            try:
+                import json as _json
+                item = _json.loads(item)
+            except Exception:
+                continue
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        source_url = str(item.get("source_url") or "").strip()
+        if not title or not source_url:
+            continue
+        result.append({
+            "title": title[:200],
+            "summary": str(item.get("summary") or "")[:300].strip(),
+            "source_url": source_url,
+        })
+    return result
 
 
 def _use_case_details_value(value: object) -> list[dict[str, Any]]:

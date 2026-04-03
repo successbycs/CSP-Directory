@@ -707,14 +707,15 @@ def _lead_follow_up_response(
 
 def _pipeline_run_response(
     start_response,
-    trigger_pipeline_fn: Callable[[str], dict[str, Any]],
+    trigger_pipeline_fn: Callable[..., dict[str, Any]],
     payload: dict[str, str],
 ):
     pipeline_id = payload.get("pipeline_id", "").strip()
+    vendor_website = payload.get("vendor_website", "").strip()
     if not pipeline_id:
         return _json_response(start_response, {"ok": False, "error": "pipeline_id_required"}, status="400 Bad Request")
     try:
-        result = trigger_pipeline_fn(pipeline_id)
+        result = trigger_pipeline_fn(pipeline_id, vendor_website)
     except ValueError as error:
         return _json_response(start_response, {"ok": False, "error": str(error)}, status="400 Bad Request")
     except Exception as error:  # pragma: no cover - defensive error surface

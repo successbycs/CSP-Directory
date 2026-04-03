@@ -78,7 +78,6 @@ function renderVendor(container, vendor) {
           this vendor so a buyer can move from a market-map view into a practical evaluation.
         </p>
         <div class="chip-row">
-          ${renderChip(category)}
           ${renderChip(`Confidence: ${confidence}`)}
           ${renderChip(founded === "Not captured" ? "Founded not captured" : `Founded ${founded}`)}
           ${vendor.free_trial === true
@@ -97,7 +96,7 @@ function renderVendor(container, vendor) {
           <p class="eyebrow">Snapshot</p>
           <h3>${escapeHtml(websiteLabel)}</h3>
           <p>
-            ${escapeHtml(category)} vendor with ${stageCount} lifecycle stage${stageCount === 1 ? "" : "s"},
+            ${stageCount} lifecycle stage${stageCount === 1 ? "" : "s"},
             ${useCaseCount} use case${useCaseCount === 1 ? "" : "s"}, and ${evidenceCount}
             evidence source${evidenceCount === 1 ? "" : "s"} currently captured.
           </p>
@@ -125,6 +124,23 @@ function renderVendor(container, vendor) {
               Back to browse
             </a>
           </div>
+          <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
+            <a href="https://www.linkedin.com/in/chrissparshott/" target="_blank" rel="noreferrer"
+               style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);text-decoration:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              LinkedIn
+            </a>
+            <a href="https://successbycs.com" target="_blank" rel="noreferrer"
+               style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px 5px 6px;background:#0d1a12;border-radius:20px;text-decoration:none;font-size:13px;font-weight:600;color:#fff;line-height:1;">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:#22c55e;border-radius:50%;flex-shrink:0;">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <rect x="2" y="2.5" width="2.2" height="5" rx="0.8" fill="#fff"/>
+                  <rect x="5.8" y="2.5" width="2.2" height="5" rx="0.8" fill="#fff"/>
+                </svg>
+              </span>
+              SuccessByCS
+            </a>
+          </div>
         </section>
       </aside>
     </section>
@@ -138,20 +154,6 @@ function renderVendor(container, vendor) {
 
     <section class="content-grid">
       <div class="content-main">
-        <section class="section-card">
-          <div>
-            <p class="eyebrow">Overview</p>
-            <h2>What this vendor appears to do</h2>
-          </div>
-          <p class="section-copy">${escapeHtml(mission)}</p>
-          <div class="detail-grid">
-            ${renderDetailItem("Unique selling point", usp)}
-            ${renderDetailItem("Category", category)}
-            ${renderDetailItem("Directory fit", fit)}
-            ${renderDetailItem("Confidence", confidence)}
-          </div>
-        </section>
-
         <section class="section-card">
           <div>
             <p class="eyebrow">Buyer fit</p>
@@ -168,6 +170,7 @@ function renderVendor(container, vendor) {
         ${renderStorySection("Case-study details", vendor.case_study_details, formatCaseStudy)}
         ${renderStorySection("Use-case detail objects", vendor.use_case_details, formatUseCaseDetail)}
         ${renderSimpleListSection("Value statements", vendor.value_statements)}
+        ${renderBlogPostsSection(vendor.blog_posts)}
       </div>
 
       <aside class="content-side">
@@ -267,6 +270,29 @@ function renderPricingItem(label, pricingArray) {
       <dd>${escapeHtml(text)}</dd>
     </dl>
   `;
+}
+
+function renderBlogPostsSection(posts) {
+  if (!Array.isArray(posts) || !posts.length) return "";
+  const items = posts.slice(0, 6).map(p => {
+    const url = escapeAttribute(p.source_url || "");
+    const title = escapeHtml(p.title || "");
+    const summary = escapeHtml((p.summary || "").slice(0, 160));
+    return `
+      <li style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <a href="${url}" target="_blank" rel="noreferrer"
+           style="font-weight:600;color:var(--text-primary);text-decoration:none;font-size:14px;">${title} ↗</a>
+        ${summary ? `<p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);">${summary}</p>` : ""}
+      </li>`;
+  }).join("");
+  return `
+    <section class="section-card">
+      <div>
+        <p class="eyebrow">Content &amp; resources</p>
+        <h2>From their blog</h2>
+      </div>
+      <ul class="list" style="list-style:none;padding:0;margin:0;">${items}</ul>
+    </section>`;
 }
 
 function renderSimpleListSection(title, items) {

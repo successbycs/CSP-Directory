@@ -152,7 +152,7 @@ def list_pipeline_controls() -> dict[str, Any]:
     return {"items": items}
 
 
-def trigger_pipeline_run(pipeline_id: str) -> dict[str, Any]:
+def trigger_pipeline_run(pipeline_id: str, vendor_website: str = "") -> dict[str, Any]:
     """Start one pipeline in the background and return updated run metadata."""
     normalized_id = str(pipeline_id or "").strip()
     if not normalized_id:
@@ -172,6 +172,8 @@ def trigger_pipeline_run(pipeline_id: str) -> dict[str, Any]:
         PIPELINE_LOG_DIR.mkdir(parents=True, exist_ok=True)
         log_path = PIPELINE_LOG_DIR / f"{normalized_id}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.log"
         command = [_python_executable(), *list(spec["command"])]
+        if vendor_website:
+            command += ["--vendor", str(vendor_website)]
         with log_path.open("ab") as log_file:
             process = subprocess.Popen(
                 command,

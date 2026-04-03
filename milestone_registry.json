@@ -1545,6 +1545,41 @@
       "status": "completed",
       "description": "Removed Fit: medium/high chip from all vendor profile hero rows \u2014 redundant given confidence chip.",
       "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M89",
+      "title": "Admin dashboard: Pipeline Control moved to top",
+      "status": "completed",
+      "description": "Relocated the Unified Pipeline Control section to be the first panel after the dashboard header in admin.html. Now the most-used panel is immediately visible on page load.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M90",
+      "title": "M76 Ops Workbench: implement missing services/ops modules",
+      "status": "completed",
+      "description": "Created all 6 missing per-vendor ops modules: run_discovery.py (Apify/n8n discovery), run_crawl.py (Tier 1 direct HTTP + Tier 2/3 n8n webhook), run_datagma.py (Datagma firmographic to crawl_datagma_result), run_g2.py (G2 RapidAPI to crawl_g2_result), run_llm_extraction.py (GPT-4o extraction from vendor_pages to crawl_llm_result), run_merge.py (COALESCE merge of all crawl_*_result to main schema). Steps 1-6 in admin per-vendor workbench now functional.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M91",
+      "title": "Batch scripts: enrich_site_crawl, run_discovery, run_full_enrichment_cycle",
+      "status": "completed",
+      "description": "Created 3 missing batch pipeline scripts: enrich_site_crawl.py (Tier 1/2/3 crawl for all vendors), run_discovery.py (Google Search via n8n webhook or Apify direct), run_full_enrichment_cycle.py (orchestrates all enrichment steps in sequence with --skip support). Closes all gaps in batch pipeline card grid on admin panel.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M92",
+      "title": "Pipeline control: vendor_website forwarded to subprocess for per-vendor ops",
+      "status": "completed",
+      "description": "trigger_pipeline_run() now accepts vendor_website param and appends --vendor URL to the subprocess command. _pipeline_run_response in admin_api.py extracts vendor_website from POST body. Enables ops workbench Steps 2-6 to target the correct vendor when triggered from admin panel.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M93",
+      "title": "E2E system audit — gaps documented and remediated",
+      "status": "completed",
+      "description": "Full audit of admin API, pipeline scripts, ops modules, n8n workflows, and env vars. Found and fixed: 6 missing ops modules (M90), 3 missing batch scripts (M91), vendor_website not passed to subprocess (M92). Remaining known gap: N8N_CRAWL_TIER2/3_WEBHOOK and N8N_DISCOVERY_WEBHOOK env vars not yet configured (requires n8n webhook setup).",
+      "completed_at": "2026-04-03"
     }
   ]
 }
