@@ -124,7 +124,7 @@ def _llm_openai(prompt: str) -> str:
         raise RuntimeError("OPENAI_API_KEY not set")
     client = OpenAI(api_key=api_key)
     resp = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         temperature=0,
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
@@ -134,12 +134,12 @@ def _llm_openai(prompt: str) -> str:
 
 def llm_complete(prompt: str) -> str:
     try:
-        result = _llm_ollama(prompt)
-        log.step_progress("llm_extraction", "Ollama responded")
+        result = _llm_openai(prompt)
+        log.step_progress("llm_extraction", "GPT-4o mini responded")
         return result
     except Exception as e:
-        log.step_progress("llm_extraction", f"Ollama timeout ({type(e).__name__}) — using GPT-4o")
-        return _llm_openai(prompt)
+        log.step_progress("llm_extraction", f"OpenAI unavailable ({type(e).__name__}) — falling back to Mistral local")
+        return _llm_ollama(prompt)
 
 
 def _load_pages(vendor_website: str) -> list[dict]:

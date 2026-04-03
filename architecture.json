@@ -1,0 +1,187 @@
+{
+  "version": "1.1",
+  "last_updated": "2026-04-03",
+  "description": "Authoritative architecture specification. All development decisions must comply. When in doubt, check here first.",
+
+  "pipeline": {
+    "phases": [
+      {
+        "id": "discovery",
+        "name": "URL Acquisition",
+        "entrypoint": "services/pipeline/discovery_runner.py",
+        "responsibilities": ["source fetch", "dedupe by normalised domain", "quality filter", "candidate status assignment"],
+        "quality_filter_required": true,
+        "discard_patterns": ["blog posts", "Reddit threads", "review articles", "403 pages", "aggregator listings"]
+      },
+      {
+        "id": "enrichment",
+        "name": "Vendor Enrichment",
+        "entrypoint": "services/pipeline/enrichment_runner.py",
+        "responsibilities": ["crawl", "embed", "LLM extract", "merge", "profile build", "upsert"]
+      },
+      {
+        "id": "persistence",
+        "name": "Persistence and Export",
+        "entrypoint": "services/pipeline/orchestrator.py",
+        "responsibilities": ["persist run record", "persist candidates", "export directory dataset", "export review dataset"]
+      }
+    ]
+  },
+
+  "enrichment_runtime": {
+    "principle": "All third-party API calls go through n8n workflows. Python scripts are batch orchestrators only — they query Supabase for vendor lists and POST to n8n webhooks. Python must never call RapidAPI, Apify, LinkedIn, or any enrichment API directly.",
+    "violation_example": "A Python script that imports requests and calls g2-data-api.p.rapidapi.com directly is an architectural violation.",
+    "correct_pattern": "Python reads vendors from Supabase, POSTs {vendors, rapidapi_key, admin_url} to N8N_<PIPELINE>_WEBHOOK, reads response."
+  },
+
+  "n8n_webhooks": {
+    "description": "All n8n webhook URLs are stored as env vars. Set after deploying each workflow to n8n Cloud.",
+    "vars": {
+      "N8N_G2_ENRICHMENT_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-g2-enrichment",
+      "N8N_FIRMOGRAPHIC_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-firmographic-enrichment",
+      "N8N_LINKEDIN_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-linkedin-enrichment",
+      "N8N_CRAWL_TIER1_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-crawl-tier1-direct",
+      "N8N_CRAWL_TIER2_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-crawl-tier2-rag",
+      "N8N_CRAWL_TIER3_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-crawl-tier3-wcc",
+      "N8N_DISCOVERY_WEBHOOK": "https://successbycs.app.n8n.cloud/webhook/csp-google-discovery"
+    }
+  },
+
+  "llm": {
+    "primary": "gpt-4o-mini",
+    "primary_rationale": "Cost-optimised: ~$0.15/1M input tokens. Sufficient quality for structured vendor extraction.",
+    "fallback": "mistral (Ollama local, model: mistral:latest)",
+    "fallback_rationale": "Free local fallback when OpenAI is unavailable or rate-limited.",
+    "tier_order": ["gpt-4o-mini", "mistral-ollama"],
+    "do_not_use_as_primary": ["gpt-4o", "mistral-ollama"],
+    "note": "Mistral local gives poor quality for specific vendor knowledge — use only as emergency fallback, never primary."
+  },
+
+  "rag": {
+    "design_intent": "Crawl vendor site -> store page chunks in vendor_pages -> embed with nomic-embed-text -> store vectors in vendor_page_embeddings -> use vector similarity to retrieve relevant chunks per LLM question group.",
+    "embed_model": "nomic-embed-text (Ollama local)",
+    "vector_store": "vendor_page_embeddings (Supabase pgvector)",
+    "retrieval": "cosine similarity, top-k chunks per question group",
+    "status": "designed and partially coded, not yet wired into active pipeline — must be completed",
+    "why_it_matters": "Without RAG, LLM gets first N chunks regardless of relevance. With RAG, each question group gets the most semantically relevant page content."
+  },
+
+  "crawl_strategy": {
+    "tiers": [
+      {
+        "tier": 1,
+        "name": "Direct HTTP",
+        "cost": "free",
+        "works_for": "~60% static/server-rendered sites",
+        "escalate_when": "word_count < 200 OR vendor name missing/looks like tagline"
+      },
+      {
+        "tier": 2,
+        "name": "Apify RAG Web Browser (via n8n)",
+        "cost": "~$0.001/page",
+        "works_for": "JS-rendered SPAs",
+        "escalate_when": "word_count still < 200 after tier 2"
+      },
+      {
+        "tier": 3,
+        "name": "Apify WCC + residential proxy (via n8n)",
+        "cost": "~$0.004/page",
+        "works_for": "Cloudflare-protected and heavy bot-detection sites"
+      }
+    ],
+    "principle": "Always try cheapest tier first. Escalate only on failure signal."
+  },
+
+  "data_model": {
+    "source_of_truth": "Supabase (cs_vendors table)",
+    "public_serving": "Exported JSON at docs/website/data/directory_dataset.json — frontend reads this, never Supabase directly",
+    "write_rule": "Upsert by normalised domain. Never overwrite existing non-null values (safe-upsert). Higher-confidence values may overwrite lower-confidence ones.",
+    "field_taxonomy": {
+      "scraped_*": "Deterministic HTML extraction — rule-based, never LLM",
+      "llm_*": "LLM inference from crawled text",
+      "no_prefix": "Operator-set or final merged fields — never auto-overwritten"
+    },
+    "confidence_hierarchy": [
+      "vendor_own_site_scrape (highest)",
+      "structured_aggregator (G2, Crunchbase)",
+      "llm_from_scraped_content",
+      "llm_direct_query",
+      "search_snippet (lowest)"
+    ]
+  },
+
+  "enrichment_sources": {
+    "g2": {
+      "api": "g2-data-api.p.rapidapi.com",
+      "fields": ["g2_url", "g2_rating", "g2_review_count", "g2_categories", "soc2", "compliance"],
+      "bonus_fields": ["founded", "hq_address", "pricing", "free_trial"],
+      "n8n_workflow": "csp-g2-enrichment",
+      "batch_script": "scripts/enrich_g2_rapidapi.py"
+    },
+    "firmographic": {
+      "api": "enrichment-b2b-linkedin-crunchbase-datagma.p.rapidapi.com",
+      "fields": ["founded", "hq_address", "funding_stage", "total_funding", "ceo_name", "company_size", "revenue", "linkedin_url"],
+      "n8n_workflow": "csp-firmographic-enrichment",
+      "batch_script": "scripts/enrich_firmographic.py"
+    },
+    "linkedin": {
+      "api": "linkedin-data-api.p.rapidapi.com",
+      "fields": ["linkedin_url", "company_size"],
+      "n8n_workflow": "csp-linkedin-enrichment",
+      "batch_script": "scripts/enrich_linkedin.py"
+    },
+    "site_crawl": {
+      "tiers": ["csp-crawl-tier1-direct", "csp-crawl-tier2-rag", "csp-crawl-tier3-wcc"],
+      "output_table": "vendor_pages",
+      "batch_script": "scripts/enrich_site_crawl.py"
+    },
+    "llm_extraction": {
+      "input": "vendor_pages + vendor_page_embeddings (RAG)",
+      "output_column": "crawl_llm_result",
+      "model_primary": "gpt-4o-mini",
+      "model_fallback": "mistral (Ollama)",
+      "batch_script": "scripts/run_batch_enrichment.py"
+    }
+  },
+
+  "directory_export": {
+    "include_filter": "include_in_directory = true",
+    "exclude_filter": "directory_category = 'other'",
+    "output_path": "docs/website/data/directory_dataset.json",
+    "export_script": "scripts/export_directory_dataset.py",
+    "trigger": "Run after any enrichment cycle to update live directory"
+  },
+
+  "lifecycle_stages": {
+    "framework": "SuccessByCS 8-stage",
+    "stages": ["Sign", "Onboard", "Activate", "Adopt", "Support", "Expand", "Renew", "Advocate"],
+    "classification": "deterministic rule-based (not LLM)",
+    "classifier": "services/classification/lifecycle_classifier.py"
+  },
+
+  "admin": {
+    "api_port": 8787,
+    "base_url_env": "ADMIN_BASE_URL",
+    "default_base_url": "http://127.0.0.1:8787",
+    "pipeline_control": "services/admin/pipeline_control.py",
+    "principle": "Admin API is the write-back endpoint for n8n workflows. n8n POSTs enrichment results to /admin/ops/store-crawl-result."
+  },
+
+  "frontend": {
+    "pages": ["landing.html", "browse.html", "vendor.html"],
+    "data_source": "docs/website/data/directory_dataset.json",
+    "vendor_profile_script": "docs/website/vendor.js",
+    "principle": "No direct Supabase calls from browser. All data served from exported JSON."
+  },
+
+  "guardrails": [
+    "Python enrichment scripts must not call third-party APIs directly — use n8n webhooks",
+    "LLM primary must be gpt-4o-mini, not gpt-4o or local Mistral",
+    "Mistral local is fallback only — never primary — quality is insufficient for vendor data",
+    "RAG must be wired: crawl -> embed -> vector store -> retrieve per question group -> LLM",
+    "Safe-upsert: never overwrite existing non-null values in cs_vendors",
+    "Frontend must never read from Supabase directly",
+    "Export must be re-run after every enrichment cycle",
+    "All architectural decisions must be reflected in this file before implementation"
+  ]
+}
