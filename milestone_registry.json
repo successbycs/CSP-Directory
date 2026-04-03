@@ -1144,7 +1144,7 @@
       "title": "Trustpilot rating enrichment via static HTML crawl",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M50"
       ],
@@ -1228,7 +1228,7 @@
       "title": "Internal feature-depth score from vendor help/docs site crawl",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "M60",
         "M70"
@@ -1790,6 +1790,34 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "Running pipeline from home IP without proxy will cause sporadic failures that look like vendor site issues but are actually IP-based rate limits. Tier 3 Apify proxy is the most robust solution but costs ~/bin/bash.004/page. For Tier 1 free crawl, a free/cheap rotating proxy service (e.g. Webshare free tier) may suffice. Operator must configure HTTP_PROXY env var or enable CRAWL_USE_PROXY in config."
+    },
+    {
+      "id": "M102",
+      "title": "Feedback form end-to-end: n8n intake, admin panel display, thank-you email, Discord notification",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [],
+      "proof_description": "The \"Suggest an edit\" feedback form on the vendor browse page is currently broken (shows \"Something went wrong\" error). Fix the form submission to POST to an n8n webhook. n8n workflow stores the submission in Supabase (new feedback table or existing), surfaces it in the admin panel under a Feedback tab, sends a thank-you response to the submitter (if email provided), and posts a Discord notification with the feedback details.",
+      "rationale": "The feedback form is user-facing and broken \u2014 a bad experience for any visitor who tries to correct vendor data. Fixing it closes a trust gap and gives operators a way to receive crowdsourced corrections from CS practitioners.",
+      "acceptance_criteria": [
+        "Form submission POSTs to N8N_FEEDBACK_WEBHOOK env var (set in .env)",
+        "n8n workflow stores submission in Supabase cs_vendor_feedback table (vendor_name, feedback_type, message, email, submitted_at)",
+        "Admin panel shows a Feedback tab listing all submissions with vendor name, type, message, email, timestamp",
+        "If submitter email is provided, n8n sends a thank-you email via SMTP or email node",
+        "n8n posts a Discord message to DISCORD_WEBHOOK_URL env var with vendor name, feedback type, and message",
+        "Form shows success message on completion instead of error",
+        "Proof: submit test feedback via form, verify row in Supabase, Discord message received, thank-you email sent (or logged if no SMTP)"
+      ],
+      "proof_artifact": "runs/proofs/M102_feedback_form.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Current broken state: form submits but backend webhook URL is missing or wrong \u2014 shows generic error. N8N_FEEDBACK_WEBHOOK must be added to .env after deploying the workflow. cs_vendor_feedback table needs DDL. Discord webhook URL goes in DISCORD_WEBHOOK_URL env var. Thank-you email can use n8n Gmail or SMTP node."
     }
   ]
 }

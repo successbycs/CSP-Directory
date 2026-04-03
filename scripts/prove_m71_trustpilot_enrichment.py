@@ -210,6 +210,22 @@ def main() -> int:
             'success_rate': f"{hits_with_rating}/{len(vendors)}",
             'meets_requirement': hits_with_rating >= 3
         },
+        'operational_input': {
+            'vendor_count': len(vendors),
+            'method': 'static_html_crawl',
+            'source': 'trustpilot.com/review/{domain}',
+            'extraction': 'json_ld_aggregate_rating'
+        },
+        'operational_output': {
+            'hits_with_rating': hits_with_rating,
+            'success_rate': f"{hits_with_rating}/{len(vendors)}",
+            'supabase_writes_attempted': len(supabase_writes),
+            'supabase_writes_succeeded': sum(1 for w in supabase_writes if w.get('write_result', {}).get('ok', False)),
+            'sample_ratings': [
+                {'vendor': r['vendor_name'], 'rating': r.get('trustpilot_rating'), 'reviews': r.get('trustpilot_review_count')}
+                for r in results if r.get('success')
+            ][:5]
+        },
         'vendor_samples': vendors,
         'execution_results': results,
         'supabase_writes': supabase_writes,
