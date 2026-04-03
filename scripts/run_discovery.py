@@ -54,6 +54,32 @@ _REVIEW_SITES = re.compile(
     r"|crunchbase|wikipedia|reddit|medium|quora|youtube)", re.I
 )
 
+_QUESTION_LIKE = re.compile(r"^(what|how|why|when|where|who)\b", re.I)
+_TLD_LIKE = re.compile(r"\.[a-z]{2,24}$", re.I)
+_NOISE_DOMAINS = {
+    "wbresearch.com",
+    "eventbrite.com",
+    "meetup.com",
+    "medium.com",
+}
+
+
+def _looks_like_domain(domain: str) -> bool:
+    # Require a TLD and at least one dot, and avoid obvious query fragments.
+    if not domain or "/" in domain or " " in domain:
+        return False
+    if not _TLD_LIKE.search(domain):
+        return False
+    parts = domain.split(".")
+    if len(parts) < 2 or any(len(p) == 0 for p in parts):
+        return False
+    return True
+
+
+def _is_question_like(text: str) -> bool:
+    t = (text or "").strip().lower()
+    return bool(t and (_QUESTION_LIKE.match(t) or "?" in t))
+
 
 def _load_queries() -> list[str]:
     try:
@@ -113,12 +139,19 @@ def _upsert_candidates(items: list[dict]) -> int:
         if not url:
             continue
         domain = url.replace("https://", "").replace("http://", "").rstrip("/").split("/")[0]
-        if not domain or domain in seen or _REVIEW_SITES.search(domain):
+        source_title = str(item.get("searchQuery") or item.get("title") or "")
+        if (
+            not _looks_like_domain(domain)
+            or domain in seen
+            or _REVIEW_SITES.search(domain)
+            or domain in _NOISE_DOMAINS
+            or _is_question_like(source_title)
+        ):
             continue
         seen.add(domain)
         rows.append({
             "candidate_domain": domain,
-            "source_query": str(item.get("searchQuery") or item.get("title") or "")[:500],
+            "source_query": source_title[:500],
             "candidate_status": "new",
         })
 

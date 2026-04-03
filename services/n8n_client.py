@@ -78,6 +78,9 @@ def post_webhook(
     try:
         response = requests.post(url, json=full_payload, timeout=timeout_seconds)
         response.raise_for_status()
+        if not response.content or not response.content.strip():
+            logger.warning("n8n webhook %s returned empty body; treating as empty JSON", url)
+            return {}
         return response.json()
     except requests.Timeout:
         raise RuntimeError(f"n8n webhook timed out after {timeout_seconds}s: {url}")
