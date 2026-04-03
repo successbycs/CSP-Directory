@@ -117,12 +117,6 @@ function renderVendor(container, vendor) {
             >
               Connect to Chris @ SuccessByCS
             </a>
-            <a
-              class="button button-secondary"
-              href="./browse.html"
-            >
-              Back to browse
-            </a>
           </div>
           <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
             <a href="https://www.linkedin.com/in/chrissparshott/" target="_blank" rel="noreferrer"
