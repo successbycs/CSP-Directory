@@ -385,6 +385,12 @@
 
   // ---- Data ----
   async function loadData() {
+    // Pre-fill search from ?q= param (e.g. use-case links from vendor profiles)
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) {
+      const input = document.getElementById('search');
+      if (input) input.value = q;
+    }
     try {
       const resp = await fetch(DATASET_URL);
       if (!resp.ok) throw new Error('Failed to load dataset');

@@ -189,6 +189,15 @@
       background: #fff;
       color: var(--text-mid);
     }
+    .chip-link {
+      background: var(--green-50);
+      color: var(--green-700);
+      border-color: var(--green-100);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .chip-link:hover { background: var(--green-100); }
 
     .tag {
       background: var(--green-100);
@@ -344,6 +353,16 @@
       font-size: 14px;
       line-height: 1.7;
     }
+    .use-case-links { display: flex; flex-wrap: wrap; gap: 6px; }
+    .use-case-link {
+      display: inline-block;
+      font-size: 12px; font-weight: 600;
+      padding: 3px 10px; border-radius: 99px;
+      background: var(--green-50); color: var(--green-700);
+      border: 1px solid var(--green-100);
+      text-decoration: none; transition: background .15s, border-color .15s;
+    }
+    .use-case-link:hover { background: var(--green-100); border-color: var(--green-200); }
 
     .list {
       display: grid;

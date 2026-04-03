@@ -81,7 +81,9 @@ function renderVendor(container, vendor) {
           ${renderChip(category)}
           ${renderChip(`Confidence: ${confidence}`)}
           ${renderChip(founded === "Not captured" ? "Founded not captured" : `Founded ${founded}`)}
-          ${renderChip(vendor.free_trial === true ? "Free trial" : "No free-trial signal")}
+          ${vendor.free_trial === true
+            ? `<a href="#operational-signals" class="chip chip-link">Free trial ↓</a>`
+            : renderChip("No free-trial signal")}
           ${renderChip(vendor.soc2 === true ? "SOC 2 signal" : "No SOC 2 signal")}
         </div>
         <div class="hero-actions">
@@ -156,9 +158,9 @@ function renderVendor(container, vendor) {
           </div>
           <div class="detail-grid">
             ${renderDetailItem("Ideal customer profile", formatList(vendor.icp))}
-            ${renderDetailItem("Use cases", formatList(vendor.use_cases))}
+            ${renderUseCaseLinks("Use cases", vendor.use_cases)}
             ${renderDetailItem("Lifecycle stages", formatList(vendor.lifecycle_stages))}
-            ${renderDetailItem("Pricing", pricing)}
+            ${renderPricingItem("Pricing", vendor.pricing)}
           </div>
         </section>
 
@@ -168,7 +170,7 @@ function renderVendor(container, vendor) {
       </div>
 
       <aside class="content-side">
-        <section class="section-card">
+        <section class="section-card" id="operational-signals">
           <div>
             <p class="eyebrow">Operational signals</p>
             <h2>What we have on record</h2>
@@ -208,6 +210,46 @@ function renderDetailItem(label, value) {
     <dl class="detail-item">
       <dt>${escapeHtml(label)}</dt>
       <dd>${escapeHtml(value || "Not captured")}</dd>
+    </dl>
+  `;
+}
+
+function renderUseCaseLinks(label, useCases) {
+  if (!Array.isArray(useCases) || !useCases.length) {
+    return renderDetailItem(label, null);
+  }
+  const links = useCases
+    .map(u => `<a href="./browse.html?q=${encodeURIComponent(u)}" class="use-case-link">${escapeHtml(u)}</a>`)
+    .join('');
+  return `
+    <dl class="detail-item">
+      <dt>${escapeHtml(label)}</dt>
+      <dd class="use-case-links">${links}</dd>
+    </dl>
+  `;
+}
+
+const PRICING_LABELS = {
+  '$':            'Price publicly listed on website',
+  'per month':    'Monthly billing available',
+  'per year':     'Annual billing available',
+  'per seat':     'Per-seat pricing',
+  'per user':     'Per-user pricing',
+  'contact sales':'Custom pricing — contact sales',
+};
+
+function formatPricingHuman(pricingArray) {
+  if (!Array.isArray(pricingArray) || !pricingArray.length) return 'Not captured';
+  const lines = pricingArray.map(token => PRICING_LABELS[token.trim().toLowerCase()] || token);
+  return lines.join(' · ');
+}
+
+function renderPricingItem(label, pricingArray) {
+  const text = formatPricingHuman(pricingArray);
+  return `
+    <dl class="detail-item">
+      <dt>${escapeHtml(label)}</dt>
+      <dd>${escapeHtml(text)}</dd>
     </dl>
   `;
 }
