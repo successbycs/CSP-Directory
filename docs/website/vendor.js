@@ -115,7 +115,7 @@ function renderVendor(container, vendor) {
               target="_blank"
               rel="noreferrer"
             >
-              Connect to Chris @ SuccessByCS
+              Connect with Chris @ SuccessByCS
             </a>
           </div>
           <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;">
