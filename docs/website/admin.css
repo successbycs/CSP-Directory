@@ -381,7 +381,84 @@ a:hover { color: var(--green-800); }
   .record-field.full-width { grid-column: 1; }
 }
 
-/* ── M76 Enrichment Workbench ─────────────────────────────── */
+/* ── Pipeline control group labels ───────────────────────── */
+.ops-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #6e7681;
+  padding: 0 0 10px;
+  border-bottom: 1px solid #21262d;
+  margin-bottom: 16px;
+}
+
+/* ── Batch pipeline cards ─────────────────────────────────── */
+.pipeline-batch-card {
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  background: #0d1117;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s;
+}
+.pipeline-batch-card:hover { border-color: #388bfd; }
+.pipeline-batch-card .pbc-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c9d1d9;
+}
+.pipeline-batch-card .pbc-desc {
+  font-size: 12px;
+  color: #8b949e;
+  line-height: 1.55;
+  flex: 1;
+}
+.pipeline-batch-card .pbc-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pipeline-batch-card .pbc-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.pbc-status.idle     { background: #21262d; color: #8b949e; }
+.pbc-status.running  { background: #3a2e00; color: #e3b341; }
+.pbc-status.completed{ background: #1a3a1a; color: #56d364; }
+.pbc-status.failed   { background: #3a1a1a; color: #f85149; }
+.pipeline-batch-card .pbc-time {
+  font-size: 11px;
+  color: #6e7681;
+}
+.pipeline-batch-card .pbc-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pipeline-batch-card .pbc-progress {
+  font-size: 11px;
+  font-family: monospace;
+  color: #8b949e;
+  background: #161b22;
+  border-radius: 4px;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 64px;
+  overflow-y: auto;
+  display: none;
+}
+.pipeline-batch-card.has-progress .pbc-progress { display: block; }
+
+/* ── Enrichment Workbench step cards ──────────────────────── */
 .ops-step-card {
   border: 1px solid #21262d;
   border-radius: 6px;

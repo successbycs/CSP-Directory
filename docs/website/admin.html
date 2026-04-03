@@ -34,47 +34,8 @@
       </div>
     </header>
 
-    <section class="panel">
-      <div class="panel-header">
-        <div>
-          <p class="eyebrow">Pipeline control</p>
-          <h2>Run pipelines and monitor progress</h2>
-          <p id="pipeline-control-metrics" class="subheadline">Loading pipeline controls.</p>
-          <p class="subheadline"><a href="/discovery-queries.html">View pipeline runners and discovery query set</a></p>
-          <p class="subheadline"><a href="/integration-catalog.html">View integration catalog (n8n-derived, read-only)</a></p>
-          <p class="subheadline"><a href="/n8n-integrations.html">View n8n integrations (read-only)</a></p>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>order</th>
-              <th>phase</th>
-              <th>runner</th>
-              <th>details</th>
-              <th>config</th>
-            </tr>
-          </thead>
-          <tbody id="pipeline-runners-body"></tbody>
-        </table>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>pipeline</th>
-              <th>status</th>
-              <th>last_triggered_nz</th>
-              <th>last_finished_nz</th>
-              <th>actions</th>
-              <th>progress</th>
-            </tr>
-          </thead>
-          <tbody id="pipelines-body"></tbody>
-        </table>
-      </div>
-    </section>
+    <!-- Hidden table keeps existing click-handler logic intact -->
+    <table style="display:none"><tbody id="pipelines-body"></tbody></table>
 
     <section class="panel">
       <div class="panel-header">
@@ -250,26 +211,38 @@
       </div>
     </section>
 
-    <!-- M76 Enrichment Workbench -->
+    <!-- Unified Pipeline Control -->
     <section class="panel" id="enrichment-workbench">
       <div class="panel-header">
         <div>
-          <p class="eyebrow">M76 — Enrichment Workbench</p>
-          <h2>Step-by-step vendor enrichment</h2>
-          <p class="subheadline">Run each enrichment step independently. Each step writes to its own isolated column. Step 6 (Merge) writes the final clean values to the main schema.</p>
+          <p class="eyebrow">Pipeline control</p>
+          <h2>Enrichment &amp; discovery operations</h2>
+          <p id="pipeline-control-metrics" class="subheadline">
+            <a href="/discovery-queries.html">Discovery queries</a> &nbsp;·&nbsp;
+            <a href="/integration-catalog.html">Integration catalog</a> &nbsp;·&nbsp;
+            <a href="/n8n-integrations.html">n8n integrations</a>
+          </p>
         </div>
       </div>
 
+      <!-- ── Group A: Batch pipelines ─────────────────────────────── -->
+      <div class="ops-group-label">Batch pipelines — run across all vendors</div>
+      <div id="ops-batch-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px;" id="pipelines-body-cards"></div>
+
+      <!-- ── Group B: Per-vendor workbench ────────────────────────── -->
+      <div class="ops-group-label">Per-vendor enrichment — step by step</div>
+
       <!-- Vendor selector -->
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
-        <label for="ops-vendor-input" style="font-weight:500;white-space:nowrap;">Vendor website:</label>
-        <input id="ops-vendor-input" type="url" placeholder="https://gainsight.com" style="flex:1;min-width:260px;padding:6px 10px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;font-size:13px;">
-        <button class="action-btn" onclick="opsSetVendor()">Set vendor</button>
-        <span id="ops-vendor-status" style="font-size:12px;color:#58a6ff;"></span>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;padding:16px;background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:8px;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="#58a6ff" style="flex-shrink:0"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 2a6 6 0 110 12A6 6 0 018 2zm0 2a4 4 0 100 8 4 4 0 000-8z"/></svg>
+        <label for="ops-vendor-input" style="font-weight:600;white-space:nowrap;font-size:13px;">Target vendor:</label>
+        <input id="ops-vendor-input" type="url" placeholder="https://gainsight.com" style="flex:1;min-width:260px;padding:8px 12px;border:1px solid #30363d;border-radius:6px;background:#0d1117;color:#c9d1d9;font-size:13px;">
+        <button class="action-btn" onclick="opsSetVendor()">Set</button>
+        <span id="ops-vendor-status" style="font-size:12px;color:#58a6ff;font-weight:500;"></span>
       </div>
 
       <!-- Step cards -->
-      <div id="ops-steps" style="display:grid;gap:16px;">
+      <div id="ops-steps" style="display:grid;gap:12px;">
 
         <!-- Step 1 -->
         <div class="ops-step-card">

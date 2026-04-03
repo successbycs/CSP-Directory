@@ -757,65 +757,128 @@ function renderEnrichmentMetrics() {
     (topPipelines ? ` Top pipelines: ${topPipelines}.` : "");
 }
 
+// IDs shown as batch cards (top-level, no vendor needed)
+const BATCH_PIPELINE_IDS = [
+  "full_pipeline",
+  "google_discovery",
+  "g2_rapidapi_enrichment",
+  "firmographic_enrichment",
+  "linkedin_enrichment",
+  "site_crawl_enrichment",
+  "ops_llm_enrichment_batch",
+  "ops_export_dataset",
+];
+
+const BATCH_PIPELINE_SOURCES = {
+  full_pipeline:            { label: "Full cycle",     cls: "source-tier" },
+  google_discovery:         { label: "Apify · Google", cls: "source-tier" },
+  g2_rapidapi_enrichment:   { label: "RapidAPI · G2",  cls: "source-g2" },
+  firmographic_enrichment:  { label: "RapidAPI · Datagma", cls: "source-datagma" },
+  linkedin_enrichment:      { label: "RapidAPI · LinkedIn", cls: "source-datagma" },
+  site_crawl_enrichment:    { label: "Apify · Crawl",  cls: "source-tier" },
+  ops_llm_enrichment_batch: { label: "GPT-4o",         cls: "source-llm" },
+  ops_export_dataset:       { label: "Supabase → JSON",cls: "source-merge" },
+};
+
 function renderPipelines() {
-  const body = document.getElementById("pipelines-body");
+  const grid = document.getElementById("ops-batch-grid");
   const metricsNode = document.getElementById("pipeline-control-metrics");
-  if (!body || !metricsNode) {
+  const rows = state.pipelines.length ? state.pipelines : normalizePipelineItems([]);
+  const running = rows.filter((p) => p.status === "running").length;
+
+  if (metricsNode) {
+    const msg = state.errors.pipelines
+      ? `Showing default controls — backend unavailable.`
+      : `${rows.length} pipelines · ${running} running · Times NZ`;
+    metricsNode.firstChild && (metricsNode.childNodes[0].textContent = msg + " · ");
+  }
+
+  if (!grid) return;
+
+  const batchRows = rows.filter((p) => BATCH_PIPELINE_IDS.includes(p.pipeline_id));
+
+  grid.innerHTML = batchRows.map((p) => {
+    const status   = String(p.status || "idle");
+    const src      = BATCH_PIPELINE_SOURCES[p.pipeline_id] || { label: "", cls: "source-null" };
+    const progress = String(p.progress || "").trim();
+    const lastRun  = p.last_triggered_at ? formatNzDateTime(p.last_triggered_at) : "Never";
+    const isRunning = status === "running";
+    return `
+      <div class="pipeline-batch-card ${progress ? 'has-progress' : ''}" data-pipeline-id="${escapeAttribute(p.pipeline_id)}">
+        <div style="display:flex;align-items:flex-start;gap:8px;">
+          <div style="flex:1">
+            <div class="pbc-name">${escapeHtml(p.name || p.pipeline_id)}</div>
+          </div>
+          <span class="ops-step-source ${src.cls}" style="white-space:nowrap;flex-shrink:0">${escapeHtml(src.label)}</span>
+        </div>
+        <div class="pbc-desc">${escapeHtml(p.description || "")}</div>
+        <div class="pbc-meta">
+          <span class="pbc-status ${status}">${escapeHtml(status)}</span>
+          <span class="pbc-time">Last run: ${escapeHtml(lastRun)}</span>
+        </div>
+        <div class="pbc-actions">
+          <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(p.pipeline_id)}" ${isRunning ? "disabled" : ""}>
+            ${isRunning ? "Running…" : "Run"}
+          </button>
+          <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
+          ${isRunning ? `<button class="action-button action-danger" data-pipeline-action="reset" data-pipeline-id="${escapeAttribute(p.pipeline_id)}">Reset</button>` : ""}
+        </div>
+        ${progress ? `<pre class="pbc-progress">${escapeHtml(progress)}</pre>` : ""}
+      </div>
+    `;
+  }).join("") || '<p style="color:#6e7681;font-size:13px;">No batch pipelines found.</p>';
+
+  // Keep hidden table body in sync for click handler
+  const hiddenBody = document.getElementById("pipelines-body");
+  if (hiddenBody) {
+    hiddenBody.innerHTML = rows.map((p) =>
+      `<tr data-pipeline-id="${escapeAttribute(p.pipeline_id)}"></tr>`
+    ).join("");
+  }
+}
+
+// Card click handler — delegate from the grid
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest("[data-pipeline-action]");
+  if (!btn) return;
+  const card = btn.closest(".pipeline-batch-card");
+  if (!card) return; // let existing table handler deal with table clicks
+  // Reuse the existing table click logic by dispatching a synthetic event
+  handlePipelineActionButton(btn);
+});
+
+async function handlePipelineActionButton(button) {
+  const action = button.dataset.pipelineAction;
+  const pipelineId = button.dataset.pipelineId;
+  if (!pipelineId && action !== "refresh") return;
+
+  if (action === "refresh") { await refreshPipelines(); return; }
+
+  if (action === "reset") {
+    button.disabled = true;
+    button.textContent = "Resetting…";
+    try {
+      await fetchJson("/admin/pipelines/reset", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({pipeline_id: pipelineId}),
+      });
+    } catch (e) { window.alert(`Reset failed: ${e.message}`); }
+    await refreshPipelines();
     return;
   }
-  const rows = state.pipelines.length ? state.pipelines : normalizePipelineItems([]);
-  const running = rows.filter((pipeline) => pipeline.status === "running").length;
-  metricsNode.textContent = state.errors.pipelines
-    ? `${rows.length} pipeline controls configured. ${state.errors.pipelines} Showing default controls.`
-    : `${rows.length} pipeline controls configured, ${running} running. Times shown in NZ (Pacific/Auckland).`;
 
-  // Group rows by their group property (discovery / enrichment / ungrouped)
-  const groups = {};
-  for (const pipeline of rows) {
-    const g = pipeline.group || "other";
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(pipeline);
+  if (action === "run") {
+    button.disabled = true;
+    button.textContent = "Running…";
+    try {
+      await fetchJson("/admin/pipelines/run", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({pipeline_id: pipelineId}),
+      });
+    } catch (e) { window.alert(`Run failed: ${e.message}`); }
+    button.textContent = "Run";
+    await refreshPipelines();
   }
-
-  const GROUP_LABELS = { discovery: "Discovery", enrichment: "Enrichment", other: "Other" };
-  const GROUP_ORDER = ["enrichment", "discovery", "other"];
-
-  const htmlParts = [];
-  for (const groupKey of GROUP_ORDER) {
-    const groupRows = groups[groupKey];
-    if (!groupRows || !groupRows.length) continue;
-    htmlParts.push(`<tr class="pipeline-group-header"><td colspan="6"><strong>${escapeHtml(GROUP_LABELS[groupKey] || groupKey)}</strong></td></tr>`);
-    for (const pipeline of groupRows) {
-      const status = String(pipeline.status || "idle");
-      const statusClass = status === "running" ? "is-warning" : status === "failed" ? "is-danger" : "is-neutral";
-      const progress = String(pipeline.progress || "").trim();
-      const progressText = progress || (state.errors.pipelines ? "Pipeline endpoint unavailable on this backend instance." : "No log output yet.");
-      htmlParts.push(`
-        <tr>
-          <td>
-            <div class="cell-stack">
-              <strong>${escapeHtml(pipeline.name || pipeline.pipeline_id || "")}</strong>
-              <span>${escapeHtml(pipeline.description || "")}</span>
-              <span><code>${escapeHtml(pipeline.pipeline_id || "")}</code></span>
-            </div>
-          </td>
-          <td><span class="status-pill ${statusClass}">${escapeHtml(status)}</span></td>
-          <td>${escapeHtml(formatNzDateTime(pipeline.last_triggered_at || ""))}</td>
-          <td>${escapeHtml(formatNzDateTime(pipeline.last_finished_at || ""))}</td>
-          <td>
-            <div class="actions">
-              <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}" ${status === "running" ? "disabled" : ""}>Run</button>
-              <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
-              ${status === "running" ? `<button class="action-button action-danger" data-pipeline-action="reset" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}">Reset</button>` : ""}
-            </div>
-          </td>
-          <td><pre class="pipeline-progress">${escapeHtml(progressText)}</pre></td>
-        </tr>
-      `);
-    }
-  }
-
-  body.innerHTML = htmlParts.join("") || '<tr><td colspan="6" class="message">No pipeline controls found.</td></tr>';
 }
 
 function renderPipelineRunners() {
@@ -845,9 +908,9 @@ function formatRunnerConfig(config) {
 
 async function handlePipelineTableClick(event) {
   const button = event.target.closest("[data-pipeline-action]");
-  if (!button) {
-    return;
-  }
+  if (!button) return;
+  // Card clicks are handled by the delegated listener — skip here
+  if (button.closest(".pipeline-batch-card")) return;
   const action = button.dataset.pipelineAction;
   if (action === "refresh") {
     await refreshPipelines();
