@@ -259,3 +259,52 @@ None. All checks passed without discrepancies.
 
 ### Conclusion
 Milestone M73c is fully compliant with its requirements. The workflow artifact is ready for operator import and activation in n8n Cloud. Recommend advancing to the next milestone as per autonomy state guidance.
+
+# Audit Entry: M73 - Internal feature-depth score from vendor help/docs site crawl
+
+## Status: FAIL
+
+### Summary
+Milestone M73 has been decomposed into sub-milestones M73a, M73b, M73c, and M73d. While M73a, M73b, and M73c are reported as complete, M73d remains pending. The core requirement of implementing a functional n8n workflow for feature-depth score enrichment has not been fully delivered.
+
+### Evidence Review
+- **Proof Artifact**: `runs/proofs/M73_feature_depth_score.json` exists
+- **Verification**: `python3 scripts/autonomous_audit.py` passed
+- **Review Status**: Pass (with note about decomposition)
+- **QA Status**: Pass (with note about sub-milestones as delivery units)
+- **Builder Output**: Indicates n8n workflow implementation requires operator setup before execution
+
+### Issues Identified
+1. **Decomposition Incomplete**: M73 was split into M73a-d, but M73d is still pending completion
+2. **Workflow Implementation Blocked**: The n8n workflow for feature-depth score enrichment requires operator setup before it can be executed
+3. **Acceptance Criteria Not Fully Met**: Several acceptance criteria require a working workflow that:
+   - Crawls vendor help_center_url or fallback URLs
+   - Extracts structured feature taxonomy across 6 dimensions
+   - Computes feature_depth_score (0-100, category-relative)
+   - Computes feature_signals list
+   - Writes results to Supabase
+   - Shows ranked output with scores spread across 0-100 range
+
+### Architectural Compliance
+- **Selected Surface**: n8n (compliant with controller directives)
+- **Architecture Pattern**: Workflow Orchestration (preferred pattern)
+- **Boundary Compliance**: All third-party API calls would go through n8n workflows as required
+
+### Verification Results
+- Automated verification passed
+- Review passed with decomposition noted
+- QA passed with decomposition noted
+- Builder indicates workflow implementation blocked by operator setup requirement
+
+### Recommendation
+Milestone M73 cannot be considered complete until:
+1. M73d is completed
+2. The n8n workflow for feature-depth score enrichment is fully implemented and deployed
+3. The workflow can successfully execute against vendor data
+4. All acceptance criteria are verified as met
+
+### Next Steps
+1. Complete M73d implementation
+2. Deploy and test the n8n workflow
+3. Verify all acceptance criteria are met
+4. Re-audit the complete milestone delivery
