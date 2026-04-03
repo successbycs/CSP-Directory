@@ -4,9 +4,9 @@ flowchart TD
   subgraph UI["🖥️  Operator & UI"]
     direction LR
     OPS["Admin Ops Page\n(browser)"]
-    BROWSE["Browse Directory\n(GitHub Pages)"]
-    LANDING["Landing Page\n(GitHub Pages)"]
-    VENDOR["Vendor Profile\n(GitHub Pages)"]
+    BROWSE["Browse Directory\n(Vercel)"]
+    LANDING["Landing Page\n(Vercel)"]
+    VENDOR["Vendor Profile\n(Vercel)"]
   end
 
   %% ── Layer 2: Local Python Services ──────────────────────────────────────────
@@ -59,12 +59,12 @@ flowchart TD
     VENDORS["cs_vendors\nmain schema · crawl_*_result · source_field_map"]
     PAGES["vendor_pages\nclean_text · word_count · tier_used"]
     EMBEDDINGS["vendor_page_embeddings\nvector(768) · ivfflat index"]
-    DATASET["directory_dataset.json\nstatic export → GitHub Pages"]
+    DATASET["directory_dataset.json\nstatic export → Vercel"]
   end
 
-  %% ── Layer 8: GitHub Pages ────────────────────────────────────────────────────
-  subgraph GHP["📦  GitHub Pages  (vendors.successbycs.com)"]
-    STATIC["Static files\nbrowse · vendor · landing · data/"]
+  %% ── Layer 8: Vercel ────────────────────────────────────────────────────
+  subgraph GHP["📦  Vercel  (vendors.successbycs.com)"]
+    STATIC["Static files\nbrowse · vendor · landing · data/\noutputDirectory: docs/website"]
   end
 
   %% ─────────────────────────────────────────────────────────────────────────────
@@ -111,7 +111,7 @@ flowchart TD
   MERGE -->|"read crawl_* results"| VENDORS
   MERGE -->|"write schema fields"| VENDORS
 
-  %% Dataset export → GitHub Pages
+  %% Dataset export → Vercel
   VENDORS -->|"export JSON"| DATASET
   DATASET -->|"commit"| STATIC
 
