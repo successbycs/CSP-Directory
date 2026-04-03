@@ -172,6 +172,14 @@ def build_admin_app(
         if method == "POST" and path == "/admin/pipelines/run":
             payload = _parse_action_payload(environ)
             return _pipeline_run_response(start_response, trigger_pipeline_fn, payload)
+        if method == "POST" and path == "/admin/ops/store-crawl-result":
+            payload = _parse_enrich_write_payload(environ)
+            return _store_crawl_result_response(start_response, payload)
+        if method == "POST" and path == "/admin/ops/store-pages":
+            payload = _parse_enrich_write_payload(environ)
+            return _store_pages_response(start_response, payload)
+        if method == "GET" and path == "/admin/ops/field-coverage":
+            return _field_coverage_response(start_response, query_params)
         if method == "GET":
             static_response = _static_response(path)
             if static_response is not None:
@@ -519,6 +527,11 @@ def list_integration_catalog() -> dict[str, Any]:
     }
 
 
+def sync_integration_catalog() -> dict[str, Any]:
+    """Sync the repo's canonical integration rules into Supabase integration_catalog."""
+    return supabase_client.sync_default_integration_catalog()
+
+
 def list_lead_capture_data(*, limit: int = 200) -> dict[str, Any]:
     """Return lead-capture dashboard data with fallback-safe persistence access."""
     return lead_capture_store.export_lead_capture_dashboard(limit=limit)
@@ -818,6 +831,7 @@ def _run_enrich_write(payload: dict[str, Any]) -> dict[str, Any]:
         "llm_directory_fit", "llm_directory_category",
         "g2_url", "g2_market_segment", "g2_rating", "g2_review_count",
         "pricing_source", "funding_stage", "total_funding", "youtube_channel_url",
+        "company_size", "revenue", "linkedin_url", "ceo_linkedin",
     }
     _BOOL_FIELDS = {"free_trial", "soc2", "include_in_directory", "llm_include_in_directory", "has_public_pricing_page"}
     _LIST_FIELDS = {
@@ -918,6 +932,133 @@ def _enrich_write_response(
         )
     status = "200 OK" if result.get("ok") else "400 Bad Request"
     return _json_response(start_response, result, status=status)
+
+
+_ALLOWED_CRAWL_RESULT_COLUMNS = frozenset({
+    "crawl_tier1_result",
+    "crawl_tier2_result",
+    "crawl_tier3_result",
+    "crawl_datagma_result",
+    "crawl_g2_result",
+    "crawl_llm_result",
+})
+
+
+def _store_crawl_result_response(start_response, payload: dict[str, Any]):
+    """Write a JSONB blob to a named crawl_*_result column. Never touches main schema columns."""
+    vendor_website = str(payload.get("vendor_website") or "").strip()
+    column = str(payload.get("column") or "").strip()
+    result_payload = payload.get("payload")
+
+    if not vendor_website:
+        return _json_response(start_response, {"ok": False, "error": "vendor_website required"}, status="400 Bad Request")
+    if column not in _ALLOWED_CRAWL_RESULT_COLUMNS:
+        return _json_response(start_response, {"ok": False, "error": f"unknown column: {column}"}, status="400 Bad Request")
+    if not isinstance(result_payload, dict):
+        return _json_response(start_response, {"ok": False, "error": "payload must be a JSON object"}, status="400 Bad Request")
+
+    if not supabase_client.is_configured():
+        return _json_response(start_response, {"ok": False, "error": "supabase_not_configured"}, status="503 Service Unavailable")
+
+    try:
+        client = supabase_client.get_supabase_client()
+        client.table("cs_vendors").update({column: result_payload}).eq("website", vendor_website).execute()
+    except Exception as error:
+        logger.exception("store-crawl-result failed for %s column=%s", vendor_website, column)
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
+
+    return _json_response(start_response, {"ok": True, "vendor_website": vendor_website, "column": column})
+
+
+def _store_pages_response(start_response, payload: dict[str, Any]):
+    """Upsert a batch of crawled pages into vendor_pages. Called by n8n tier crawl workflows."""
+    vendor_website = str(payload.get("vendor_website") or "").strip()
+    tier_used = str(payload.get("tier_used") or "").strip()
+    pages = payload.get("pages")
+
+    if not vendor_website:
+        return _json_response(start_response, {"ok": False, "error": "vendor_website required"}, status="400 Bad Request")
+    if not isinstance(pages, list) or not pages:
+        return _json_response(start_response, {"ok": False, "error": "pages must be a non-empty list"}, status="400 Bad Request")
+    if not supabase_client.is_configured():
+        return _json_response(start_response, {"ok": False, "error": "supabase_not_configured"}, status="503 Service Unavailable")
+
+    rows = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        page_url = str(page.get("page_url") or "").strip()
+        if not page_url:
+            continue
+        rows.append({
+            "vendor_website": vendor_website,
+            "page_url": page_url,
+            "title": page.get("title"),
+            "clean_text": page.get("clean_text"),
+            "word_count": page.get("word_count"),
+            "page_depth": page.get("page_depth"),
+            "tier_used": tier_used or page.get("tier_used"),
+        })
+
+    if not rows:
+        return _json_response(start_response, {"ok": False, "error": "no valid pages after filtering"}, status="400 Bad Request")
+
+    try:
+        client = supabase_client.get_supabase_client()
+        client.table("vendor_pages").upsert(rows, on_conflict="vendor_website,page_url").execute()
+    except Exception as error:
+        logger.exception("store-pages failed for %s", vendor_website)
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
+
+    return _json_response(start_response, {"ok": True, "vendor_website": vendor_website, "pages_stored": len(rows)})
+
+
+def _field_coverage_response(start_response, query_params: dict[str, list[str]]):
+    """Return per-field source coverage for a vendor, or vendor_pages row count check."""
+    vendor_website = query_params.get("vendor_website", [""])[0].strip()
+    check = query_params.get("check", [""])[0].strip()
+
+    if not vendor_website:
+        return _json_response(start_response, {"ok": False, "error": "vendor_website required"}, status="400 Bad Request")
+    if not supabase_client.is_configured():
+        return _json_response(start_response, {"ok": False, "error": "supabase_not_configured"}, status="503 Service Unavailable")
+
+    try:
+        client = supabase_client.get_supabase_client()
+
+        if check == "vendor_pages_count":
+            result = client.table("vendor_pages").select("id", count="exact").eq("vendor_website", vendor_website).execute()
+            count = result.count if hasattr(result, "count") and result.count is not None else len(result.data or [])
+            return _json_response(start_response, {"ok": True, "vendor_website": vendor_website, "vendor_pages_count": count})
+
+        # Full field coverage report: read all crawl_*_result + source_field_map
+        cols = ",".join([*_ALLOWED_CRAWL_RESULT_COLUMNS, "source_field_map"])
+        vendor_rows = client.table("cs_vendors").select(cols).eq("website", vendor_website).execute()
+        if not vendor_rows.data:
+            return _json_response(start_response, {"ok": False, "error": "vendor not found"}, status="404 Not Found")
+
+        row = vendor_rows.data[0]
+        coverage: dict[str, Any] = {}
+        for col in _ALLOWED_CRAWL_RESULT_COLUMNS:
+            result_blob = row.get(col)
+            if isinstance(result_blob, dict):
+                coverage[col] = {
+                    "ok": result_blob.get("ok"),
+                    "crawled_at": result_blob.get("crawled_at"),
+                    "fields": list((result_blob.get("fields") or {}).keys()),
+                }
+            else:
+                coverage[col] = None
+
+        return _json_response(start_response, {
+            "ok": True,
+            "vendor_website": vendor_website,
+            "source_field_map": row.get("source_field_map"),
+            "coverage": coverage,
+        })
+    except Exception as error:
+        logger.exception("field-coverage failed for %s", vendor_website)
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
 
 
 def _static_response(path: str):

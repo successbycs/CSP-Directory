@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 from services.extraction.vendor_intel import (
     INTEGRATION_BRAND_RULES,
@@ -662,6 +665,9 @@ def build_vendor_row(
         "g2_review_count": intelligence.g2_review_count,
         "g2_market_segment": intelligence.g2_market_segment or None,
         "g2_categories": intelligence.g2_categories or [],
+        "company_size": intelligence.company_size or None,
+        "revenue": intelligence.revenue or None,
+        "linkedin_url": intelligence.linkedin_url or None,
         "has_public_pricing_page": intelligence.has_public_pricing_page,
         "pricing_source": intelligence.pricing_source or None,
         "raw_description": raw_description or None,

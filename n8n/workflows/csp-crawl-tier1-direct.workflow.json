@@ -1,0 +1,222 @@
+{
+  "name": "CSP Crawl Tier 1 \u2014 Direct HTTP",
+  "meta": {
+    "description": "Tier 1 site crawl: plain HTTP request, free. Extracts vendor name and visible text from homepage. Caller escalates to Tier 2 if word_count < 200 or name unresolved. Part of M74 three-tier crawl architecture."
+  },
+  "nodes": [
+    {
+      "id": "webhook-tier1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "path": "csp-crawl-tier1-direct",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst vendor_name = (body.vendor_name || body.name || '').trim();\nreturn [{ json: { website, vendor_name } }];"
+      }
+    },
+    {
+      "id": "fetch-homepage",
+      "name": "Fetch Homepage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.website }}",
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 3
+            }
+          }
+        },
+        "headers": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; CSP-Crawler/1.0)"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "extract-name-text",
+      "name": "Extract Name + Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst website = $('Validate Input').first().json.website;\nconst inputName = $('Validate Input').first().json.vendor_name || '';\n\n// Status check\nconst statusCode = parseInt($('Fetch Homepage').first().json['$response']?.statusCode || input.statusCode || 200);\nconst html = $('Fetch Homepage').first().json['$response']?.body || input.body || '';\n\n// --- Name extraction helpers ---\nfunction extractMeta(html, property, attr) {\n  const re = new RegExp(`<meta[^>]+${attr}=[\"']${property}[\"'][^>]+content=[\"'](.*?)[\"']`, 'i');\n  const m = html.match(re) || html.match(new RegExp(`<meta[^>]+content=[\"'](.*?)[\"'][^>]+${attr}=[\"']${property}[\"']`, 'i'));\n  return m ? m[1].replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim() : '';\n}\nfunction extractTitle(html) {\n  const m = html.match(/<title[^>]*>(.*?)<\\/title>/is);\n  return m ? m[1].replace(/<[^>]+>/g, ' ').replace(/&amp;/g,'&').replace(/&#39;/g,\"'\").replace(/&quot;/g,'\"').replace(/\\s+/g,' ').trim() : '';\n}\nfunction domainStem(url) {\n  try {\n    const host = new URL(url).hostname.replace(/^www\\./, '');\n    const base = host.split('.')[0].toLowerCase();\n    const prefixes = ['get','try','use','my','the'];\n    for (const p of prefixes) {\n      if (base.startsWith(p) && base.length - p.length >= 4) {\n        return base.slice(p.length).charAt(0).toUpperCase() + base.slice(p.length + 1);\n      }\n    }\n    return base.charAt(0).toUpperCase() + base.slice(1);\n  } catch { return ''; }\n}\nconst TAGLINE_SUFFIXES = new Set(['analytics','automation','dashboard','insights','intelligence','management','monitoring','platform','reporting','software','solution','solutions','tracking']);\nfunction isTagline(text) {\n  const lower = text.toLowerCase();\n  const last = lower.split(/\\s+/).pop();\n  if (TAGLINE_SUFFIXES.has(last)) return true;\n  if (/\\bai[- ]powered\\b|\\b\\w+-powered\\b|\\bpowered by\\b/.test(lower)) return true;\n  if (/\\b\\d{4}\\b/.test(lower)) return true;\n  if (/best |guide|review|how to|top |what is | vs /.test(lower)) return true;\n  return false;\n}\nfunction cleanCandidate(raw) {\n  let s = raw.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();\n  if (!s) return '';\n  for (const sep of [' | ',' - ',' \\u2013 ',' \\u2014 ',': ']) {\n    if (s.includes(sep)) {\n      for (const part of s.split(sep)) {\n        const c = cleanCandidate(part);\n        if (c) return c;\n      }\n    }\n  }\n  if (isTagline(s)) return '';\n  if (s.split(/\\s+/).length > 5) return '';\n  if (s.length > 40) return '';\n  return s;\n}\n\n// Priority chain for name\nconst candidates = [\n  extractMeta(html, 'og:site_name', 'property'),\n  extractMeta(html, 'application-name', 'name'),\n  extractMeta(html, 'apple-mobile-web-app-title', 'name'),\n  extractTitle(html),\n];\nlet name = '';\nfor (const c of candidates) {\n  const cleaned = cleanCandidate(c);\n  if (cleaned) { name = cleaned; break; }\n}\nif (!name) {\n  const cleaned = cleanCandidate(inputName);\n  name = cleaned || domainStem(website);\n}\n\n// Text extraction \u2014 strip HTML tags\nconst text = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\nconst word_count = text ? text.split(/\\s+/).length : 0;\n\nreturn [{ json: { website, name, word_count, text: text.slice(0, 10000), status_code: statusCode, tier_used: 'tier1_direct', ok: statusCode < 400 && word_count > 0 } }];"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+    {
+      "id": "store-pages-tier1",
+      "name": "Store Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Validate Input').first().json.admin_url }}/admin/ops/store-pages",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ vendor_website: $json.website, tier_used: 'tier1_direct', pages: [{ page_url: $json.website, title: $json.name, clean_text: $json.text, word_count: $json.word_count, page_depth: 0 }] }) }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "store-crawl-result-tier1",
+      "name": "Store Crawl Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1340,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Validate Input').first().json.admin_url }}/admin/ops/store-crawl-result",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ vendor_website: $('Extract Name + Text').first().json.website, column: 'crawl_tier1_result', payload: { ok: $('Extract Name + Text').first().json.ok, pipeline: 'csp-crawl-tier1-direct', crawled_at: new Date().toISOString(), pages_fetched: 1, word_count: $('Extract Name + Text').first().json.word_count, fields: { name: $('Extract Name + Text').first().json.name } } }) }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Fetch Homepage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Homepage": {
+      "main": [
+        [
+          {
+            "node": "Extract Name + Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Name + Text": {
+      "main": [
+        [
+          {
+            "node": "Store Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Pages": {
+      "main": [
+        [
+          {
+            "node": "Store Crawl Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Crawl Result": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "pinData": {}
+}

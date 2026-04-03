@@ -39,8 +39,87 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
     {
         "pipeline_id": "g2_rapidapi_enrichment",
         "name": "G2 RapidAPI Enrichment",
-        "description": "Runs G2 enrichment helper over included vendors.",
+        "description": "Runs G2 RapidAPI enrichment over all include_in_directory vendors. Fills g2_url, g2_rating, g2_review_count, g2_categories.",
         "command": ["scripts/enrich_g2_rapidapi.py"],
+    },
+    {
+        "pipeline_id": "firmographic_enrichment",
+        "name": "Firmographic Enrichment (Datagma)",
+        "description": "Enriches vendors with firmographic data via Datagma (RapidAPI). Fills founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Requires RAPIDAPI_KEY + Datagma subscription.",
+        "command": ["scripts/enrich_firmographic.py"],
+    },
+    {
+        "pipeline_id": "linkedin_enrichment",
+        "name": "LinkedIn Enrichment",
+        "description": "Enriches vendors with LinkedIn data via LinkedIn Data API (RapidAPI). Fills ceo_linkedin, linkedin_url, leadership. Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
+        "command": ["scripts/enrich_linkedin.py"],
+    },
+    {
+        "pipeline_id": "site_crawl_enrichment",
+        "name": "Site Crawl (Tiered)",
+        "description": "Re-crawls vendor homepages using three-tier strategy: Tier 1 (free HTTP) → Tier 2 (Apify RAG) → Tier 3 (Apify WCC + proxy). Requires N8N_CRAWL_TIER1/2/3_WEBHOOK env vars.",
+        "command": ["scripts/enrich_site_crawl.py"],
+    },
+    {
+        "pipeline_id": "google_discovery",
+        "name": "Google Discovery",
+        "description": "Discovers new vendor candidates via Apify Google Search. Requires N8N_DISCOVERY_WEBHOOK and APIFY_API_TOKEN.",
+        "command": ["scripts/run_discovery.py"],
+    },
+    {
+        "pipeline_id": "full_enrichment_cycle",
+        "name": "Full Enrichment Cycle",
+        "description": "Runs all enrichment sources in sequence: site crawl → LLM extraction → Datagma firmographic → LinkedIn → G2 → pricing. Use for backfill or full vendor refresh.",
+        "command": ["scripts/run_full_enrichment_cycle.py"],
+    },
+    # M76 Ops Enrichment Workbench — per-step pipelines
+    {
+        "pipeline_id": "ops_discovery_run",
+        "name": "Step 1 — Google Discovery",
+        "description": "Discover new vendor candidates via Apify Google Search. Writes to cs_vendor_candidates.",
+        "command": ["-m", "services.ops.run_discovery"],
+    },
+    {
+        "pipeline_id": "ops_crawl_tier1",
+        "name": "Step 2a — Tier 1 Crawl (Direct HTTP)",
+        "description": "Crawl vendor website via direct HTTP fetch (free). Writes to vendor_pages + crawl_tier1_result.",
+        "command": ["-m", "services.ops.run_crawl", "--tier", "1"],
+    },
+    {
+        "pipeline_id": "ops_crawl_tier2",
+        "name": "Step 2b — Tier 2 Crawl (Apify RAG)",
+        "description": "Crawl vendor website via Apify RAG Web Browser (~$0.001/page). Writes to vendor_pages + crawl_tier2_result.",
+        "command": ["-m", "services.ops.run_crawl", "--tier", "2"],
+    },
+    {
+        "pipeline_id": "ops_crawl_tier3",
+        "name": "Step 2c — Tier 3 Crawl (Apify WCC + Proxy)",
+        "description": "Crawl vendor website via Apify WCC with anti-bot proxy (~$0.004/page). Writes to vendor_pages + crawl_tier3_result.",
+        "command": ["-m", "services.ops.run_crawl", "--tier", "3"],
+    },
+    {
+        "pipeline_id": "ops_crawl_datagma",
+        "name": "Step 3 — Datagma Firmographic",
+        "description": "Enrich vendor firmographic data via Datagma (RapidAPI). Writes to crawl_datagma_result. Requires RAPIDAPI_KEY.",
+        "command": ["-m", "services.ops.run_datagma"],
+    },
+    {
+        "pipeline_id": "ops_crawl_g2",
+        "name": "Step 4 — G2 Enrichment",
+        "description": "Enrich vendor G2 data via RapidAPI G2 API. Writes to crawl_g2_result. Requires RAPIDAPI_KEY.",
+        "command": ["-m", "services.ops.run_g2"],
+    },
+    {
+        "pipeline_id": "ops_crawl_llm",
+        "name": "Step 5 — LLM Extraction (Ollama RAG)",
+        "description": "Extract structured fields from vendor_pages using Ollama Mistral + nomic-embed-text pgvector RAG. Writes to crawl_llm_result. Requires vendor_pages >= 10 rows.",
+        "command": ["-m", "services.ops.run_llm_extraction"],
+    },
+    {
+        "pipeline_id": "ops_merge",
+        "name": "Step 6 — Clean Merge",
+        "description": "Merge all crawl_*_result columns into main cs_vendors schema columns using priority rules. Writes source_field_map.",
+        "command": ["-m", "services.ops.run_merge"],
     },
 )
 

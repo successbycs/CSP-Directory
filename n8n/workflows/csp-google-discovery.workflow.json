@@ -1,0 +1,90 @@
+{
+  "name": "CSP Google Discovery",
+  "meta": {
+    "description": "Vendor discovery via Apify Google Search Scraper. Accepts discovery queries, filters out review/directory sites, upserts candidates to Supabase cs_vendor_candidates via /admin/discovery-upsert. Part of M74."
+  },
+  "nodes": [
+    {
+      "id": "webhook-discovery",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "path": "csp-google-discovery",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst queries = body.queries || body.query ? [body.query] : [];\nif (!queries.length) throw new Error('queries array is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token required');\nconst admin_url = (body.admin_url || process.env.ADMIN_BASE_URL || 'http://127.0.0.1:8787').trim();\nreturn queries.map(q => ({ json: { query: q, apify_token, admin_url, results_per_page: body.results_per_page || 10 } }));"
+      }
+    },
+    {
+      "id": "google-search",
+      "name": "Google Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items?token={{ $json.apify_token }}&timeout=60",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ queries: $json.query, maxPagesPerQuery: 1, resultsPerPage: $json.results_per_page, countryCode: 'us', languageCode: 'en' }) }}",
+        "options": { "timeout": 90000 }
+      }
+    },
+    {
+      "id": "filter-candidates",
+      "name": "Filter Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const DENYLIST = ['reddit.com','g2.com','capterra.com','trustradius.com','getapp.com','producthunt.com','wikipedia.org','linkedin.com','softwareadvice.com','trustpilot.com','yelp.com','glassdoor.com','crunchbase.com','gartner.com','forrester.com','techcrunch.com','venturebeat.com'];\nconst results = $input.first().json;\nconst items = Array.isArray(results) ? results : [results];\nconst candidates = [];\nfor (const item of items) {\n  const organicResults = item.organicResults || [];\n  for (const r of organicResults) {\n    const url = r.url || r.link || '';\n    if (!url) continue;\n    try {\n      const host = new URL(url).hostname.replace(/^www\\./,'');\n      if (DENYLIST.some(d => host === d || host.endsWith('.'+d))) continue;\n      candidates.push({ url, title: r.title || '', snippet: r.description || r.snippet || '', source: 'google_discovery' });\n    } catch { /* skip malformed URLs */ }\n  }\n}\nreturn candidates.map(c => ({ json: c }));"
+      }
+    },
+    {
+      "id": "upsert-candidates",
+      "name": "Upsert Candidates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Validate Input').first().json.admin_url }}/admin/discovery-upsert",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ url: $json.url, title: $json.title, snippet: $json.snippet, source: $json.source }) }}"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"queued\": {{ $('Filter Candidates').all().length }} }"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
+    "Validate Input": { "main": [[{ "node": "Google Search", "type": "main", "index": 0 }]] },
+    "Google Search": { "main": [[{ "node": "Filter Candidates", "type": "main", "index": 0 }]] },
+    "Filter Candidates": { "main": [[{ "node": "Upsert Candidates", "type": "main", "index": 0 }]] },
+    "Upsert Candidates": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true },
+  "staticData": null,
+  "pinData": {}
+}

@@ -250,6 +250,148 @@
       </div>
     </section>
 
+    <!-- M76 Enrichment Workbench -->
+    <section class="panel" id="enrichment-workbench">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">M76 — Enrichment Workbench</p>
+          <h2>Step-by-step vendor enrichment</h2>
+          <p class="subheadline">Run each enrichment step independently. Each step writes to its own isolated column. Step 6 (Merge) writes the final clean values to the main schema.</p>
+        </div>
+      </div>
+
+      <!-- Vendor selector -->
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+        <label for="ops-vendor-input" style="font-weight:500;white-space:nowrap;">Vendor website:</label>
+        <input id="ops-vendor-input" type="url" placeholder="https://gainsight.com" style="flex:1;min-width:260px;padding:6px 10px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;font-size:13px;">
+        <button class="action-btn" onclick="opsSetVendor()">Set vendor</button>
+        <span id="ops-vendor-status" style="font-size:12px;color:#58a6ff;"></span>
+      </div>
+
+      <!-- Step cards -->
+      <div id="ops-steps" style="display:grid;gap:16px;">
+
+        <!-- Step 1 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 1</span>
+            <span class="ops-step-title">Google Discovery</span>
+            <span class="ops-step-source source-tier">Apify Google Search</span>
+            <span class="ops-step-writes">→ cs_vendor_candidates</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Discover new vendors from Google search. Results land in <code>cs_vendor_candidates</code> for review before promotion.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+              <label style="font-size:12px;color:#8b949e;">Pages/query:</label>
+              <input id="ops-step1-pages" type="number" value="20" min="1" max="100" style="width:64px;padding:4px 6px;font-size:12px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;">
+              <button class="action-btn" data-ops-run="ops_discovery_run" onclick="opsRunStep(this)">Run</button>
+              <span class="ops-step-status" id="ops-step1-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 2</span>
+            <span class="ops-step-title">Three-Tier Website Crawl</span>
+            <span class="ops-step-source source-tier">HTTP / Apify RAG / Apify WCC</span>
+            <span class="ops-step-writes">→ vendor_pages + crawl_tier{1,2,3}_result</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Crawl the vendor site using the cheapest successful tier. Pages stored in <code>vendor_pages</code>. Tier summary written to <code>crawl_tier{N}_result</code>.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+              <label style="font-size:12px;color:#8b949e;">Tier:</label>
+              <select id="ops-step2-tier" style="padding:4px 6px;font-size:12px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;">
+                <option value="ops_crawl_tier1">Tier 1 — Direct HTTP (free)</option>
+                <option value="ops_crawl_tier2">Tier 2 — Apify RAG (~$0.001/page)</option>
+                <option value="ops_crawl_tier3" selected>Tier 3 — Apify WCC + Proxy (~$0.004/page)</option>
+              </select>
+              <label style="font-size:12px;color:#8b949e;">Max pages:</label>
+              <input id="ops-step2-maxpages" type="number" value="100" min="1" max="300" style="width:64px;padding:4px 6px;font-size:12px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;">
+              <button class="action-btn" onclick="opsRunCrawlStep()">Run</button>
+              <span class="ops-step-status" id="ops-step2-status"></span>
+            </div>
+            <div id="ops-step2-pages-count" style="font-size:12px;color:#8b949e;margin-top:6px;"></div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 3</span>
+            <span class="ops-step-title">Datagma Firmographic</span>
+            <span class="ops-step-source source-datagma">Datagma via RapidAPI</span>
+            <span class="ops-step-writes">→ crawl_datagma_result</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Enrich founded, hq_address, company_size, funding_stage, total_funding, ceo_name, revenue from Datagma. Requires RAPIDAPI_KEY.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" data-ops-run="ops_crawl_datagma" onclick="opsRunStep(this)">Run</button>
+              <span class="ops-step-status" id="ops-step3-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 4</span>
+            <span class="ops-step-title">G2 Enrichment</span>
+            <span class="ops-step-source source-g2">G2 via RapidAPI</span>
+            <span class="ops-step-writes">→ crawl_g2_result</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Enrich g2_rating, g2_review_count, g2_categories, g2_market_segment from G2 Data API. Hit rate ~33%. Requires RAPIDAPI_KEY.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" data-ops-run="ops_crawl_g2" onclick="opsRunStep(this)">Run</button>
+              <span class="ops-step-status" id="ops-step4-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 5</span>
+            <span class="ops-step-title">LLM Extraction (Ollama RAG)</span>
+            <span class="ops-step-source source-llm">Ollama + pgvector</span>
+            <span class="ops-step-writes">→ crawl_llm_result + vendor_page_embeddings</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Extract mission, icp_buyer, lifecycle_stages, integrations etc. using Mistral via local Ollama RAG over vendor_pages content.</p>
+            <div id="ops-step5-guard" style="display:none;margin-bottom:8px;padding:6px 10px;background:#2d1b1b;border-radius:4px;font-size:12px;color:#ff7b72;border:1px solid #6e1111;">
+              Run Step 2 (Tier Crawl) first — vendor_pages has 0 rows for this vendor.
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" id="ops-step5-btn" data-ops-run="ops_crawl_llm" onclick="opsRunStep(this)">Run</button>
+              <span class="ops-step-status" id="ops-step5-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 6</span>
+            <span class="ops-step-title">Clean Merge</span>
+            <span class="ops-step-source source-merge">Python merge_module</span>
+            <span class="ops-step-writes">→ cs_vendors main columns + source_field_map</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Apply COALESCE priority rules across all crawl_*_result columns. Write winning values to main schema. Never overwrites existing values with null.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" data-ops-run="ops_merge" onclick="opsRunStep(this)">Run</button>
+              <span class="ops-step-status" id="ops-step6-status"></span>
+            </div>
+            <!-- Field coverage report rendered here after merge -->
+            <div id="ops-field-coverage" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
     <section class="panel">
       <div class="panel-header">
         <h2>Pipeline Log</h2>

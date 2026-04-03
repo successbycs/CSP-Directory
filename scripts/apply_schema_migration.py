@@ -65,6 +65,18 @@ REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
     ("last_enriched_pipeline", "text", True),
     ("enrichment_count", "integer", True),
     ("enrichment_pipeline_counts", "jsonb", True),
+    # M75 — firmographic enrichment (Datagma / LinkedIn)
+    ("company_size", "text", True),
+    ("revenue", "text", True),
+    ("linkedin_url", "text", True),
+    # M76 — per-source result columns (Ops Enrichment Workbench)
+    ("crawl_tier1_result", "jsonb", True),
+    ("crawl_tier2_result", "jsonb", True),
+    ("crawl_tier3_result", "jsonb", True),
+    ("crawl_datagma_result", "jsonb", True),
+    ("crawl_g2_result", "jsonb", True),
+    ("crawl_llm_result", "jsonb", True),
+    ("source_field_map", "jsonb", True),
 ]
 
 COLUMNS_TO_DROP: list[str] = []

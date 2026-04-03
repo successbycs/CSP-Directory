@@ -158,12 +158,42 @@ def _clean_vendor_name_candidate(candidate: str) -> str:
     lowered = normalized_candidate.lower()
     if _looks_like_article_title(lowered):
         return ""
+    if _looks_like_tagline(lowered):
+        return ""
     if len(normalized_candidate.split()) > 5:
         return ""
     if len(normalized_candidate) > 40:
         return ""
 
     return normalized_candidate
+
+
+def _looks_like_tagline(text: str) -> bool:
+    """Return True when the candidate looks like a product tagline rather than a company name."""
+    _TAGLINE_SUFFIX_WORDS = {
+        "analytics",
+        "automation",
+        "dashboard",
+        "insights",
+        "intelligence",
+        "management",
+        "monitoring",
+        "platform",
+        "reporting",
+        "software",
+        "solution",
+        "solutions",
+        "tracking",
+    }
+    _TAGLINE_INFIX_PATTERNS = (
+        r"\b\w+-powered\b",   # AI-Powered, Data-Powered, etc.
+        r"\bai[- ]powered\b",
+        r"\bpowered by\b",
+    )
+    last_word = text.rsplit(None, 1)[-1] if text else ""
+    if last_word in _TAGLINE_SUFFIX_WORDS:
+        return True
+    return any(re.search(p, text) for p in _TAGLINE_INFIX_PATTERNS)
 
 
 def _looks_like_article_title(text: str) -> bool:

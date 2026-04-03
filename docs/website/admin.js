@@ -1,27 +1,68 @@
 const API_FALLBACK_BASE = "http://127.0.0.1:8787";
 const DEFAULT_PIPELINE_CONTROLS = [
+  // ── Discovery ──────────────────────────────────────────────────────────────
   {
     pipeline_id: "full_pipeline",
     name: "Full Discovery + Enrichment",
+    group: "discovery",
     description:
-      "Includes Apify Google Search discovery -> Apify/web crawl enrichment (configured depth/page limits) -> deterministic + optional LLM extraction -> persistence + export.",
+      "Runs discover → enrich → export using configured query set. Includes Apify Google Search, web crawl, LLM extraction, and persistence.",
   },
   {
     pipeline_id: "weekly_discovery_job",
     name: "Weekly Discovery Job",
+    group: "discovery",
     description:
-      "Discovery-only runner: Apify Google Search using configured query set and candidate limits.",
+      "Discovery-only: Apify Google Search using configured query set and candidate limits.",
+  },
+  {
+    pipeline_id: "google_discovery",
+    name: "Google Discovery (n8n)",
+    group: "discovery",
+    description:
+      "Discovers new vendor candidates via Apify Google Search → n8n workflow → filters review/directory sites → upserts candidates.",
   },
   {
     pipeline_id: "weekly_digest_job",
-    name: "Weekly Digest Job",
-    description: "Digest/report runner: builds weekly lifecycle summary outputs.",
+    name: "Weekly Digest",
+    group: "discovery",
+    description: "Builds weekly lifecycle digest and summary outputs.",
+  },
+  // ── Enrichment ─────────────────────────────────────────────────────────────
+  {
+    pipeline_id: "full_enrichment_cycle",
+    name: "⚡ Full Enrichment Cycle",
+    group: "enrichment",
+    description:
+      "Runs all enrichment sources in sequence: site crawl (tiered) → LLM extraction → Datagma firmographic → LinkedIn → G2 → pricing. Use for backfill or full vendor refresh.",
+  },
+  {
+    pipeline_id: "site_crawl_enrichment",
+    name: "Site Crawl (Tiered)",
+    group: "enrichment",
+    description:
+      "Re-crawls vendor homepages: Tier 1 (free HTTP) → Tier 2 (Apify RAG ~$0.001/page) → Tier 3 (Apify WCC + proxy ~$0.004/page). Requires N8N_CRAWL_TIER1/2/3_WEBHOOK.",
+  },
+  {
+    pipeline_id: "firmographic_enrichment",
+    name: "Firmographic Enrichment (Datagma)",
+    group: "enrichment",
+    description:
+      "Single domain call via Datagma (RapidAPI) returns founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Requires RAPIDAPI_KEY + Datagma subscription.",
+  },
+  {
+    pipeline_id: "linkedin_enrichment",
+    name: "LinkedIn Enrichment",
+    group: "enrichment",
+    description:
+      "Fills ceo_linkedin, linkedin_url, leadership via LinkedIn Data API (RapidAPI). Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
   },
   {
     pipeline_id: "g2_rapidapi_enrichment",
-    name: "G2 RapidAPI Enrichment",
+    name: "G2 Enrichment (RapidAPI)",
+    group: "enrichment",
     description:
-      "Targeted enrichment runner: G2 RapidAPI enrichment over included vendors.",
+      "G2 product data via RapidAPI G2 Data API. Fills g2_url, g2_rating, g2_review_count, g2_categories. Currently 20/119 vendors covered — run to fill remaining 99.",
   },
 ];
 const DEFAULT_PIPELINE_RUNNERS = [
@@ -728,33 +769,52 @@ function renderPipelines() {
     ? `${rows.length} pipeline controls configured. ${state.errors.pipelines} Showing default controls.`
     : `${rows.length} pipeline controls configured, ${running} running. Times shown in NZ (Pacific/Auckland).`;
 
-  body.innerHTML = rows.map((pipeline) => {
-    const status = String(pipeline.status || "idle");
-    const statusClass = status === "running" ? "is-warning" : status === "failed" ? "is-danger" : "is-neutral";
-    const progress = String(pipeline.progress || "").trim();
-    const progressText = progress || (state.errors.pipelines ? "Pipeline endpoint unavailable on this backend instance." : "No log output yet.");
-    return `
-      <tr>
-        <td>
-          <div class="cell-stack">
-            <strong>${escapeHtml(pipeline.name || pipeline.pipeline_id || "")}</strong>
-            <span>${escapeHtml(pipeline.description || "")}</span>
-            <span><code>${escapeHtml(pipeline.pipeline_id || "")}</code></span>
-          </div>
-        </td>
-        <td><span class="status-pill ${statusClass}">${escapeHtml(status)}</span></td>
-        <td>${escapeHtml(formatNzDateTime(pipeline.last_triggered_at || ""))}</td>
-        <td>${escapeHtml(formatNzDateTime(pipeline.last_finished_at || ""))}</td>
-        <td>
-          <div class="actions">
-            <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}" ${status === "running" ? "disabled" : ""}>Run</button>
-            <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
-          </div>
-        </td>
-        <td><pre class="pipeline-progress">${escapeHtml(progressText)}</pre></td>
-      </tr>
-    `;
-  }).join("") || '<tr><td colspan="6" class="message">No pipeline controls found.</td></tr>';
+  // Group rows by their group property (discovery / enrichment / ungrouped)
+  const groups = {};
+  for (const pipeline of rows) {
+    const g = pipeline.group || "other";
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(pipeline);
+  }
+
+  const GROUP_LABELS = { discovery: "Discovery", enrichment: "Enrichment", other: "Other" };
+  const GROUP_ORDER = ["enrichment", "discovery", "other"];
+
+  const htmlParts = [];
+  for (const groupKey of GROUP_ORDER) {
+    const groupRows = groups[groupKey];
+    if (!groupRows || !groupRows.length) continue;
+    htmlParts.push(`<tr class="pipeline-group-header"><td colspan="6"><strong>${escapeHtml(GROUP_LABELS[groupKey] || groupKey)}</strong></td></tr>`);
+    for (const pipeline of groupRows) {
+      const status = String(pipeline.status || "idle");
+      const statusClass = status === "running" ? "is-warning" : status === "failed" ? "is-danger" : "is-neutral";
+      const progress = String(pipeline.progress || "").trim();
+      const progressText = progress || (state.errors.pipelines ? "Pipeline endpoint unavailable on this backend instance." : "No log output yet.");
+      htmlParts.push(`
+        <tr>
+          <td>
+            <div class="cell-stack">
+              <strong>${escapeHtml(pipeline.name || pipeline.pipeline_id || "")}</strong>
+              <span>${escapeHtml(pipeline.description || "")}</span>
+              <span><code>${escapeHtml(pipeline.pipeline_id || "")}</code></span>
+            </div>
+          </td>
+          <td><span class="status-pill ${statusClass}">${escapeHtml(status)}</span></td>
+          <td>${escapeHtml(formatNzDateTime(pipeline.last_triggered_at || ""))}</td>
+          <td>${escapeHtml(formatNzDateTime(pipeline.last_finished_at || ""))}</td>
+          <td>
+            <div class="actions">
+              <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}" ${status === "running" ? "disabled" : ""}>Run</button>
+              <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
+            </div>
+          </td>
+          <td><pre class="pipeline-progress">${escapeHtml(progressText)}</pre></td>
+        </tr>
+      `);
+    }
+  }
+
+  body.innerHTML = htmlParts.join("") || '<tr><td colspan="6" class="message">No pipeline controls found.</td></tr>';
 }
 
 function renderPipelineRunners() {
@@ -843,6 +903,7 @@ function normalizePipelineItems(items) {
       last_triggered_at: String(live.last_triggered_at || ""),
       last_finished_at: String(live.last_finished_at || ""),
       progress: String(live.progress || ""),
+      group: String(live.group || base.group || "other"),
     };
   });
 }
@@ -1109,6 +1170,116 @@ function startPipelinePolling() {
   _pipelinePollInterval = setInterval(() => {
     refreshPipelines();
   }, 5000);
+}
+
+// ── M76 Enrichment Workbench ───────────────────────────────────────────────
+
+let _opsVendor = '';
+
+function opsSetVendor() {
+  const input = document.getElementById('ops-vendor-input');
+  const status = document.getElementById('ops-vendor-status');
+  const raw = (input ? input.value : '').trim();
+  if (!raw) { if (status) status.textContent = 'Enter a vendor website URL.'; return; }
+  _opsVendor = raw;
+  if (status) status.textContent = `Vendor set: ${raw}`;
+  opsCheckStep5Guard();
+  opsLoadFieldCoverage();
+}
+
+async function opsCheckStep5Guard() {
+  const btn = document.getElementById('ops-step5-btn');
+  const guard = document.getElementById('ops-step5-guard');
+  const countEl = document.getElementById('ops-step2-pages-count');
+  if (!_opsVendor) return;
+  try {
+    const base = (window.state && window.state.apiBase) || API_FALLBACK_BASE;
+    const res = await fetch(`${base}/admin/ops/field-coverage?vendor_website=${encodeURIComponent(_opsVendor)}&check=vendor_pages_count`);
+    const data = await res.json();
+    const count = data.vendor_pages_count || 0;
+    if (countEl) countEl.textContent = `vendor_pages rows for this vendor: ${count}`;
+    const insufficient = count < 10;
+    if (guard) guard.style.display = insufficient ? 'block' : 'none';
+    if (guard && insufficient) guard.textContent = `Run Step 2 (Tier Crawl) first — vendor_pages has ${count} rows for this vendor.`;
+    if (btn) btn.disabled = insufficient;
+  } catch (_) {}
+}
+
+async function opsRunStep(btn) {
+  const pipelineId = btn.dataset.opsRun;
+  if (!pipelineId) return;
+  if (!_opsVendor) { alert('Set a vendor website first.'); return; }
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Running…';
+  try {
+    await fetchJson('/admin/pipelines/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pipeline_id: pipelineId, vendor_website: _opsVendor}),
+    });
+    const stepEl = btn.closest('.ops-step-card');
+    const statusEl = stepEl ? stepEl.querySelector('.ops-step-status') : null;
+    if (statusEl) statusEl.textContent = 'Triggered — check Pipeline Log below';
+    if (pipelineId === 'ops_crawl_llm' || pipelineId === 'ops_crawl_tier1' ||
+        pipelineId === 'ops_crawl_tier2' || pipelineId === 'ops_crawl_tier3') {
+      setTimeout(opsCheckStep5Guard, 5000);
+    }
+    if (pipelineId === 'ops_merge') {
+      setTimeout(opsLoadFieldCoverage, 8000);
+    }
+  } catch (err) {
+    alert(`Step trigger failed: ${err.message}`);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+
+async function opsRunCrawlStep() {
+  const tierSelect = document.getElementById('ops-step2-tier');
+  const maxPagesInput = document.getElementById('ops-step2-maxpages');
+  const pipelineId = tierSelect ? tierSelect.value : 'ops_crawl_tier3';
+  const maxPages = maxPagesInput ? parseInt(maxPagesInput.value, 10) || 100 : 100;
+  if (!_opsVendor) { alert('Set a vendor website first.'); return; }
+  try {
+    await fetchJson('/admin/pipelines/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pipeline_id: pipelineId, vendor_website: _opsVendor, max_pages: maxPages}),
+    });
+    const statusEl = document.getElementById('ops-step2-status');
+    if (statusEl) statusEl.textContent = `Triggered ${pipelineId} (max_pages=${maxPages}) — check Pipeline Log`;
+    setTimeout(opsCheckStep5Guard, 8000);
+  } catch (err) {
+    alert(`Crawl step trigger failed: ${err.message}`);
+  }
+}
+
+async function opsLoadFieldCoverage() {
+  const container = document.getElementById('ops-field-coverage');
+  if (!container || !_opsVendor) return;
+  try {
+    const base = (window.state && window.state.apiBase) || API_FALLBACK_BASE;
+    const res = await fetch(`${base}/admin/ops/field-coverage?vendor_website=${encodeURIComponent(_opsVendor)}`);
+    const data = await res.json();
+    if (!data.ok || !data.coverage) { container.innerHTML = ''; return; }
+
+    const sfm = data.source_field_map || {};
+    const sourceClass = {tier1:'source-tier',tier2:'source-tier',tier3:'source-tier',datagma:'source-datagma',g2:'source-g2',llm:'source-llm'};
+
+    const rows = Object.entries(sfm).map(([field, src]) => {
+      const cls = sourceClass[src] || 'source-null';
+      return `<tr><td>${escHtml(field)}</td><td><span class="ops-step-source ${cls}">${escHtml(src)}</span></td></tr>`;
+    }).join('');
+
+    container.innerHTML = rows ? `
+      <p style="font-size:12px;font-weight:600;color:#8b949e;margin:0 0 6px 0;">Field coverage after last merge</p>
+      <table class="ops-coverage-table">
+        <thead><tr><th>field</th><th>source</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : '';
+  } catch (_) {}
 }
 
 // Start polling on page load

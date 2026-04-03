@@ -511,7 +511,7 @@
       "id": "M51",
       "title": "Deep crawl: async Apify job up to 100 pages per vendor",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "M46"
       ],
@@ -991,13 +991,19 @@
       "title": "Pricing n8n workflow: content-quality gate, nullable schema, llm_inferred source flag",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "notes": "Workflow spec authored by Claude Code at n8n/workflows/framework-pricing-enrichment.workflow.json. AF must build and deploy via n8n_adapter.py \u2014 do not hand-import the spec JSON directly. Schema, fields, and write contract are ready.",
+      "notes": "Workflow spec authored by Claude Code at n8n/workflows/framework-pricing-enrichment.workflow.json. AF must build and deploy via n8n_adapter.py \u2014 use N8N_CONTROL_SURFACE=rest_api and the full AF path: N8N_CONTROL_SURFACE=rest_api python3 /home/chris/SuccessByCS-Builder/Autonomous-Framework/scripts/tool_adapters/n8n_adapter.py upsert-workflow --workflow-file /home/chris/projects/CSP-Directory/n8n/workflows/framework-pricing-enrichment.workflow.json. Schema, fields, and write contract are ready.",
       "proof_description": "n8n workflow for pricing enrichment. Stage 1: crawl /pricing page with content-quality gate (min 200 visible-text words). Stage 2 fallback: LLM prompt with nullable tier fields, additionalProperties false, no URL citation required. Output: pricing array, has_public_pricing_page bool, free_trial bool, pricing_source scraped or llm_inferred. Writes via M64 validation endpoint. Tested on 10 vendors (5 with known public pricing, 5 without). LLM-inferred pricing shown on public site with llm_inferred label.",
       "proof_artifact": "runs/proofs/M65_pricing_n8n_workflow.json",
+      "evidence": {
+        "changed_files": [
+          "n8n/workflows/framework-pricing-enrichment.workflow.json",
+          "runs/proofs/M65_pricing_n8n_workflow.json"
+        ]
+      },
       "interaction_targets": [
         "system"
       ],
-      "status": "in_progress",
+      "status": "complete",
       "dependencies": [
         "M58",
         "M63",
@@ -1140,7 +1146,19 @@
       "title": "G2 enrichment via RapidAPI G2 Data Api (Chetan11-dev)",
       "delivery_type": "capability_delivering",
       "executor": "af",
-      "status": "not_started",
+      "status": "complete",
+      "completed_at": "2026-04-01T00:00:00+00:00",
+      "evidence": {
+        "proof_summary": "60 vendors run, 20 hits (33% hit rate). G2 fields (g2_url, g2_rating, g2_review_count, g2_market_segment, g2_categories) written to Supabase via /admin/enrich-write. Bonus fields (soc2, compliance, founded, hq_address) also populated from G2 data where available.",
+        "artifact_paths": [
+          "runs/proofs/M72_g2_rapidapi_enrichment.json"
+        ],
+        "changed_files": [
+          "n8n/workflows/csp-g2-enrichment.workflow.json",
+          "services/admin/admin_api.py",
+          "services/extraction/vendor_intel.py"
+        ]
+      },
       "dependencies": [
         "M50"
       ],
@@ -1231,6 +1249,232 @@
       "verify": [
         "python3 scripts/autonomous_audit.py"
       ]
+    },
+    {
+      "id": "M74",
+      "title": "Three-tier vendor site crawl as n8n/Apify pipeline (replace Python direct-HTTP)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M60",
+        "M72"
+      ],
+      "proof_description": "Replace the Python direct-HTTP vendor crawl (vendor_fetcher.py) with three dedicated n8n workflows, one per tier, ordered cheapest-first. Tier 1 (csp-crawl-tier1-direct): plain HTTP Request node \u2014 no Apify cost. Tier 2 (csp-crawl-tier2-rag): Apify RAG Web Browser \u2014 lightweight JS rendering. Tier 3 (csp-crawl-tier3-wcc): Apify Website Content Crawler with proxy \u2014 full stealth crawl. Python dispatch logic in vendor_fetcher.py: call Tier 1 first; escalate to Tier 2 if response is thin (< 200 words or missing og:site_name); escalate to Tier 3 if Tier 2 also fails. Also add csp-google-discovery n8n workflow (Apify Google Search Results Scraper) to replace direct SerpAPI calls in web_search.py. Tracxn enricher deprecated. Run end-to-end proof on 10 vendors.",
+      "acceptance_criteria": [
+        "csp-crawl-tier1-direct.workflow.json: n8n HTTP Request node fetches URL, extracts og:site_name + page text, returns {name, text, word_count, tier_used}",
+        "csp-crawl-tier2-rag.workflow.json: calls apify/rag-web-browser, same output contract as Tier 1",
+        "csp-crawl-tier3-wcc.workflow.json: calls apify/website-content-crawler with proxyConfiguration, same output contract",
+        "All three workflows share identical response schema: {vendor_name, website, name, pages, word_count, tier_used, ok}",
+        "vendor_fetcher.py: reads N8N_CRAWL_TIER1_WEBHOOK, N8N_CRAWL_TIER2_WEBHOOK, N8N_CRAWL_TIER3_WEBHOOK env vars",
+        "Python dispatch: Tier 1 first -> escalate to Tier 2 if word_count < 200 or name missing -> escalate to Tier 3 if Tier 2 word_count < 200",
+        "Direct HTTP fallback preserved when no N8N_CRAWL_TIER* webhooks configured",
+        "csp-google-discovery.workflow.json deployed: Apify Google Search Scraper -> filter candidates -> POST /admin/discovery-upsert",
+        "web_search.py delegates to N8N_DISCOVERY_WEBHOOK when set; falls back to existing SerpAPI logic",
+        "Domain name prefix stripping: get/try/use/my/the stripped from domain stem for name fallback",
+        "Tracxn n8n workflow marked active:false; tracxn_enricher.py has deprecation warning",
+        "End-to-end proof: 10 vendors crawled, tier_used distribution recorded, enriched fields written to cs_vendors"
+      ],
+      "proof_artifact": "runs/proofs/M74_n8n_crawl_pipeline.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_vendor_fetcher.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Three tiers ordered cheapest-first: (1) Direct HTTP \u2014 free, instant, works for ~60% of static sites; (2) Apify RAG Web Browser (apify/rag-web-browser) \u2014 ~/bin/bash.001/page, handles JS rendering; (3) Apify Website Content Crawler (apify/website-content-crawler) \u2014 ~/bin/bash.004/page, proxy+stealth for Cloudflare-protected sites. Escalation thresholds: word_count < 200 OR name not resolved from og:site_name/application-name. Tracxn broken: /d/companies/ URL scheme returns 404, CloudFront returns 403. Funding/stage data to be sourced via M75 Lusha enrichment instead."
+    },
+    {
+      "id": "M76",
+      "title": "Ops Enrichment Workbench \u2014 step-by-step enrichment UI with per-source result columns, RAG LLM extraction, and clean merge",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M72",
+        "M74"
+      ],
+      "prework_human_gates": [
+        "M74 MUST be complete and all three tier crawl workflows deployed and tested before M76 starts \u2014 verify with: SELECT COUNT(*) FROM vendor_pages WHERE vendor_website='https://gainsight.com' after a test Tier 3 run (must be >= 50 rows)",
+        "Set and test all six n8n webhook env vars: N8N_CRAWL_TIER1_WEBHOOK, N8N_CRAWL_TIER2_WEBHOOK, N8N_CRAWL_TIER3_WEBHOOK, N8N_DISCOVERY_WEBHOOK, N8N_FIRMOGRAPHIC_WEBHOOK, N8N_G2_WEBHOOK \u2014 test each with a dummy POST before ops page use",
+        "Run `ollama list` and confirm both mistral:latest and nomic-embed-text are installed. If nomic-embed-text missing: ollama pull nomic-embed-text",
+        "Enable pgvector extension in Supabase dashboard: Database \u2192 Extensions \u2192 search 'vector' \u2192 enable. OR run: CREATE EXTENSION IF NOT EXISTS vector via Supabase SQL editor"
+      ],
+      "proof_description": "Build a structured, operator-driven enrichment workbench in the ops admin page. Six independent step panels: (1) Google Discovery with configurable page depth, (2) Three-tier website crawl (Tier 1 HTTP / Tier 2 Apify RAG / Tier 3 Apify WCC) \u2014 each tier writes clean_text pages to vendor_pages table and results to its own crawl_tier{N}_result JSONB column, (3) Datagma firmographic enrichment writing to crawl_datagma_result, (4) G2 enrichment writing to crawl_g2_result, (5) LLM extraction via local Ollama (mistral:latest) using RAG over vendor_pages embeddings (nomic-embed-text + Supabase pgvector) writing to crawl_llm_result, (6) Clean merge module reading all crawl_*_result columns and writing winning values to main cs_vendors schema + source_field_map. No step overwrites another. Enhanced structured logging for all steps visible in real-time in the existing pipeline log panel. Prove end-to-end on Gainsight: all 6 steps, field coverage table, source_field_map.",
+      "acceptance_criteria": [
+        "pgvector extension enabled on Supabase project (verify: SELECT * FROM pg_extension WHERE extname='vector')",
+        "Schema migration applied cleanly and idempotently: all seven JSONB columns exist on cs_vendors (crawl_tier1_result, crawl_tier2_result, crawl_tier3_result, crawl_datagma_result, crawl_g2_result, crawl_llm_result, source_field_map)",
+        "vendor_pages table exists with UNIQUE(vendor_website, page_url) \u2014 upsert on re-crawl, no raw HTML stored",
+        "vendor_page_embeddings table exists with UNIQUE(vendor_website, page_url, chunk_index) and ivfflat index",
+        "New endpoint /admin/ops/store-crawl-result writes JSONB payload to specified crawl_*_result column only \u2014 does NOT call enrich-write, does NOT touch main schema columns",
+        "Tier 1/2/3 n8n workflows updated: pages written to vendor_pages via /admin/ops/store-pages; crawl result written to crawl_tier{N}_result via /admin/ops/store-crawl-result",
+        "Datagma workflow writes result to crawl_datagma_result via /admin/ops/store-crawl-result only \u2014 NOT to main cs_vendors columns directly",
+        "G2 workflow writes result to crawl_g2_result via /admin/ops/store-crawl-result only \u2014 NOT to main cs_vendors columns directly",
+        "No crawl step writes to any other step's crawl_*_result column \u2014 verified by inspecting each workflow's write node target",
+        "Tier 3 max_pages configurable from ops page (default 100, max 300)",
+        "All eight /admin/ops/* endpoints registered as pipeline specs in pipeline_control.py \u2014 each runs as a subprocess so progress streams to /admin/pipeline-log",
+        "services/ops/ops_logger.py: OpsLogger class with step_start, step_progress, step_done, step_error \u2014 emits structured {timestamp, phase, milestone, action, message, success} entries",
+        "services/enrichment/llm_extractor_ollama.py: callable as module function run_llm_extraction(vendor_website: str) -> dict \u2014 chunks vendor_pages, embeds with nomic-embed-text, searches pgvector, calls Mistral 4 times, returns crawl_llm_result payload",
+        "services/enrichment/merge_module.py: callable as module function run_merge(vendor_website: str) -> dict \u2014 reads all crawl_*_result columns, applies COALESCE-based priority rules per field, writes only non-null winning values to main columns, never overwrites existing value with null",
+        "LLM prompts output strict JSON only matching cs_vendors field names \u2014 invalid JSON responses logged and skipped, not raised as exceptions",
+        "Live log panel shows progress within 3 seconds of each event: chunk N/M for embeddings, per-field LLM results, per-field merge decisions",
+        "Ops page: 6 step panels, each with Run button, NZST last-run timestamp, and result table rendering after run completes",
+        "Step 2 panel shows per-vendor Tier 1/2/3 columns independently \u2014 re-running one tier does not clear another tier's column",
+        "Step 5 pre-run guard: if vendor_pages has fewer than 10 rows for the target vendor, Step 5 Run button is disabled and shows warning 'Run Step 2 first'",
+        "Proof: Gainsight 6-step run produces runs/proofs/M76_ops_enrichment_workbench.json with all required keys (see proof_artifact_schema)",
+        "LinkedIn enrichment excluded from this milestone"
+      ],
+      "proof_artifact": "runs/proofs/M76_ops_enrichment_workbench.json",
+      "proof_artifact_schema": {
+        "milestone_id": "M76",
+        "status": "pass|fail",
+        "completed_at": "ISO8601",
+        "vendor_tested": "Gainsight",
+        "step_configs": {
+          "discovery": {
+            "pages_per_query": 20
+          },
+          "tier_crawl": {
+            "max_pages": 100
+          },
+          "ollama": {
+            "model": "mistral:latest",
+            "embedding_model": "nomic-embed-text"
+          }
+        },
+        "step_results": {
+          "step_1": {
+            "status": "complete",
+            "candidates_found": "int"
+          },
+          "step_2": {
+            "status": "complete",
+            "tier_used": "tier3_wcc",
+            "pages_fetched": "int",
+            "word_count": "int",
+            "vendor_pages_rows": "int (must be >= 50)"
+          },
+          "step_3": {
+            "status": "complete",
+            "fields_populated": [
+              "founded",
+              "hq_address",
+              "..."
+            ]
+          },
+          "step_4": {
+            "status": "complete",
+            "g2_rating": "float",
+            "g2_review_count": "int"
+          },
+          "step_5": {
+            "status": "complete",
+            "embeddings_created": "int",
+            "llm_calls": 4,
+            "fields_extracted": "int (must be >= 5)"
+          },
+          "step_6": {
+            "status": "complete",
+            "fields_merged": "int (must be >= 10)",
+            "source_field_map": {}
+          }
+        },
+        "field_coverage_sample": [
+          {
+            "field": "name",
+            "value": "string",
+            "source": "tier1|tier2|tier3|datagma|g2|llm"
+          }
+        ],
+        "acceptance_criteria_met": [
+          "list of criteria strings"
+        ]
+      },
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 scripts/apply_schema_migration.py",
+        "python3 -m pytest tests/test_merge_module.py tests/test_llm_extractor_ollama.py tests/test_ops_endpoints.py -v",
+        "python3 scripts/check_ollama_models.py",
+        "python3 scripts/check_supabase_pgvector.py",
+        "python3 scripts/check_admin_endpoints.py",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "verify_scripts_to_create": [
+        "scripts/check_ollama_models.py \u2014 assert localhost:11434 reachable, mistral:latest and nomic-embed-text both present in ollama list",
+        "scripts/check_supabase_pgvector.py \u2014 assert vector extension enabled, vendor_pages and vendor_page_embeddings tables exist and insertable",
+        "scripts/check_admin_endpoints.py \u2014 POST to each /admin/ops/* endpoint with minimal payload, assert 2xx response"
+      ],
+      "notes": "M75 removed from dependencies (triad finding B2): M76 explicitly excludes LinkedIn enrichment; M75 workflows are in progress but not required for M76 to run. LinkedIn deferred to M78 pending M76 proof results. LLM architecture: Ollama local on WSL (localhost:11434) \u2014 Python is bridge to Supabase cloud (outbound HTTPS, no tunnel). AF separation note: Python admin API calls n8n webhooks for steps 2-4 \u2014 this is a pragmatic exception to the AF control-plane/integration separation rule, documented here: admin API is operator-facing control surface, not AF framework orchestration; n8n is being called as a managed side-effect not as a governed integration surface. Acceptable for local operator tool; document exception in kb.md. enrich-write NOT modified (triad finding Risk #1): new /admin/ops/store-crawl-result endpoint handles all crawl_*_result writes; existing /admin/enrich-write continues to handle merge module writes to main columns. Merge null-preservation (triad finding Risk #2): implemented as COALESCE \u2014 UPDATE cs_vendors SET field = COALESCE(new_value, field) \u2014 never overwrites existing value with null. pgvector ivfflat index (triad finding Risk #3): proof run with single vendor (~250 vectors) will show ~15ms query latency; this is expected and correct \u2014 ivfflat underperforms sequential scan below ~500 vectors; do not modify index. Tier 3 depth 100 pages for reliability; operator can increase via ops page."
+    },
+    {
+      "id": "M77",
+      "title": "System architecture diagram \u2014 accurate Mermaid + PNG of full CSP Directory stack",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M76"
+      ],
+      "proof_description": "Produce a single high-resolution PNG system architecture diagram (2400x1800px minimum) from a committed Mermaid source file. Diagram must accurately cover all 6 layers: (1) Operator/ops page UI, (2) local Python services, (3) local Ollama models, (4) n8n Cloud workflows, (5) external APIs (Apify, RapidAPI), (6) Supabase tables. All data flows labelled. No aspirational components \u2014 diagram reflects M76-confirmed architecture only.",
+      "acceptance_criteria": [
+        "docs/architecture/system_architecture.mmd committed with valid Mermaid syntax",
+        "docs/architecture/system_architecture.png committed at 2400x1800px minimum",
+        "All 6 layers present: UI, local Python, Ollama, n8n, external APIs, Supabase",
+        "All n8n workflows named individually (not generic 'n8n')",
+        "Supabase tables listed individually (cs_vendors, vendor_pages, vendor_page_embeddings, cs_vendor_candidates, integration_catalog)",
+        "Ollama models named explicitly (mistral:latest, nomic-embed-text)",
+        "All data flows shown with labelled arrows",
+        "Diagram regenerates cleanly from .mmd source via mmdc CLI",
+        "docs/kb.md updated to reference diagram location"
+      ],
+      "proof_artifact": "runs/proofs/M77_system_architecture.json",
+      "interaction_targets": [
+        "human"
+      ],
+      "verify": [
+        "mmdc -i docs/architecture/system_architecture.mmd -o docs/architecture/system_architecture.png -w 2400 -H 1800"
+      ],
+      "notes": "Mermaid CLI install: npm install -g @mermaid-js/mermaid-cli. Use flowchart TD with subgraphs per layer. Colour-code by layer. Depends on M76 being confirmed so diagram reflects actual not aspirational architecture."
+    },
+    {
+      "id": "M78",
+      "title": "LinkedIn enrichment \u2014 ceo_linkedin, linkedin_url, leadership (deferred pending M76 proof)",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "not_started",
+      "dependencies": [
+        "M76"
+      ],
+      "proof_description": "Build csp-linkedin-company-enrichment n8n workflow using Apify LinkedIn Company Scraper (data-slayer/linkedin-company-scraper \u2014 cookieless, 900+ fields, actively maintained). Input: vendor website domain. Step 1: derive LinkedIn company URL from domain using Google search (\"site:linkedin.com/company {domain}\") via Apify Google Search. Step 2: scrape company LinkedIn page. Extract and safe-upsert: ceo_name/founder (from company executives section), founded, hq_address, company_size (headcount range), funding_stage (from latest funding round), total_funding (sum of rounds). Write via /admin/enrich-write. Only overwrites fields currently null/empty in cs_vendors. Run against all vendors with include_in_directory=true; prove fields populated in Supabase.",
+      "acceptance_criteria": [
+        "csp-linkedin-company-enrichment.workflow.json deployed to n8n cloud",
+        "Webhook input: { vendors: [{vendor_name, website}], apify_token? }",
+        "Step 1 node: derives LinkedIn company URL \u2014 first checks if ceo_linkedin or known linkedin_url stored, else Google search fallback",
+        "Step 2 node: calls data-slayer/linkedin-company-scraper (or dev_fusion/linkedin-company-scraper) with LinkedIn company URL",
+        "Extracts: founded, hq_address (city/region/country), company_size (headcount), funding_stage, total_funding, ceo_name (from executives)",
+        "Safe-upsert via /admin/enrich-write: skips fields already populated in cs_vendors",
+        "Handles LinkedIn URL not found gracefully (logs miss, continues batch)",
+        "Handles Apify 4xx/5xx and rate limits without failing full batch",
+        "lusha_enricher.py renamed to linkedin_company_enricher.py; mirrors workflow extraction logic",
+        "new field: company_size text added to VendorIntelligence, cs_vendors schema, admin_api.py",
+        "Proof: 20 vendors enriched; show before/after for ceo_name, founded, hq_address, funding_stage",
+        "Cost per vendor logged (Apify credits used)"
+      ],
+      "proof_artifact": "runs/proofs/M78_linkedin_enrichment.json",
+      "interaction_targets": [
+        "system",
+        "human"
+      ],
+      "verify": [
+        "python3 -m pytest tests/test_lusha_enricher.py -v",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "DEFERRED: Excluded from M76 by design decision. The 100-page website crawl (M76 Step 2) surfaces ceo_name and leadership from /about and /team pages without API cost. The only unique LinkedIn value is personal profile URLs (ceo_linkedin) \u2014 not required for directory at this stage. Gate: run M76 proof (single vendor Gainsight), measure ceo_name/leadership miss rate. Only proceed with M78 if miss rate is unacceptably high. If M78 proceeds: use LinkedIn Data API on RapidAPI (linkedin-data-api.p.rapidapi.com) \u2014 NOT Apify LinkedIn Company Scraper (two-step approach adds failure mode). Firmographic fields (founded, HQ, funding) are now covered by M75 Datagma \u2014 M78 scope is limited to: linkedin_url, ceo_linkedin, leadership array."
     }
   ]
 }

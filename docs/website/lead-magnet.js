@@ -1,7 +1,8 @@
 const LEAD_MAGNET_CAPTURE_VERSION = "m24a.v1";
 const LEAD_MAGNET_STORAGE_KEY = "successbycs_lead_magnet_intake";
-const LEAD_CAPTURE_API_PATH = "/api/lead-capture";
+const LEAD_CAPTURE_API_URL = "https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake";
 const LEAD_CAPTURE_API_FALLBACK_BASE = "http://127.0.0.1:8787";
+const LEAD_CAPTURE_API_PATH = "/api/lead-capture";
 
 document.addEventListener("DOMContentLoaded", () => {
   ensureLeadMagnetModal();
@@ -296,7 +297,7 @@ async function persistLeadMagnetPayload(payload) {
 }
 
 function collectLeadCaptureEndpoints() {
-  const endpoints = new Set([new URL(LEAD_CAPTURE_API_PATH, window.location.origin).toString()]);
+  const endpoints = new Set([LEAD_CAPTURE_API_URL]);
   endpoints.add(`${LEAD_CAPTURE_API_FALLBACK_BASE}${LEAD_CAPTURE_API_PATH}`);
   return Array.from(endpoints);
 }

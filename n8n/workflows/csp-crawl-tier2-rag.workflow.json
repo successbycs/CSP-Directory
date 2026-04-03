@@ -1,0 +1,75 @@
+{
+  "name": "CSP Crawl Tier 2 — Apify RAG Web Browser",
+  "meta": {
+    "description": "Tier 2 site crawl: Apify RAG Web Browser (~$0.001/page). Handles JS-rendered SPAs and lazy-loaded content. Same name cleaning and response contract as Tier 1. Caller escalates to Tier 3 if word_count < 200. Part of M74 three-tier crawl architecture."
+  },
+  "nodes": [
+    {
+      "id": "webhook-tier2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "path": "csp-crawl-tier2-rag",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "validate-input",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token is required');\nreturn [{ json: { website, vendor_name: body.vendor_name || '', apify_token } }];"
+      }
+    },
+    {
+      "id": "run-rag-browser",
+      "name": "Run RAG Web Browser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/apify~rag-web-browser/run-sync-get-dataset-items?token={{ $json.apify_token }}&timeout=60",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ startUrls: [{ url: $json.website }], maxCrawlPages: 1 }) }}",
+        "options": { "timeout": 90000 }
+      }
+    },
+    {
+      "id": "extract-name-text",
+      "name": "Extract Name + Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const website = $('Validate Input').first().json.website;\nconst inputName = $('Validate Input').first().json.vendor_name || '';\nconst results = $input.first().json;\nconst items = Array.isArray(results) ? results : [results];\nconst first = items[0] || {};\n\n// RAG returns: text, markdown, metadata.title, metadata.description\nconst rawText = first.text || first.markdown || '';\nconst rawTitle = first.metadata?.title || first.title || '';\n\nconst TAGLINE_SUFFIXES = new Set(['analytics','automation','dashboard','insights','intelligence','management','monitoring','platform','reporting','software','solution','solutions','tracking']);\nfunction isTagline(text) {\n  const lower = text.toLowerCase();\n  const last = lower.split(/\\s+/).pop();\n  if (TAGLINE_SUFFIXES.has(last)) return true;\n  if (/\\bai[- ]powered\\b|\\b\\w+-powered\\b|\\bpowered by\\b/.test(lower)) return true;\n  if (/\\b\\d{4}\\b/.test(lower)) return true;\n  return false;\n}\nfunction cleanCandidate(raw) {\n  let s = (raw || '').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();\n  if (!s) return '';\n  for (const sep of [' | ',' - ',' – ',' — ',': ']) {\n    if (s.includes(sep)) {\n      for (const part of s.split(sep)) {\n        const c = cleanCandidate(part);\n        if (c) return c;\n      }\n    }\n  }\n  if (isTagline(s)) return '';\n  if (s.split(/\\s+/).length > 5) return '';\n  if (s.length > 40) return '';\n  return s;\n}\nfunction domainStem(url) {\n  try {\n    const host = new URL(url).hostname.replace(/^www\\./, '');\n    const base = host.split('.')[0].toLowerCase();\n    for (const p of ['get','try','use','my','the']) {\n      if (base.startsWith(p) && base.length - p.length >= 4)\n        return base.slice(p.length).charAt(0).toUpperCase() + base.slice(p.length+1);\n    }\n    return base.charAt(0).toUpperCase() + base.slice(1);\n  } catch { return ''; }\n}\n\nlet name = cleanCandidate(rawTitle) || cleanCandidate(inputName) || domainStem(website);\nconst word_count = rawText ? rawText.split(/\\s+/).length : 0;\n\nreturn [{ json: { website, name, word_count, text: rawText.slice(0, 10000), tier_used: 'tier2_rag', ok: word_count > 0 } }];"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
+    "Validate Input": { "main": [[{ "node": "Run RAG Web Browser", "type": "main", "index": 0 }]] },
+    "Run RAG Web Browser": { "main": [[{ "node": "Extract Name + Text", "type": "main", "index": 0 }]] },
+    "Extract Name + Text": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true },
+  "staticData": null,
+  "pinData": {}
+}

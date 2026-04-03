@@ -528,6 +528,10 @@ class VendorIntelligence:
     g2_review_count: int | None = field(default=None)
     g2_market_segment: str = field(default="")
     g2_categories: list[str] = field(default_factory=list)
+    # M75: firmographic enrichment fields (Datagma / LinkedIn)
+    company_size: str = field(default="")
+    revenue: str = field(default="")
+    linkedin_url: str = field(default="")
 
     def __post_init__(self) -> None:
         """Normalize structured buyer-persona enrichment into a stable list-of-dicts shape."""

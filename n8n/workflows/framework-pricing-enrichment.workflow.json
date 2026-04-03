@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Content quality gate: count visible words in response body\n// Pass-through all upstream fields; add quality gate flags\n\nconst item = $input.first().json;\n\n// Strip HTML tags to count visible text words\nconst body = String(item.$response?.body || item.body || '');\nconst visibleText = body\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&[a-z]+;/gi, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst wordCount = visibleText ? visibleText.split(' ').filter(w => w.length > 1).length : 0;\nconst statusCode = item.$response?.statusCode || item.statusCode || 0;\nconst hasEnoughContent = wordCount >= 200 && statusCode < 400;\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    pricing_url: `${item.website}/pricing`,\n    status_code: statusCode,\n    word_count: wordCount,\n    has_enough_content: hasEnoughContent,\n    visible_text: visibleText.slice(0, 8000),\n  }\n}];"
+        "jsCode": "// Content quality gate: count visible words in response body\n// Pass-through all upstream fields; add quality gate flags\n\nconst item = $input.first().json;\n\n// Vendor fields come from Split Vendors, not the HTTP response\nconst vendorNode = $('Split Vendors').item;\nconst vendorName = vendorNode ? vendorNode.json.vendor_name : '';\nconst website = vendorNode ? vendorNode.json.website : '';\n\n// Strip HTML tags to count visible text words\nconst body = String(item.data || item.$response?.body || item.body || '');\nconst visibleText = body\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&[a-z]+;/gi, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\nconst wordCount = visibleText ? visibleText.split(' ').filter(w => w.length > 1).length : 0;\nconst statusCode = item.$response?.statusCode || item.statusCode || 0;\nconst hasEnoughContent = wordCount >= 200 && statusCode < 400;\n\nreturn [{\n  json: {\n    vendor_name: vendorName,\n    website: website,\n    pricing_url: `${website}/pricing`,\n    status_code: statusCode,\n    word_count: wordCount,\n    has_enough_content: hasEnoughContent,\n    visible_text: visibleText.slice(0, 8000),\n  }\n}];"
       },
       "id": "a1b2c3d4-0004-0004-0004-000000000004",
       "name": "Content Quality Gate",
@@ -140,14 +140,14 @@
       "position": [1200, 160],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "openai-api-key",
+          "id": "MVBsPMQxuGr6go7g",
           "name": "OpenAI API Key"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Parse OpenAI response and normalise to write contract\nconst item = $input.first().json;\n\nlet extracted = {};\ntry {\n  const content = item.choices?.[0]?.message?.content || '{}';\n  extracted = JSON.parse(content);\n} catch (e) {\n  // leave extracted empty\n}\n\nreturn [{\n  json: {\n    vendor_name: item.vendor_name,\n    website: item.website,\n    has_public_pricing_page: extracted.has_public_pricing_page ?? false,\n    pricing: extracted.pricing || [],\n    free_trial: extracted.free_trial ?? null,\n    pricing_source: 'llm_inferred',\n  }\n}];"
+        "jsCode": "// Parse OpenAI response and normalise to write contract\nconst item = $input.first().json;\n\n// Vendor fields come from Split Vendors\nconst vendorNode = $('Split Vendors').item;\nconst vendorName = vendorNode ? vendorNode.json.vendor_name : '';\nconst website = vendorNode ? vendorNode.json.website : '';\n\nlet extracted = {};\ntry {\n  const content = item.choices?.[0]?.message?.content || '{}';\n  extracted = JSON.parse(content);\n} catch (e) {\n  // leave extracted empty\n}\n\nreturn [{\n  json: {\n    vendor_name: vendorName,\n    website: website,\n    has_public_pricing_page: extracted.has_public_pricing_page ?? false,\n    pricing: extracted.pricing || [],\n    free_trial: extracted.free_trial ?? null,\n    pricing_source: 'llm_inferred',\n  }\n}];"
       },
       "id": "a1b2c3d4-0008-0008-0008-000000000008",
       "name": "Normalise LLM Response",
@@ -157,54 +157,8 @@
     },
     {
       "parameters": {
-        "mode": "passThrough",
-        "output": "first"
-      },
-      "id": "a1b2c3d4-0009-0009-0009-000000000009",
-      "name": "Merge",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [1680, 0]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $vars.ADMIN_API_BASE_URL }}/admin/enrich-write",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "X-Admin-Token",
-              "value": "={{ $vars.ADMIN_API_TOKEN }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"website\": \"{{ $json.website }}\",\n  \"vendor_name\": \"{{ $json.vendor_name }}\",\n  \"has_public_pricing_page\": {{ $json.has_public_pricing_page }},\n  \"pricing\": {{ JSON.stringify($json.pricing || []) }},\n  \"free_trial\": {{ $json.free_trial }},\n  \"pricing_source\": \"{{ $json.pricing_source }}\"\n}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          },
-          "timeout": 15000
-        }
-      },
-      "id": "a1b2c3d4-0010-0010-0010-000000000010",
-      "name": "Write to Admin API",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1920, 0]
-    },
-    {
-      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, pricing_source: $json.pricing_source }) }}",
+        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, website: $json.website, has_public_pricing_page: $json.has_public_pricing_page, pricing: $json.pricing, free_trial: $json.free_trial, pricing_source: $json.pricing_source }) }}",
         "options": {}
       },
       "id": "a1b2c3d4-0011-0011-0011-000000000011",
@@ -243,7 +197,7 @@
     },
     "Extract Pricing from HTML": {
       "main": [
-        [{ "node": "Merge", "type": "main", "index": 0 }]
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
       ]
     },
     "LLM Extract Pricing": {
@@ -252,16 +206,6 @@
       ]
     },
     "Normalise LLM Response": {
-      "main": [
-        [{ "node": "Merge", "type": "main", "index": 1 }]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [{ "node": "Write to Admin API", "type": "main", "index": 0 }]
-      ]
-    },
-    "Write to Admin API": {
       "main": [
         [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
       ]

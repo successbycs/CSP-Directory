@@ -1,0 +1,127 @@
+{
+  "name": "CSP LinkedIn Enrichment",
+  "meta": {
+    "description": "LinkedIn company enrichment via LinkedIn Data API on RapidAPI. Looks up company by domain → returns ceo_linkedin, linkedin_url, leadership array. Safe-upsert via /admin/enrich-write. Part of M75. Pre-requisite: subscribe to linkedin-data-api.p.rapidapi.com."
+  },
+  "nodes": [
+    {
+      "id": "webhook-linkedin",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "path": "csp-linkedin-enrichment",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "split-vendors",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '', linkedin_url: body.linkedin_url || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst admin_url = (body.admin_url || process.env.ADMIN_BASE_URL || 'http://127.0.0.1:8787').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', linkedin_url: v.linkedin_url || '', rapidapi_key, admin_url } }));"
+      }
+    },
+    {
+      "id": "search-linkedin-company",
+      "name": "Search LinkedIn Company",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "https://linkedin-data-api.p.rapidapi.com/get-company-by-domain",
+        "queryParameters": {
+          "parameters": [
+            { "name": "domain", "value": "={{ new URL($json.website).hostname.replace(/^www\\./, '') }}" }
+          ]
+        },
+        "headers": {
+          "parameters": [
+            { "name": "x-rapidapi-host", "value": "linkedin-data-api.p.rapidapi.com" },
+            { "name": "x-rapidapi-key", "value": "={{ $json.rapidapi_key }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "extract-linkedin-fields",
+      "name": "Extract LinkedIn Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst website = $('Split Vendors').first().json.website;\nconst vendor_name = $('Split Vendors').first().json.vendor_name;\n\nconst company = data.data || data.company || data || {};\nconst extracted = {};\n\n// Company LinkedIn URL\nconst linkedinUrl = company.linkedin_url || company.linkedInUrl || company.url;\nif (linkedinUrl && linkedinUrl.includes('linkedin.com')) {\n  extracted.linkedin_url = linkedinUrl;\n}\n\n// Extract executives / leadership\nconst employees = company.employees || company.executives || company.keyPeople || [];\nconst leadership = [];\nlet ceo_linkedin = '';\nlet ceo_name = '';\n\nfor (const person of employees) {\n  const title = person.title || person.headline || '';\n  const name = person.name || person.full_name || [person.firstName, person.lastName].filter(Boolean).join(' ');\n  const profileUrl = person.linkedin_url || person.profile_url || person.url || '';\n  if (name) {\n    leadership.push({ name, title, linkedin_url: profileUrl });\n    if (!ceo_name && /ceo|chief executive|founder|co.?founder/i.test(title)) {\n      ceo_name = name;\n      ceo_linkedin = profileUrl;\n    }\n  }\n}\n\nif (leadership.length) extracted.leadership = leadership;\nif (ceo_name) extracted.ceo_name = ceo_name;\nif (ceo_linkedin) extracted.ceo_linkedin = ceo_linkedin;\n\nconst has_data = Object.keys(extracted).length > 0;\nreturn [{ json: { website, vendor_name, extracted, has_data, pipeline_name: 'csp-linkedin-enrichment' } }];"
+      }
+    },
+    {
+      "id": "has-data",
+      "name": "Has Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.has_data }}", "value2": true }]
+        }
+      }
+    },
+    {
+      "id": "enrich-write",
+      "name": "Enrich Write",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Split Vendors').first().json.admin_url }}/admin/enrich-write",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ website: $json.website, vendor_name: $json.vendor_name, pipeline_name: $json.pipeline_name, ...$json.extracted }) }}"
+      }
+    },
+    {
+      "id": "respond-miss",
+      "name": "Respond Miss",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 420],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": false, \"reason\": \"no_linkedin_data\", \"website\": \"{{ $json.website }}\" }"
+      }
+    },
+    {
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 200],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, website: $('Extract LinkedIn Fields').first().json.website, fields_written: Object.keys($('Extract LinkedIn Fields').first().json.extracted) }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Split Vendors", "type": "main", "index": 0 }]] },
+    "Split Vendors": { "main": [[{ "node": "Search LinkedIn Company", "type": "main", "index": 0 }]] },
+    "Search LinkedIn Company": { "main": [[{ "node": "Extract LinkedIn Fields", "type": "main", "index": 0 }]] },
+    "Extract LinkedIn Fields": { "main": [[{ "node": "Has Data?", "type": "main", "index": 0 }]] },
+    "Has Data?": {
+      "main": [
+        [{ "node": "Enrich Write", "type": "main", "index": 0 }],
+        [{ "node": "Respond Miss", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enrich Write": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true },
+  "staticData": null,
+  "pinData": {}
+}
