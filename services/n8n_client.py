@@ -26,6 +26,17 @@ WEBHOOK_G2_ENRICHMENT = "framework-g2-enrichment"
 WEBHOOK_PRICING_ENRICHMENT = "framework-pricing-enrichment"
 WEBHOOK_LEAD_CAPTURE_INTAKE = "csp-lead-capture-intake"
 
+# CSP-specific enrichment webhooks (M70 migration)
+WEBHOOK_CSP_G2_ENRICHMENT = "csp-g2-enrichment"
+WEBHOOK_CSP_PRICING_ENRICHMENT = "csp-pricing-enrichment"
+WEBHOOK_CSP_TRACXN_ENRICHMENT = "csp-tracxn-enrichment"
+WEBHOOK_CSP_FIRMOGRAPHIC_ENRICHMENT = "csp-firmographic-enrichment"
+WEBHOOK_CSP_LINKEDIN_ENRICHMENT = "csp-linkedin-enrichment"
+WEBHOOK_CSP_GOOGLE_DISCOVERY = "csp-google-discovery"
+WEBHOOK_CSP_CRAWL_TIER1 = "csp-crawl-tier1-direct"
+WEBHOOK_CSP_CRAWL_TIER2 = "csp-crawl-tier2-rag"
+WEBHOOK_CSP_CRAWL_TIER3 = "csp-crawl-tier3-wcc"
+
 
 def get_n8n_base_url() -> str:
     """Return the n8n base URL from env, raising if not set."""

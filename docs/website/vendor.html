@@ -472,6 +472,55 @@
         padding: 20px;
       }
     }
+
+    /* ── Feedback modal ── */
+    .feedback-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .feedback-overlay.open { display: flex; }
+    .feedback-modal {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 28px 24px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.18);
+      display: grid;
+      gap: 16px;
+    }
+    .feedback-modal h2 { font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0; }
+    .feedback-modal p.sub { font-size: 13px; color: var(--text-light); margin: 0; }
+    .feedback-field { display: grid; gap: 5px; }
+    .feedback-field label { font-size: 13px; font-weight: 600; color: var(--text-mid); }
+    .feedback-field input,
+    .feedback-field select,
+    .feedback-field textarea {
+      font-family: inherit;
+      font-size: 14px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-dark);
+      background: #fafafa;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .feedback-field input:focus,
+    .feedback-field select:focus,
+    .feedback-field textarea:focus { border-color: var(--green-500); background: #fff; }
+    .feedback-field textarea { resize: vertical; min-height: 90px; }
+    .feedback-field input[readonly] { color: var(--text-light); cursor: default; }
+    .feedback-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .feedback-status { font-size: 13px; padding: 8px 12px; border-radius: 8px; display: none; }
+    .feedback-status.success { display: block; background: var(--green-50); color: var(--green-700); border: 1px solid var(--green-100); }
+    .feedback-status.error { display: block; background: #fff0f0; color: #b91c1c; border: 1px solid #fecaca; }
   </style>
 </head>
 <body>
@@ -483,6 +532,42 @@
   <main class="page">
     <section id="vendor-profile" class="profile-state">Loading vendor profile...</section>
   </main>
+
+  <!-- Vendor feedback modal -->
+  <div id="feedback-overlay" class="feedback-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <div class="feedback-modal">
+      <div>
+        <h2 id="feedback-title">Suggest an edit</h2>
+        <p class="sub">Help us keep this profile accurate. We review every submission.</p>
+      </div>
+      <div class="feedback-field">
+        <label>Vendor</label>
+        <input type="text" id="feedback-vendor" readonly>
+      </div>
+      <div class="feedback-field">
+        <label for="feedback-type">Feedback type</label>
+        <select id="feedback-type">
+          <option value="data_correction">Data correction</option>
+          <option value="missing_info">Missing information</option>
+          <option value="suggestion">Suggestion</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="feedback-field">
+        <label for="feedback-message">Your feedback <span style="color:#b91c1c">*</span></label>
+        <textarea id="feedback-message" placeholder="Describe what's wrong or what should be added…"></textarea>
+      </div>
+      <div class="feedback-field">
+        <label for="feedback-email">Your email <span style="color:var(--text-light);font-weight:400">(optional — only if you'd like a reply)</span></label>
+        <input type="email" id="feedback-email" placeholder="you@example.com">
+      </div>
+      <div id="feedback-status" class="feedback-status"></div>
+      <div class="feedback-actions">
+        <button class="button button-secondary" id="feedback-cancel" type="button">Cancel</button>
+        <button class="button button-primary" id="feedback-submit" type="button">Send feedback</button>
+      </div>
+    </div>
+  </div>
 
   <script src="./vendor.js"></script>
 </body>

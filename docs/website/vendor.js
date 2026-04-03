@@ -89,6 +89,7 @@ function renderVendor(container, vendor) {
         <div class="hero-actions">
           ${website ? `<a class="button button-primary" href="${escapeAttribute(website)}" target="_blank" rel="noreferrer">Visit website</a>` : ""}
           <a class="button button-secondary" href="./browse.html">Back to browse</a>
+          <button class="button button-secondary" type="button" onclick="openFeedbackModal(${JSON.stringify(escapeHtml(vendorName))})">Suggest an edit</button>
         </div>
       </div>
       <aside class="hero-side">
@@ -191,6 +192,14 @@ function renderVendor(container, vendor) {
           ${renderEvidenceList(vendor.evidence_urls)}
         </section>
       </aside>
+    </section>
+
+    <section class="section-card" style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div>
+        <p class="eyebrow">Improve this profile</p>
+        <p style="font-size:14px;color:var(--text-mid);margin-top:4px;">Spotted something wrong or missing? Let us know — we review every submission.</p>
+      </div>
+      <button class="button button-secondary" type="button" onclick="openFeedbackModal(${JSON.stringify(escapeHtml(vendorName))})">Suggest an edit</button>
     </section>
   `;
 }
@@ -475,4 +484,78 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value);
+}
+
+// ── Vendor feedback modal ─────────────────────────────────────────────────────
+
+const FEEDBACK_WEBHOOK_URL = "https://successbycs.app.n8n.cloud/webhook/csp-vendor-feedback";
+
+function openFeedbackModal(vendorName) {
+  document.getElementById("feedback-vendor").value = vendorName;
+  document.getElementById("feedback-type").value = "data_correction";
+  document.getElementById("feedback-message").value = "";
+  document.getElementById("feedback-email").value = "";
+  const status = document.getElementById("feedback-status");
+  status.className = "feedback-status";
+  status.textContent = "";
+  document.getElementById("feedback-submit").disabled = false;
+  document.getElementById("feedback-overlay").classList.add("open");
+  document.getElementById("feedback-message").focus();
+}
+
+function closeFeedbackModal() {
+  document.getElementById("feedback-overlay").classList.remove("open");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("feedback-cancel").addEventListener("click", closeFeedbackModal);
+  document.getElementById("feedback-overlay").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeFeedbackModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeFeedbackModal();
+  });
+  document.getElementById("feedback-submit").addEventListener("click", submitFeedback);
+});
+
+async function submitFeedback() {
+  const vendor = document.getElementById("feedback-vendor").value.trim();
+  const type = document.getElementById("feedback-type").value;
+  const message = document.getElementById("feedback-message").value.trim();
+  const email = document.getElementById("feedback-email").value.trim();
+  const status = document.getElementById("feedback-status");
+  const btn = document.getElementById("feedback-submit");
+
+  if (!message) {
+    status.className = "feedback-status error";
+    status.textContent = "Please describe your feedback before submitting.";
+    return;
+  }
+
+  btn.disabled = true;
+  status.className = "feedback-status";
+  status.textContent = "";
+
+  try {
+    const resp = await fetch(FEEDBACK_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vendor_name: vendor,
+        feedback_type: type,
+        message,
+        submitter_email: email || null,
+        source_url: window.location.href,
+      }),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    status.className = "feedback-status success";
+    status.textContent = "Thanks — your feedback has been received and we'll review it shortly.";
+    document.getElementById("feedback-message").value = "";
+    document.getElementById("feedback-email").value = "";
+  } catch (err) {
+    status.className = "feedback-status error";
+    status.textContent = "Something went wrong. Please try again or email chris@successbycs.com.";
+    btn.disabled = false;
+  }
 }

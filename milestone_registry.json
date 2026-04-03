@@ -511,7 +511,7 @@
       "id": "M51",
       "title": "Deep crawl: async Apify job up to 100 pages per vendor",
       "delivery_type": "capability_delivering",
-      "status": "in_progress",
+      "status": "blocked",
       "dependencies": [
         "M46"
       ],
@@ -1091,7 +1091,7 @@
       "id": "M70",
       "title": "Refactor Python enrichment steps to n8n workflows",
       "delivery_type": "capability_delivering",
-      "status": "not_started",
+      "status": "in_progress",
       "dependencies": [
         "M50"
       ],
