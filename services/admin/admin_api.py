@@ -172,6 +172,9 @@ def build_admin_app(
         if method == "POST" and path == "/admin/pipelines/run":
             payload = _parse_action_payload(environ)
             return _pipeline_run_response(start_response, trigger_pipeline_fn, payload)
+        if method == "POST" and path == "/admin/pipelines/reset":
+            payload = _parse_action_payload(environ)
+            return _pipeline_reset_response(start_response, payload)
         if method == "POST" and path == "/admin/ops/store-crawl-result":
             payload = _parse_enrich_write_payload(environ)
             return _store_crawl_result_response(start_response, payload)
@@ -719,6 +722,19 @@ def _pipeline_run_response(
         return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
     status = "200 OK" if result.get("ok", True) else "409 Conflict"
     return _json_response(start_response, result, status=status)
+
+
+def _pipeline_reset_response(start_response, payload: dict[str, str]):
+    """Force a stuck pipeline back to idle/failed so it can be re-triggered."""
+    pipeline_id = payload.get("pipeline_id", "").strip()
+    if not pipeline_id:
+        return _json_response(start_response, {"ok": False, "error": "pipeline_id_required"}, status="400 Bad Request")
+    try:
+        result = pipeline_control.reset_pipeline_state(pipeline_id)
+    except Exception as error:
+        logger.exception("Pipeline reset failed")
+        return _json_response(start_response, {"ok": False, "error": str(error)}, status="500 Internal Server Error")
+    return _json_response(start_response, result)
 
 
 def _run_publish_directory() -> dict[str, Any]:

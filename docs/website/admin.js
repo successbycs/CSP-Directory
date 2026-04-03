@@ -806,6 +806,7 @@ function renderPipelines() {
             <div class="actions">
               <button class="action-button action-primary" data-pipeline-action="run" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}" ${status === "running" ? "disabled" : ""}>Run</button>
               <button class="action-button action-secondary" data-pipeline-action="refresh">Refresh</button>
+              ${status === "running" ? `<button class="action-button action-danger" data-pipeline-action="reset" data-pipeline-id="${escapeAttribute(pipeline.pipeline_id || "")}">Reset</button>` : ""}
             </div>
           </td>
           <td><pre class="pipeline-progress">${escapeHtml(progressText)}</pre></td>
@@ -852,10 +853,29 @@ async function handlePipelineTableClick(event) {
     await refreshPipelines();
     return;
   }
+  const pipelineId = button.dataset.pipelineId;
+
+  if (action === "reset") {
+    if (!pipelineId) return;
+    button.disabled = true;
+    button.textContent = "Resetting…";
+    try {
+      await fetchJson("/admin/pipelines/reset", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({pipeline_id: pipelineId}),
+      });
+    } catch (error) {
+      window.alert(`Pipeline reset failed: ${error.message}`);
+    } finally {
+      await refreshPipelines();
+    }
+    return;
+  }
+
   if (action !== "run") {
     return;
   }
-  const pipelineId = button.dataset.pipelineId;
   if (!pipelineId) {
     return;
   }
@@ -1230,6 +1250,31 @@ async function opsRunStep(btn) {
     }
   } catch (err) {
     alert(`Step trigger failed: ${err.message}`);
+  } finally {
+    btn.textContent = orig;
+    btn.disabled = false;
+  }
+}
+
+async function opsRunBatch(btn) {
+  const limitInput = document.getElementById('ops-step7-limit');
+  const limit = limitInput ? parseInt(limitInput.value, 10) || 0 : 0;
+  const statusEl = document.getElementById('ops-step7-status');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'Starting…';
+  if (statusEl) statusEl.textContent = '';
+  try {
+    const body = {pipeline_id: 'ops_llm_enrichment_batch'};
+    if (limit > 0) body.limit = limit;
+    await fetchJson('/admin/pipelines/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+    if (statusEl) statusEl.textContent = `Batch triggered (limit: ${limit || 'all'}) — monitor Pipeline Log below`;
+  } catch (err) {
+    alert(`Batch enrichment failed: ${err.message}`);
   } finally {
     btn.textContent = orig;
     btn.disabled = false;

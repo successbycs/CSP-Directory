@@ -121,6 +121,18 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
         "description": "Merge all crawl_*_result columns into main cs_vendors schema columns using priority rules. Writes source_field_map.",
         "command": ["-m", "services.ops.run_merge"],
     },
+    {
+        "pipeline_id": "ops_llm_enrichment_batch",
+        "name": "Step 7 — Batch LLM Enrichment (GPT-4o)",
+        "description": "Run crawl → embed → GPT-4o RAG extraction for all vendors not yet enriched. Updates directory_dataset.json incrementally. Falls back to local Ollama if available.",
+        "command": ["scripts/run_batch_enrichment.py"],
+    },
+    {
+        "pipeline_id": "ops_export_dataset",
+        "name": "Step 8 — Export Dataset to Vercel",
+        "description": "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to update the live directory.",
+        "command": ["scripts/export_directory_dataset.py"],
+    },
 )
 
 
@@ -185,6 +197,27 @@ def trigger_pipeline_run(pipeline_id: str) -> dict[str, Any]:
         state[normalized_id] = current
         _save_state_unlocked(state)
         return {"ok": True, "pipeline": _build_pipeline_view(spec, current)}
+
+
+def reset_pipeline_state(pipeline_id: str) -> dict[str, Any]:
+    """Force a stuck pipeline back to failed so it can be re-triggered."""
+    normalized_id = str(pipeline_id or "").strip()
+    spec = next((s for s in _PIPELINE_SPECS if s["pipeline_id"] == normalized_id), None)
+    if spec is None:
+        raise ValueError(f"Unknown pipeline_id: {normalized_id}")
+    with _STATE_LOCK:
+        state = _load_state_unlocked()
+        current = dict(state.get(normalized_id) or {})
+        current.update({
+            "status": "failed",
+            "last_finished_at": _now_iso(),
+            "last_exit_code": -1,
+            "updated_at": _now_iso(),
+        })
+        state[normalized_id] = current
+        _save_state_unlocked(state)
+        _ACTIVE_RUNS.pop(normalized_id, None)
+    return {"ok": True, "pipeline": _build_pipeline_view(spec, current)}
 
 
 def _python_executable() -> str:

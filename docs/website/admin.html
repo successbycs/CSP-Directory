@@ -354,17 +354,17 @@
         <div class="ops-step-card">
           <div class="ops-step-header">
             <span class="ops-step-number">Step 5</span>
-            <span class="ops-step-title">LLM Extraction (Ollama RAG)</span>
-            <span class="ops-step-source source-llm">Ollama + pgvector</span>
+            <span class="ops-step-title">LLM Extraction (GPT-4o / Ollama fallback)</span>
+            <span class="ops-step-source source-llm">GPT-4o → Ollama + nomic-embed-text</span>
             <span class="ops-step-writes">→ crawl_llm_result + vendor_page_embeddings</span>
           </div>
           <div class="ops-step-body">
-            <p class="ops-step-desc">Extract mission, icp_buyer, lifecycle_stages, integrations etc. using Mistral via local Ollama RAG over vendor_pages content.</p>
+            <p class="ops-step-desc">Crawl → chunk → embed → RAG → extract mission, icp, lifecycle_stages, key_features, integrations etc. Uses GPT-4o with Ollama (Mistral) as local fallback. Requires vendor_pages rows.</p>
             <div id="ops-step5-guard" style="display:none;margin-bottom:8px;padding:6px 10px;background:#2d1b1b;border-radius:4px;font-size:12px;color:#ff7b72;border:1px solid #6e1111;">
               Run Step 2 (Tier Crawl) first — vendor_pages has 0 rows for this vendor.
             </div>
             <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
-              <button class="action-btn" id="ops-step5-btn" data-ops-run="ops_crawl_llm" onclick="opsRunStep(this)">Run</button>
+              <button class="action-btn" id="ops-step5-btn" data-ops-run="ops_crawl_llm" onclick="opsRunStep(this)">Run (single vendor)</button>
               <span class="ops-step-status" id="ops-step5-status"></span>
             </div>
           </div>
@@ -384,8 +384,43 @@
               <button class="action-btn" data-ops-run="ops_merge" onclick="opsRunStep(this)">Run</button>
               <span class="ops-step-status" id="ops-step6-status"></span>
             </div>
-            <!-- Field coverage report rendered here after merge -->
             <div id="ops-field-coverage" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 7</span>
+            <span class="ops-step-title">Batch LLM Enrichment — All Vendors</span>
+            <span class="ops-step-source source-llm">GPT-4o (OpenAI)</span>
+            <span class="ops-step-writes">→ directory_dataset.json (incremental)</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Runs the full crawl → embed → GPT-4o extraction pipeline for every vendor not yet enriched. Saves progress after each vendor — safe to interrupt and resume. ~$0.05–0.10 per vendor.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+              <label style="font-size:12px;color:#8b949e;">Limit (0 = all):</label>
+              <input id="ops-step7-limit" type="number" value="0" min="0" max="200" style="width:64px;padding:4px 6px;font-size:12px;border:1px solid #30363d;border-radius:4px;background:#0d1117;color:#c9d1d9;">
+              <button class="action-btn" data-ops-run="ops_llm_enrichment_batch" onclick="opsRunBatch(this)">Run batch</button>
+              <span class="ops-step-status" id="ops-step7-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="ops-step-card">
+          <div class="ops-step-header">
+            <span class="ops-step-number">Step 8</span>
+            <span class="ops-step-title">Export Dataset → Vercel</span>
+            <span class="ops-step-source source-merge">Supabase → JSON</span>
+            <span class="ops-step-writes">→ docs/website/data/directory_dataset.json</span>
+          </div>
+          <div class="ops-step-body">
+            <p class="ops-step-desc">Pull latest vendor data from Supabase and write the static directory_dataset.json that powers the Vercel browse + vendor pages. Run after any enrichment to publish changes.</p>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+              <button class="action-btn" data-ops-run="ops_export_dataset" onclick="opsRunStep(this)">Export &amp; publish</button>
+              <span class="ops-step-status" id="ops-step8-status"></span>
+            </div>
           </div>
         </div>
 
