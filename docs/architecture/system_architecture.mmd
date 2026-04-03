@@ -1,0 +1,151 @@
+flowchart TD
+
+  %% ── Layer 1: Operator & UI ──────────────────────────────────────────────────
+  subgraph UI["🖥️  Operator & UI"]
+    direction LR
+    OPS["Admin Ops Page\n(browser)"]
+    BROWSE["Browse Directory\n(GitHub Pages)"]
+    LANDING["Landing Page\n(GitHub Pages)"]
+    VENDOR["Vendor Profile\n(GitHub Pages)"]
+  end
+
+  %% ── Layer 2: Local Python Services ──────────────────────────────────────────
+  subgraph LOCAL["🐍  Local Python Services  (WSL)"]
+    direction TB
+    ADMIN_API["admin_api.py\n/admin/* endpoints"]
+    PIPELINE["pipeline_control.py\nsubprocess runner"]
+    ENRICHMENT["run_vendor_enrichment.py\ncrawl → embed → RAG → extract"]
+    MERGE["merge_module.py\nfield merge + source_field_map"]
+    LOGGER["ops_logger.py\nstructured log emitter"]
+  end
+
+  %% ── Layer 3: Local AI (Ollama) ───────────────────────────────────────────────
+  subgraph OLLAMA_BOX["🤖  Local AI  (Ollama @ localhost:11434)"]
+    direction LR
+    EMBED_MODEL["nomic-embed-text\nvector(768) embeddings"]
+    MISTRAL["mistral:latest\nLLM extraction\n(tier-1 — fallback if fast enough)"]
+  end
+
+  %% ── Layer 4: Cloud LLM ───────────────────────────────────────────────────────
+  subgraph CLOUD_LLM["☁️  Cloud LLM  (OpenAI)"]
+    GPT4O["GPT-4o\nLLM extraction\n(tier-2 fallback / default)"]
+  end
+
+  %% ── Layer 5: n8n Cloud Workflows ─────────────────────────────────────────────
+  subgraph N8N["⚡  n8n Cloud Workflows"]
+    direction TB
+    W_DISC["csp-google-discovery\nGoogle Search → candidates"]
+    W_T1["csp-crawl-tier1-direct\nDirect HTTP crawl"]
+    W_T2["csp-crawl-tier2-rag\nApify RAG Browser"]
+    W_T3["csp-crawl-tier3-wcc\nApify WCC + proxy"]
+    W_FIRM["csp-firmographic-enrichment\nRapidAPI Datagma"]
+    W_LI["csp-linkedin-enrichment\nRapidAPI LinkedIn Scraper"]
+    W_LEAD["csp-lead-capture-intake\nLead webhook → HubSpot / Slack"]
+  end
+
+  %% ── Layer 6: External APIs ───────────────────────────────────────────────────
+  subgraph EXT["🌐  External APIs"]
+    direction LR
+    APIFY["Apify\nGoogle Search · RAG Browser · WCC"]
+    DATAGMA["RapidAPI Datagma\nfirmographics"]
+    LI_API["RapidAPI LinkedIn Scraper\ncompany profile"]
+    OPENAI_API["OpenAI API\ngpt-4o"]
+  end
+
+  %% ── Layer 7: Supabase Cloud ──────────────────────────────────────────────────
+  subgraph SB["🗄️  Supabase Cloud  (PostgreSQL + pgvector)"]
+    direction TB
+    CANDS["cs_vendor_candidates\ndiscovery staging"]
+    VENDORS["cs_vendors\nmain schema · crawl_*_result · source_field_map"]
+    PAGES["vendor_pages\nclean_text · word_count · tier_used"]
+    EMBEDDINGS["vendor_page_embeddings\nvector(768) · ivfflat index"]
+    DATASET["directory_dataset.json\nstatic export → GitHub Pages"]
+  end
+
+  %% ── Layer 8: GitHub Pages ────────────────────────────────────────────────────
+  subgraph GHP["📦  GitHub Pages  (vendors.successbycs.com)"]
+    STATIC["Static files\nbrowse · vendor · landing · data/"]
+  end
+
+  %% ─────────────────────────────────────────────────────────────────────────────
+  %% Data flows
+  %% ─────────────────────────────────────────────────────────────────────────────
+
+  %% Operator triggers pipeline
+  OPS -->|"trigger step"| ADMIN_API
+  ADMIN_API -->|"subprocess"| PIPELINE
+  PIPELINE -->|"POST webhook"| W_DISC
+  PIPELINE -->|"POST webhook"| W_T1
+  PIPELINE -->|"POST webhook"| W_T2
+  PIPELINE -->|"POST webhook"| W_T3
+  PIPELINE -->|"POST webhook"| W_FIRM
+  PIPELINE -->|"POST webhook"| W_LI
+
+  %% n8n → external APIs
+  W_DISC -->|"search"| APIFY
+  W_T2 -->|"crawl"| APIFY
+  W_T3 -->|"crawl"| APIFY
+  W_FIRM -->|"lookup"| DATAGMA
+  W_LI -->|"scrape"| LI_API
+
+  %% n8n → Supabase (crawl results)
+  W_DISC -->|"upsert candidates"| CANDS
+  W_T1 -->|"store pages"| PAGES
+  W_T2 -->|"store pages"| PAGES
+  W_T3 -->|"store pages"| PAGES
+  W_FIRM -->|"crawl_firmographic_result"| VENDORS
+  W_LI -->|"crawl_linkedin_result"| VENDORS
+
+  %% Enrichment pipeline
+  ENRICHMENT -->|"upsert vendor_pages"| PAGES
+  ENRICHMENT -->|"embed chunks"| EMBED_MODEL
+  EMBED_MODEL -->|"vectors"| EMBEDDINGS
+  ENRICHMENT -->|"similarity search"| EMBEDDINGS
+  ENRICHMENT -->|"tier-1 LLM"| MISTRAL
+  MISTRAL -.->|"timeout → fallback"| GPT4O
+  GPT4O -->|"API call"| OPENAI_API
+  ENRICHMENT -->|"extracted fields"| VENDORS
+
+  %% Merge
+  ADMIN_API -->|"trigger merge"| MERGE
+  MERGE -->|"read crawl_* results"| VENDORS
+  MERGE -->|"write schema fields"| VENDORS
+
+  %% Dataset export → GitHub Pages
+  VENDORS -->|"export JSON"| DATASET
+  DATASET -->|"commit"| STATIC
+
+  %% Static site reads data
+  BROWSE -->|"fetch"| STATIC
+  VENDOR -->|"fetch"| STATIC
+  LANDING -->|"fetch"| STATIC
+
+  %% Lead capture
+  LANDING -->|"POST lead"| W_LEAD
+  BROWSE -->|"POST lead"| W_LEAD
+
+  %% Logging
+  ADMIN_API --> LOGGER
+  LOGGER -->|"3s poll"| OPS
+
+  %% ─────────────────────────────────────────────────────────────────────────────
+  %% Styles
+  %% ─────────────────────────────────────────────────────────────────────────────
+
+  classDef ui        fill:#dbeafe,stroke:#3b82f6,color:#1e3a8a
+  classDef local     fill:#ddd6fe,stroke:#7c3aed,color:#2e1065
+  classDef ollama    fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+  classDef cloudllm  fill:#fce7f3,stroke:#db2777,color:#831843
+  classDef n8n       fill:#ffedd5,stroke:#f97316,color:#7c2d12
+  classDef ext       fill:#f3f4f6,stroke:#6b7280,color:#111827
+  classDef supabase  fill:#d1fae5,stroke:#059669,color:#064e3b
+  classDef ghp       fill:#fef9c3,stroke:#ca8a04,color:#78350f
+
+  class OPS,BROWSE,LANDING,VENDOR ui
+  class ADMIN_API,PIPELINE,ENRICHMENT,MERGE,LOGGER local
+  class EMBED_MODEL,MISTRAL ollama
+  class GPT4O cloudllm
+  class W_DISC,W_T1,W_T2,W_T3,W_FIRM,W_LI,W_LEAD n8n
+  class APIFY,DATAGMA,LI_API,OPENAI_API ext
+  class CANDS,VENDORS,PAGES,EMBEDDINGS,DATASET supabase
+  class STATIC ghp

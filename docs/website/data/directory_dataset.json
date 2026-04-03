@@ -2,14 +2,16 @@
   {
     "vendor_name": "Abloomify",
     "website": "https://abloomify.com",
-    "mission": "AI-powered workforce analytics to improve delivery, quality, and engagement. Boost productivity up to 40% with privacy-first decisions.",
-    "usp": "speed time to value",
-    "icp": [
-      "Chief Operating Officer (COO)",
-      "Head of People Operations (CHRO)",
-      "IT Manager"
+    "mission": "To integrate the power of AI into the leadership layer of tech companies to help them stay lean and efficient as they grow, protect culture, and unlock new levels of productivity.",
+    "usp": "Abloomify offers AI-powered solutions tailored to specific roles and use cases, providing real-time visibility into productivity, costs, and strategic workforce planning, with a focus on data-driven insights and secure AI deployment.",
+    "icp": "Tech company leaders including CEOs, COOs, VPs of Engineering, HR, and CS teams in mid-market and enterprise segments.",
+    "icp_buyer": [
+      "CEO",
+      "COO",
+      "VP of Engineering",
+      "VP of Marketing",
+      "Head of People & Culture"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "time to value",
       "knowledge base",
@@ -26,7 +28,7 @@
       "per seat",
       "per month"
     ],
-    "free_trial": null,
+    "free_trial": true,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
@@ -38,7 +40,55 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "value_proposition": "Abloomify transforms organizations by providing AI-powered intelligence for every revenue-facing role, optimizing marketing campaigns, improving content strategy, and enhancing productivity and decision-making through personalized AI agents.",
+    "how_it_works": "Abloomify deploys lightweight device agents and browser extensions to collect high-level activity metadata from devices and apps. It integrates with existing SaaS tools and uses AI to analyze patterns, flag anomalies, and suggest optimizations. Insights are surfaced through a dashboard, providing visibility into team effort and output without invasive monitoring.",
+    "key_features": [
+      "Privacy-first design with no screenshots, keystroke logging, or webcam access",
+      "AI-powered insights and recommendations",
+      "Custom productivity models with a drag-and-drop builder",
+      "Predictive workload planning and resource allocation",
+      "SaaS usage insights to optimize software spend",
+      "Integration with tools like Jira, GitHub, HRIS, and communication platforms",
+      "Control over AI models and features employees can use"
+    ],
+    "workflows": [
+      "Connect existing tools and deploy device agents for data collection",
+      "Define success metrics using pre-built templates or custom models",
+      "Use AI to analyze data and provide insights on productivity and performance",
+      "Track effort and output across teams with real-time visibility",
+      "Optimize team capacity and prevent burnout with predictive analytics",
+      "Identify unused tools and save on software costs"
+    ],
+    "outcomes": [
+      "2x organic lead generation",
+      "45% improvement in content engagement",
+      "30% reduction in content production time",
+      "35% lower customer acquisition cost",
+      "5-12% license savings",
+      "10-25% higher revenue per employee"
+    ],
+    "metrics": [
+      "40% more relevant content",
+      "2x faster content creation",
+      "25% better lead quality",
+      "60% less messaging guesswork",
+      "5-12% license savings",
+      "10-25% higher revenue per employee"
+    ],
+    "integrations": [
+      "Slack",
+      "Teams",
+      "Google Workspace",
+      "Microsoft 365",
+      "HRIS",
+      "Jira",
+      "GitHub",
+      "CRM",
+      "Asana",
+      "Monday.com",
+      "Zoom"
+    ]
   },
   {
     "vendor_name": "AI-Powered Text Feedback Analytics",
