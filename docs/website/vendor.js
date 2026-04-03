@@ -85,6 +85,7 @@ function renderVendor(container, vendor) {
             ? `<a href="#operational-signals" class="chip chip-link">Free trial ↓</a>`
             : renderChip("No free-trial signal")}
           ${renderChip(vendor.soc2 === true ? "SOC 2 signal" : "No SOC 2 signal")}
+          ${vendor.g2_rating ? `<a href="${escapeAttribute(vendor.g2_url || 'https://g2.com')}" target="_blank" rel="noreferrer" class="chip chip-link">G2 ${vendor.g2_rating}★ (${vendor.g2_review_count} reviews) ↗</a>` : ""}
         </div>
         <div class="hero-actions">
           ${website ? `<a class="button button-primary" href="${escapeAttribute(website)}" target="_blank" rel="noreferrer">Visit website</a>` : ""}
@@ -180,6 +181,7 @@ function renderVendor(container, vendor) {
             ${renderDetailItem("Founded", founded)}
             ${renderDetailItem("Free trial", formatBoolean(vendor.free_trial))}
             ${renderDetailItem("SOC 2", formatBoolean(vendor.soc2))}
+            ${vendor.g2_rating ? renderG2Item(vendor) : ""}
           </div>
         </section>
 
@@ -405,6 +407,25 @@ function stripProtocol(value) {
 
 function normalizeValue(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function renderG2Item(vendor) {
+  const stars = "★".repeat(Math.round(vendor.g2_rating)) + "☆".repeat(5 - Math.round(vendor.g2_rating));
+  const cats = Array.isArray(vendor.g2_categories) && vendor.g2_categories.length
+    ? vendor.g2_categories.join(", ")
+    : "";
+  const href = escapeAttribute(vendor.g2_url || "https://g2.com");
+  return `
+    <dl class="detail-item" style="grid-column: 1 / -1;">
+      <dt>G2 Rating</dt>
+      <dd>
+        <a href="${href}" target="_blank" rel="noreferrer" style="color:var(--green-700);font-weight:700;text-decoration:none;">
+          ${escapeHtml(String(vendor.g2_rating))} ${escapeHtml(stars)} &nbsp;·&nbsp; ${escapeHtml(String(vendor.g2_review_count))} reviews ↗
+        </a>
+        ${cats ? `<div style="margin-top:6px;font-size:12px;color:var(--text-muted)">${escapeHtml(cats)}</div>` : ""}
+      </dd>
+    </dl>
+  `;
 }
 
 function escapeHtml(value) {

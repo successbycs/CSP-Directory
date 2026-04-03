@@ -164,7 +164,16 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/arrows/reviews",
+    "g2_rating": 4.8,
+    "g2_review_count": 47,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Client Portal",
+      "Digital Sales Room",
+      "Client Onboarding"
+    ]
   },
   {
     "vendor_name": "Berry",
@@ -482,7 +491,14 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/churned/reviews",
+    "g2_rating": 5.0,
+    "g2_review_count": 2,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Proactive Customer Retention"
+    ]
   },
   {
     "vendor_name": "ChurnZero",
@@ -634,7 +650,18 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/cloud-coach/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 158,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Project Management",
+      "Project and Portfolio Management",
+      "Professional Services Automation",
+      "Customer Success",
+      "Client Onboarding"
+    ]
   },
   {
     "vendor_name": "Comm100",
@@ -941,7 +968,18 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/customergauge/reviews",
+    "g2_rating": 4.7,
+    "g2_review_count": 47,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Feedback Analytics",
+      "Customer Journey Analytics",
+      "Experience Management",
+      "Customer Revenue Optimization",
+      "Customer Advocacy"
+    ]
   },
   {
     "vendor_name": "Customerly",
@@ -1128,7 +1166,20 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/docebo/reviews",
+    "g2_rating": 4.3,
+    "g2_review_count": 646,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Corporate Learning Management Systems",
+      "eLearning Content",
+      "Training Management Systems",
+      "Learning Management System (LMS)",
+      "Learning Experience Platforms (LXP)",
+      "Healthcare Learning Management Systems (LMS)",
+      "Customer Education"
+    ]
   },
   {
     "vendor_name": "Dock",
@@ -1250,7 +1301,14 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/encharge/reviews",
+    "g2_rating": 4.7,
+    "g2_review_count": 315,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Marketing Automation"
+    ]
   },
   {
     "vendor_name": "EverAfter",
@@ -1288,7 +1346,18 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/everafter/reviews",
+    "g2_rating": 4.6,
+    "g2_review_count": 126,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Customer Success",
+      "Client Portal",
+      "Client Onboarding",
+      "Partner Relationship Management (PRM)",
+      "Other Collaboration"
+    ]
   },
   {
     "vendor_name": "Flexera",
@@ -1363,7 +1432,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/gainsight-customer-success/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 1531,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Experience Management",
+      "Customer Revenue Optimization",
+      "Customer Success"
+    ]
   },
   {
     "vendor_name": "Gong",
@@ -1638,7 +1716,22 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/intercom/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 3285,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Live Chat",
+      "Help Desk",
+      "Customer Self-Service",
+      "Digital Customer Service Platforms",
+      "Conversational Marketing",
+      "Social Customer Service",
+      "Chatbots",
+      "Conversational Support",
+      "Customer Communications Management"
+    ]
   },
   {
     "vendor_name": "Journeyz",
@@ -1796,7 +1889,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/kapta/reviews",
+    "g2_rating": 4.7,
+    "g2_review_count": 17,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Sales Performance Management",
+      "Customer Revenue Optimization",
+      "Customer Success"
+    ]
   },
   {
     "vendor_name": "Kommunicate",
@@ -2079,7 +2181,22 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/monday-com/reviews",
+    "g2_rating": 4.7,
+    "g2_review_count": 12679,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Business Instant Messaging",
+      "Document Creation",
+      "Project Management",
+      "Work Management",
+      "Project Collaboration",
+      "Workflow Management",
+      "Task Management",
+      "Time Tracking",
+      "Marketing Calendar"
+    ]
   },
   {
     "vendor_name": "nailab",
@@ -2160,7 +2277,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/nurix/reviews",
+    "g2_rating": 4.0,
+    "g2_review_count": 2,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "AI Chatbots",
+      "Customer Service Automation",
+      "AI Agents"
+    ]
   },
   {
     "vendor_name": "Onboard.io",
@@ -2484,7 +2610,15 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/refiner/reviews",
+    "g2_rating": 4.6,
+    "g2_review_count": 8,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Product Analytics",
+      "Experience Management"
+    ]
   },
   {
     "vendor_name": "Relevance AI",
@@ -2564,7 +2698,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/renewtrak/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 14,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "CPQ",
+      "Quote-to-Cash",
+      "Subscription Revenue Management"
+    ]
   },
   {
     "vendor_name": "Revenera",
@@ -2714,7 +2857,14 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/sentisum/reviews",
+    "g2_rating": 4.8,
+    "g2_review_count": 14,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Feedback Analytics"
+    ]
   },
   {
     "vendor_name": "Skalin",
@@ -2865,7 +3015,16 @@
     ],
     "directory_fit": "medium",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/survicate/reviews",
+    "g2_rating": 4.6,
+    "g2_review_count": 177,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Survey",
+      "Experience Management",
+      "User Research"
+    ]
   },
   {
     "vendor_name": "Teamgate",
@@ -2904,7 +3063,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/teamgate/reviews",
+    "g2_rating": 4.6,
+    "g2_review_count": 19,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "CRM",
+      "Sales Analytics",
+      "Sales Platforms"
+    ]
   },
   {
     "vendor_name": "TeamSupport",
@@ -2942,7 +3110,19 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/teamsupport/reviews",
+    "g2_rating": 4.4,
+    "g2_review_count": 873,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Live Chat",
+      "Help Desk",
+      "Customer Self-Service",
+      "Digital Customer Service Platforms",
+      "Social Customer Service",
+      "Conversational Support"
+    ]
   },
   {
     "vendor_name": "Thecscafe",
@@ -3249,7 +3429,16 @@
     ],
     "directory_fit": "high",
     "directory_category": "cs_core",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/vitally/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 613,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Customer Revenue Optimization",
+      "Customer Success",
+      "Client Onboarding"
+    ]
   },
   {
     "vendor_name": "X icon",
@@ -3323,7 +3512,16 @@
     ],
     "directory_fit": "medium",
     "directory_category": "support_only",
-    "use_case_details": []
+    "use_case_details": [],
+    "g2_url": "https://g2.com/products/zapier/reviews",
+    "g2_rating": 4.5,
+    "g2_review_count": 1322,
+    "g2_market_segment": null,
+    "g2_categories": [
+      "Productivity Bots",
+      "iPaaS",
+      "API Marketplace"
+    ]
   },
   {
     "vendor_name": "Zendesk",

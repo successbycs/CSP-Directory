@@ -317,6 +317,7 @@
     }
     .badge-trial { background: #e3f2fd; color: #1565c0; }
     .badge-soc2 { background: #fce4ec; color: #b71c1c; }
+    .badge-g2 { background: #fff3e0; color: #e65100; }
     .badge-confidence-high { background: #e8f5e9; color: #2e7d32; }
     .badge-confidence-medium { background: #fff8e1; color: #f57f17; }
 
@@ -533,6 +534,7 @@
       <div class="card-footer">
         ${v.free_trial ? '<span class="badge badge-trial">Free trial</span>' : ''}
         ${v.soc2 ? '<span class="badge badge-soc2">SOC 2</span>' : ''}
+        ${v.g2_rating ? `<span class="badge badge-g2">G2 ${v.g2_rating}★</span>` : ''}
         ${conf === 'high' ? '<span class="badge badge-confidence-high">High confidence</span>' : ''}
         ${conf === 'medium' ? '<span class="badge badge-confidence-medium">Medium confidence</span>' : ''}
       </div>
