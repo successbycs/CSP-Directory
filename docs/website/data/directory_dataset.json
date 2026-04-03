@@ -16,7 +16,7 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Support",
       "Renew",
       "Advocate"
@@ -134,7 +134,7 @@
       "knowledge base"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Activate",
       "Support"
     ],
@@ -565,8 +565,8 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Renew"
     ],
     "pricing": [
@@ -602,7 +602,7 @@
       "knowledge base"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Adopt",
       "Support"
     ],
@@ -648,7 +648,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Activate",
       "Adopt",
       "Support",
@@ -694,7 +694,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Adopt",
       "Support",
       "Renew",
@@ -749,7 +749,7 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Adopt",
       "Expand",
       "Renew",
@@ -788,8 +788,8 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Expand",
       "Renew"
     ],
@@ -916,8 +916,8 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Activate",
       "Adopt",
       "Support",
@@ -960,7 +960,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Advocate"
     ],
     "pricing": [],
@@ -993,7 +993,7 @@
       "time to value"
     ],
     "lifecycle_stages": [
-      "Onboard"
+      "Onboarding"
     ],
     "pricing": [],
     "free_trial": null,
@@ -1062,7 +1062,7 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Renew"
     ],
     "pricing": [],
@@ -1098,7 +1098,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Renew",
       "Advocate"
     ],
@@ -1221,7 +1221,7 @@
       "renewal management"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Expand",
       "Renew"
     ],
@@ -1294,7 +1294,7 @@
       "renewal management"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Adopt",
       "Support",
       "Expand",
@@ -1566,7 +1566,7 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Renew",
       "Advocate"
     ],
@@ -1645,7 +1645,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Advocate"
     ],
     "pricing": [
@@ -1686,8 +1686,8 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Activate",
       "Advocate"
     ],
@@ -1728,7 +1728,7 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Adopt",
       "Expand",
       "Renew"
@@ -1765,8 +1765,8 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Renew"
     ],
     "pricing": [],
@@ -1812,8 +1812,8 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
+      "Sign-up",
+      "Onboarding",
       "Adopt",
       "Support",
       "Expand",
@@ -1860,7 +1860,7 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Adopt",
       "Expand",
       "Renew"
@@ -1933,7 +1933,7 @@
       "onboarding"
     ],
     "lifecycle_stages": [
-      "Onboard"
+      "Onboarding"
     ],
     "pricing": [
       "$"
@@ -2007,7 +2007,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Support",
       "Advocate"
     ],
@@ -2050,7 +2050,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Expand",
       "Renew",
       "Advocate"
@@ -2093,7 +2093,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Support",
       "Advocate"
     ],
@@ -2130,7 +2130,7 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Adopt",
       "Support",
       "Renew"
@@ -2245,7 +2245,7 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Support",
       "Renew"
     ],
@@ -2309,8 +2309,8 @@
     "icp_buyer": [],
     "use_cases": [],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard"
+      "Sign-up",
+      "Onboarding"
     ],
     "pricing": [],
     "free_trial": null,
@@ -2453,7 +2453,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Support",
       "Advocate"
     ],
@@ -2981,7 +2981,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Activate",
       "Support",
       "Advocate"
@@ -3094,7 +3094,7 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Onboard",
+      "Onboarding",
       "Activate",
       "Adopt",
       "Support",
@@ -3143,7 +3143,7 @@
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
+      "Sign-up",
       "Adopt",
       "Renew",
       "Advocate"
@@ -3290,7 +3290,7 @@
       "time to value"
     ],
     "lifecycle_stages": [
-      "Onboard"
+      "Onboarding"
     ],
     "pricing": [
       "$",
