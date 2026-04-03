@@ -238,6 +238,34 @@
     .cat-cs_core { background: #e8f5ee; color: var(--green-700); }
     .cat-cs_adjacent { background: #fef3e2; color: #7a4f00; }
     .cat-other { background: #f0f0f0; color: #555; }
+    .filter-cat-wrap { position: relative; display: flex; align-items: center; gap: 6px; }
+    .cat-tooltip {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--border); color: var(--text-muted);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: default; flex-shrink: 0;
+      position: relative;
+    }
+    .cat-tooltip-text {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green-900);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 12px 16px;
+      border-radius: 10px;
+      width: 260px;
+      box-shadow: var(--shadow-lg);
+      z-index: 200;
+      pointer-events: none;
+    }
+    .cat-tooltip:hover .cat-tooltip-text,
+    .cat-tooltip:focus .cat-tooltip-text { display: block; }
 
     .card-mission {
       font-size: 13px;
@@ -332,11 +360,20 @@
   <span class="filter-label">Stage</span>
   <div class="filter-pills" id="stage-pills"></div>
   <div class="filter-sep"></div>
-  <select class="filter-select" id="category-filter" onchange="applyFilters()">
-    <option value="">All categories</option>
-    <option value="cs_core">CS Core</option>
-    <option value="cs_adjacent">CS Adjacent</option>
-  </select>
+  <div class="filter-cat-wrap">
+    <select class="filter-select" id="category-filter" onchange="applyFilters()">
+      <option value="">All categories</option>
+      <option value="cs_core">CS Core — purpose-built for CS</option>
+      <option value="cs_adjacent">CS Adjacent — used by CS teams</option>
+    </select>
+    <span class="cat-tooltip" tabindex="0" aria-label="Category definitions">
+      ?
+      <span class="cat-tooltip-text">
+        <strong>CS Core</strong> — tools purpose-built for Customer Success workflows (e.g. health scoring, playbooks, renewal management).<br><br>
+        <strong>CS Adjacent</strong> — tools widely adopted by CS teams but built for a broader audience (e.g. support platforms, CRMs, product analytics).
+      </span>
+    </span>
+  </div>
   <select class="filter-select" id="extras-filter" onchange="applyFilters()">
     <option value="">All vendors</option>
     <option value="free_trial">Free trial</option>
