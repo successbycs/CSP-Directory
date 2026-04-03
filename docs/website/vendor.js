@@ -79,7 +79,6 @@ function renderVendor(container, vendor) {
         </p>
         <div class="chip-row">
           ${renderChip(category)}
-          ${renderChip(`Fit: ${fit}`)}
           ${renderChip(`Confidence: ${confidence}`)}
           ${renderChip(founded === "Not captured" ? "Founded not captured" : `Founded ${founded}`)}
           ${renderChip(vendor.free_trial === true ? "Free trial" : "No free-trial signal")}
