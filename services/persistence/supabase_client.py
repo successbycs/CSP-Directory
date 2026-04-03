@@ -352,15 +352,21 @@ def list_vendor_profiles(*, limit: int = 200, client: "Client | None" = None) ->
 def list_integration_catalog(*, limit: int = 2000, client: "Client | None" = None) -> list[dict[str, Any]]:
     """Return integration catalog rows from Supabase."""
     supabase = client or get_supabase_client()
-    response = (
-        supabase.table(INTEGRATION_CATALOG_TABLE)
-        .select(INTEGRATION_CATALOG_SELECT)
-        .order("integration_name", desc=False)
-        .limit(limit)
-        .execute()
-    )
-    rows = list(response.data or [])
-    return [row for row in rows if isinstance(row, dict)]
+    try:
+        response = (
+            supabase.table(INTEGRATION_CATALOG_TABLE)
+            .select(INTEGRATION_CATALOG_SELECT)
+            .order("integration_name", desc=False)
+            .limit(limit)
+            .execute()
+        )
+        rows = list(response.data or [])
+        return [row for row in rows if isinstance(row, dict)]
+    except Exception as exc:  # treat missing table as empty catalog so callers proceed
+        if is_integration_catalog_unavailable_error(exc):
+            logger.warning("integration_catalog unavailable; returning empty list: %s", exc)
+            return []
+        raise
 
 
 def upsert_integration_catalog_rows(
