@@ -148,6 +148,7 @@ function renderVendor(container, vendor) {
 
     <section class="content-grid">
       <div class="content-main">
+        ${renderAiSummarySection(vendor.ai_summary)}
         <section class="section-card">
           <div>
             <p class="eyebrow">Buyer fit</p>
@@ -286,6 +287,21 @@ function renderBlogPostsSection(posts) {
         <h2>From their blog</h2>
       </div>
       <ul class="list" style="list-style:none;padding:0;margin:0;">${items}</ul>
+    </section>`;
+}
+
+function renderAiSummarySection(summary) {
+  if (!summary || !summary.trim()) return "";
+  const paragraphs = summary.trim().split(/\n+/).filter(Boolean)
+    .map(p => `<p style="margin:0 0 14px 0;line-height:1.7;color:var(--text-body);">${escapeHtml(p)}</p>`)
+    .join("");
+  return `
+    <section class="section-card">
+      <div>
+        <p class="eyebrow">AI overview</p>
+        <h2>About this vendor</h2>
+      </div>
+      <div style="margin-top:12px;">${paragraphs}</div>
     </section>`;
 }
 

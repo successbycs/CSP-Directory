@@ -766,6 +766,7 @@ const BATCH_PIPELINE_IDS = [
   "linkedin_enrichment",
   "site_crawl_enrichment",
   "ops_llm_enrichment_batch",
+  "ops_ai_summary",
   "ops_export_dataset",
 ];
 
@@ -777,6 +778,7 @@ const BATCH_PIPELINE_SOURCES = {
   linkedin_enrichment:      { label: "RapidAPI · LinkedIn", cls: "source-datagma" },
   site_crawl_enrichment:    { label: "Apify · Crawl",  cls: "source-tier" },
   ops_llm_enrichment_batch: { label: "GPT-4o",         cls: "source-llm" },
+  ops_ai_summary:           { label: "GPT-4o mini",    cls: "source-llm" },
   ops_export_dataset:       { label: "Supabase → JSON",cls: "source-merge" },
 };
 

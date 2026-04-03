@@ -1576,9 +1576,30 @@
     },
     {
       "id": "M93",
-      "title": "E2E system audit — gaps documented and remediated",
+      "title": "E2E system audit \u2014 gaps documented and remediated",
       "status": "completed",
       "description": "Full audit of admin API, pipeline scripts, ops modules, n8n workflows, and env vars. Found and fixed: 6 missing ops modules (M90), 3 missing batch scripts (M91), vendor_website not passed to subprocess (M92). Remaining known gap: N8N_CRAWL_TIER2/3_WEBHOOK and N8N_DISCOVERY_WEBHOOK env vars not yet configured (requires n8n webhook setup).",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M94",
+      "title": "Architecture JSON as single source of truth",
+      "status": "completed",
+      "description": "Created architecture.json at project root as machine-readable spec covering all architectural decisions: enrichment runtime (n8n-first), LLM tiers (gpt-4o-mini primary, Mistral fallback), RAG design, crawl strategy, data model, n8n webhook registry, and guardrails. Created CLAUDE.md auto-loaded each session. Fixed LLM tier inversion in run_llm_extraction.py.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M95",
+      "title": "Wire RAG embeddings into LLM extraction pipeline",
+      "status": "completed",
+      "description": "Store page chunk embeddings (nomic-embed-text via Ollama) in vendor_page_embeddings Supabase table. On subsequent runs load from DB instead of re-embedding. Use vector cosine similarity to retrieve most relevant chunks per question group before sending to GPT-4o mini.",
+      "completed_at": "2026-04-03"
+    },
+    {
+      "id": "M96",
+      "title": "Vendor AI summary \u2014 generated, stored, and rendered",
+      "status": "completed",
+      "description": "GPT-4o mini generates a 400-word vendor summary from live web fetch. Stored in ai_summary column in cs_vendors, exported to directory dataset, rendered in vendor profile page as first content section.",
       "completed_at": "2026-04-03"
     }
   ]

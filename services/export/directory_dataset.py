@@ -119,6 +119,7 @@ def _normalize_vendor_row(row: dict[str, Any]) -> dict[str, Any]:
         "how_it_works": _string_value(row.get("how_it_works")),
         "key_features": _list_value(row.get("key_features")),
         "outcomes": _list_value(row.get("outcomes")),
+        "ai_summary": _string_value(row.get("ai_summary")),
     }
 
 

@@ -128,8 +128,14 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
         "command": ["scripts/run_batch_enrichment.py"],
     },
     {
+        "pipeline_id": "ops_ai_summary",
+        "name": "Step 8 — AI Summary (GPT-4o mini)",
+        "description": "Generate a 400-word vendor summary using GPT-4o mini from live web fetch + stored pages. Stored in ai_summary column and exported to directory dataset. Skips vendors that already have a summary.",
+        "command": ["-m", "services.ops.run_ai_summary"],
+    },
+    {
         "pipeline_id": "ops_export_dataset",
-        "name": "Step 8 — Export Dataset to Vercel",
+        "name": "Step 9 — Export Dataset to Vercel",
         "description": "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to update the live directory.",
         "command": ["scripts/export_directory_dataset.py"],
     },

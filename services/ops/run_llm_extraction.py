@@ -155,6 +155,53 @@ def _load_pages(vendor_website: str) -> list[dict]:
         return json.loads(r.read()) or []
 
 
+def _load_embeddings(vendor_website: str) -> list[tuple[str, str, list[float]]]:
+    """Load stored chunk embeddings from vendor_page_embeddings table."""
+    url = (
+        f"{SUPABASE_URL}/rest/v1/vendor_page_embeddings"
+        f"?vendor_website=eq.{urllib.parse.quote(vendor_website, safe='')}"
+        f"&select=page_url,chunk_text,embedding&order=chunk_index.asc&limit=100"
+    )
+    req = urllib.request.Request(url)
+    req.add_header("apikey", SUPABASE_KEY)
+    req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            rows = json.loads(r.read()) or []
+            result = []
+            for row in rows:
+                vec = row.get("embedding")
+                if isinstance(vec, str):
+                    vec = json.loads(vec)
+                if vec:
+                    result.append((row["page_url"], row["chunk_text"], vec))
+            return result
+    except Exception:
+        return []
+
+
+def _store_embedding(vendor_website: str, page_url: str, chunk_index: int, chunk_text: str, vec: list[float]) -> None:
+    """Upsert a single chunk embedding to vendor_page_embeddings."""
+    url = f"{SUPABASE_URL}/rest/v1/vendor_page_embeddings"
+    data = json.dumps({
+        "vendor_website": vendor_website,
+        "page_url": page_url,
+        "chunk_index": chunk_index,
+        "chunk_text": chunk_text,
+        "embedding": vec,
+    }).encode()
+    req = urllib.request.Request(url, data=data, method="POST")
+    req.add_header("apikey", SUPABASE_KEY)
+    req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+    req.add_header("Content-Type", "application/json")
+    req.add_header("Prefer", "resolution=merge-duplicates")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            r.read()
+    except Exception:
+        pass  # Non-fatal — RAG still works in-memory
+
+
 def _sb_patch(vendor_website: str, fields: dict) -> None:
     url = f"{SUPABASE_URL}/rest/v1/cs_vendors?website=eq.{urllib.parse.quote(vendor_website, safe='')}"
     data = json.dumps(fields).encode()
@@ -198,16 +245,24 @@ def main() -> int:
 
     log.step_progress("llm_extraction", f"{len(all_chunks)} chunks — attempting RAG with embeddings")
 
-    # Try to embed with Ollama; fall back to no-embed (use first N chunks)
+    # Try to embed with Ollama and store/load from vendor_page_embeddings
     use_rag = False
     chunk_vecs: list[tuple[str, str, list[float]]] = []
     try:
-        for page_url, chunk in all_chunks[:100]:  # cap to avoid OOM
-            vec = _embed_ollama(chunk)
-            if vec:
-                chunk_vecs.append((page_url, chunk, vec))
+        # First try to load existing embeddings from Supabase
+        stored = _load_embeddings(vendor_website)
+        if stored:
+            chunk_vecs = stored
+            log.step_progress("llm_extraction", f"Loaded {len(chunk_vecs)} embeddings from Supabase")
+        else:
+            # Embed and store
+            for idx, (page_url, chunk) in enumerate(all_chunks[:100]):
+                vec = _embed_ollama(chunk)
+                if vec:
+                    chunk_vecs.append((page_url, chunk, vec))
+                    _store_embedding(vendor_website, page_url, idx, chunk, vec)
+            log.step_progress("llm_extraction", f"Embedded and stored {len(chunk_vecs)} chunks")
         use_rag = bool(chunk_vecs)
-        log.step_progress("llm_extraction", f"Embedded {len(chunk_vecs)} chunks with Ollama")
     except Exception as e:
         log.step_progress("llm_extraction", f"Ollama embed unavailable ({e}) — using full-text mode")
 
