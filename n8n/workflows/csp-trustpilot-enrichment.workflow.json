@@ -1,0 +1,338 @@
+{
+  "name": "CSP Trustpilot Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "csp-trustpilot-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "trustpilot-0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "csp-trustpilot-enrichment"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ vendor_name: body.vendor_name || '', website: body.website }] : []);\nif (!vendors.length) return [{ json: { _no_vendors: true } }];\nconst admin_url = (body.admin_url || 'http://127.0.0.1:8787').trim();\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    trustpilot_slug: v.trustpilot_slug || '',\n    admin_url,\n  }\n}));"
+      },
+      "id": "trustpilot-0002-0002-0002-0002-000000000002",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n// Use domain slug (e.g. freshdesk.com) \u2014 Trustpilot URLs are /review/{domain}\n// Prefer explicit trustpilot_slug, then domain from website, then derived from name\nlet slug = item.trustpilot_slug;\nif (!slug && item.website) {\n  // Strip protocol and www. to get domain slug\n  slug = item.website.replace(/^https?:\\/\\//, '').replace(/^www\\./, '').replace(/\\/$/, '');\n}\nif (!slug) {\n  // Fallback: derive from vendor name\n  const clean = (item.vendor_name || '')\n    .toLowerCase()\n    .replace(/[^\\w\\s-]/g, '')\n    .replace(/[\\s-]+/g, '-')\n    .trim();\n  slug = clean.replace(/^-|-$/g, '');\n}\nreturn [{ json: { ...item, trustpilot_slug: slug } }];"
+      },
+      "id": "trustpilot-0003-0003-0003-0003-000000000003",
+      "name": "Build Slug",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://www.trustpilot.com/review/{{ $json.trustpilot_slug }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            },
+            {
+              "name": "Upgrade-Insecure-Requests",
+              "value": "1"
+            },
+            {
+              "name": "Sec-Fetch-Dest",
+              "value": "document"
+            },
+            {
+              "name": "Sec-Fetch-Mode",
+              "value": "navigate"
+            },
+            {
+              "name": "Sec-Fetch-Site",
+              "value": "none"
+            },
+            {
+              "name": "Sec-Fetch-User",
+              "value": "?1"
+            },
+            {
+              "name": "Cache-Control",
+              "value": "max-age=0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "trustpilot-0004-0004-0004-0004-000000000004",
+      "name": "Fetch Trustpilot Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const vendor = $('Build Slug').first().json;\nconst resp = $input.first();\nconst html = resp.body;\n\nif (!html || resp.statusCode !== 200) {\n  return [{ json: { \n    vendor_name: vendor.vendor_name, \n    website: vendor.website, \n    trustpilot_slug: vendor.trustpilot_slug, \n    _has_data: false, \n    _miss_reason: resp.statusCode === 404 ? 'page_not_found' : `http_${resp.statusCode || 'error'}`,\n    _http_status: resp.statusCode\n  } }];\n}\n\n// Extract JSON-LD AggregateRating block\nfunction extractAggregateRating(obj) {\n  if (!obj || typeof obj !== 'object') return null;\n  // Direct AggregateRating node\n  if (obj['@type'] === 'AggregateRating' && obj.ratingValue !== undefined) {\n    try { return { rating: parseFloat(obj.ratingValue), count: parseInt(obj.reviewCount, 10) }; }\n    catch(e) {}\n  }\n  // aggregateRating sub-key (LocalBusiness pattern used by Trustpilot)\n  if (obj.aggregateRating) {\n    const r = extractAggregateRating(obj.aggregateRating);\n    if (r) return r;\n  }\n  // @graph array\n  if (Array.isArray(obj['@graph'])) {\n    for (const item of obj['@graph']) {\n      const r = extractAggregateRating(item);\n      if (r) return r;\n    }\n  }\n  // Regular array\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      const r = extractAggregateRating(item);\n      if (r) return r;\n    }\n  }\n  return null;\n}"
+      },
+      "id": "trustpilot-0005-0005-0005-0005-000000000005",
+      "name": "Extract Rating Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json._has_data }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "trustpilot-0006-0006-0006-0006-000000000006",
+      "name": "Has Trustpilot Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Build upsert row for /admin/enrich-write\nconst row = {\n  website: item.website,\n  trustpilot_rating: item.trustpilot_rating,\n  trustpilot_review_count: item.trustpilot_review_count,\n  source: 'trustpilot_enrichment',\n  pipeline_name: 'trustpilot'\n};\n\nreturn [{ json: { ...item, _upsert_row: row } }];"
+      },
+      "id": "trustpilot-0007-0007-0007-0007-000000000007",
+      "name": "Build Upsert Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -160
+      ]
+    },
+    {
+      "id": "trustpilot-0008-0008-0008-0008-000000000008",
+      "name": "Write to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1680,
+        -160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Split Vendors').first().json.admin_url }}/admin/enrich-write",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify($('Build Upsert Row').first().json._upsert_row) }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ \n  ok: true, \n  vendor: $('Extract Rating Data').first().json.vendor_name, \n  trustpilot_slug: $('Extract Rating Data').first().json.trustpilot_slug,\n  trustpilot_rating: $('Extract Rating Data').first().json.trustpilot_rating,\n  trustpilot_review_count: $('Extract Rating Data').first().json.trustpilot_review_count,\n  supabase_status: $json.ok || 'written'\n}) }}",
+        "options": {}
+      },
+      "id": "trustpilot-0009-0009-0009-0009-000000000009",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ \n  ok: false, \n  vendor: $json.vendor_name, \n  miss: true, \n  reason: $json._miss_reason || 'no_data',\n  http_status: $json._http_status\n}) }}",
+        "options": {}
+      },
+      "id": "trustpilot-0010-0010-0010-0010-000000000010",
+      "name": "Respond Miss",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Split Vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Vendors": {
+      "main": [
+        [
+          {
+            "node": "Build Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slug": {
+      "main": [
+        [
+          {
+            "node": "Fetch Trustpilot Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Trustpilot Page": {
+      "main": [
+        [
+          {
+            "node": "Extract Rating Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Rating Data": {
+      "main": [
+        [
+          {
+            "node": "Has Trustpilot Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Trustpilot Data?": {
+      "main": [
+        [
+          {
+            "node": "Build Upsert Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Miss",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Upsert Row": {
+      "main": [
+        [
+          {
+            "node": "Write to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "meta": {
+    "description": "CSP Trustpilot rating enrichment via static HTML crawl. Fetches trustpilot.com/review/{slug}, extracts AggregateRating JSON-LD block, writes trustpilot_rating (float) and trustpilot_review_count (int) to Supabase via /admin/enrich-write."
+  },
+  "pinData": {}
+}

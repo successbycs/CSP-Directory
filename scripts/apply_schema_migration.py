@@ -56,6 +56,9 @@ REQUIRED_COLUMNS: list[tuple[str, str, bool]] = [
     ("g2_review_count", "integer", True),
     ("g2_market_segment", "text", True),
     ("g2_categories", "text[]", True),
+    # M71 — Trustpilot enrichment fields
+    ("trustpilot_rating", "float", True),
+    ("trustpilot_review_count", "integer", True),
     # M51 — deep crawl fields
     ("raw_crawl_blob", "text", True),
     ("crawl_page_count", "integer", True),

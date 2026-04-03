@@ -533,6 +533,9 @@ class VendorIntelligence:
     revenue: str = field(default="")
     linkedin_url: str = field(default="")
 
+        # M71: Trustpilot enrichment fields
+    trustpilot_rating: float | None = field(default=None)
+    trustpilot_review_count: int | None = field(default=None)
     def __post_init__(self) -> None:
         """Normalize structured buyer-persona enrichment into a stable list-of-dicts shape."""
         self.website = normalize_vendor_website(self.website)
@@ -631,8 +634,7 @@ class VendorIntelligence:
             "support_url",
             "about_url",
             "team_url",
-            "developer_docs_url",
-        ]:
+            "developer_docs_url", "trustpilot_rating", "trustpilot_review_count"]:
             value = getattr(self, field_name)
             if not isinstance(value, str):
                 raise TypeError(f"{field_name} must be a string")

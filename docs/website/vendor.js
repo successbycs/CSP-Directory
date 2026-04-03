@@ -89,7 +89,7 @@ function renderVendor(container, vendor) {
         <div class="hero-actions">
           ${website ? `<a class="button button-primary" href="${escapeAttribute(website)}" target="_blank" rel="noreferrer">Visit website</a>` : ""}
           <a class="button button-secondary" href="./browse.html">Back to browse</a>
-          <button class="button button-secondary" type="button" onclick="openFeedbackModal(${JSON.stringify(escapeHtml(vendorName))})">Suggest an edit</button>
+          <button class="button button-secondary" type="button" data-vendor="${escapeAttribute(vendorName)}" onclick="openFeedbackModal(this.dataset.vendor)">Suggest an edit</button>
         </div>
       </div>
       <aside class="hero-side">
@@ -199,7 +199,7 @@ function renderVendor(container, vendor) {
         <p class="eyebrow">Improve this profile</p>
         <p style="font-size:14px;color:var(--text-mid);margin-top:4px;">Spotted something wrong or missing? Let us know — we review every submission.</p>
       </div>
-      <button class="button button-secondary" type="button" onclick="openFeedbackModal(${JSON.stringify(escapeHtml(vendorName))})">Suggest an edit</button>
+      <button class="button button-secondary" type="button" data-vendor="${escapeAttribute(vendorName)}" onclick="openFeedbackModal(this.dataset.vendor)">Suggest an edit</button>
     </section>
   `;
 }

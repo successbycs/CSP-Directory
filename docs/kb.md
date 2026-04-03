@@ -68,7 +68,64 @@ Tiers run cheapest-first. Escalation threshold: `word_count < 200` or name unres
 **Depth:** 100 pages per vendor (default). Configurable up to 300 from the ops page.  
 **Rationale for 100 not 300:** First-run reliability — recrawl cadence is approximately monthly so the first run must succeed.
 
-### 2.3 Merge Priority Rules
+### 2.3 Crawl URL Strategy — Includes & Excludes
+
+All tiers probe high-value page paths directly via `startUrls`. Tiers 2 and 3 additionally use `includeGlobs` / `excludeGlobs` to focus Apify's link-following budget.
+
+#### startUrls — direct probes (all tiers)
+
+| Path | Schema fields targeted |
+|---|---|
+| `/` (homepage) | `name`, `mission`, `usp` |
+| `/pricing`, `/plans`, `/pricing-plans` | `pricing`, `free_trial` |
+| `/features`, `/product`, `/platform` | `products`, `use_cases` |
+| `/integrations` | `integrations` |
+| `/customers`, `/case-studies` | `customers`, `case_studies`, `value_statements` |
+| `/about` | `founded`, `company_hq` |
+| `/security` | `soc2`, `compliance` |
+
+Tier 1 probes: homepage + `/pricing` only (sequential HTTP, keep fast).  
+Tiers 2 and 3 probe all 12 paths above.
+
+Page text is injected into the blob with labels (`[PRICING PAGE]`, `[FEATURES PAGE]`, `[ABOUT PAGE]`, etc.) so the LLM can target sections during M52 extraction.
+
+#### includeGlobs — Tier 3 WCC only (RAG actor does not support)
+
+Catch additional schema-relevant URLs discovered during the crawl (e.g. `/en/pricing`, `/resources/case-studies`):
+
+```
+**/pricing*        **/plans*          **/product*        **/platform*
+**/features*       **/solutions*      **/use-cases*      **/use_cases*
+**/integrations*   **/marketplace*    **/apps*
+**/customers*      **/case-studies*   **/case_studies*   **/success-stories*
+**/about*          **/company*        **/team*
+**/security*       **/trust*          **/compliance*
+**/contact*        **/demo*
+```
+
+#### excludeGlobs — Tier 3 WCC only
+
+Always skip — never feeds our schema, wastes crawl budget:
+
+| Category | Patterns |
+|---|---|
+| Blog / news | `**/blog`, `**/blog/**`, `**/news/**`, `**/press/**`, `**/newsroom/**` |
+| Docs / help | `**/docs/**`, `**/documentation/**`, `**/help/**`, `**/knowledge-base/**`, `**/support/**` |
+| Changelog | `**/changelog/**`, `**/releases/**`, `**/release-notes/**` |
+| HR | `**/careers/**`, `**/jobs/**`, `**/hiring/**` |
+| Legal | `**/legal/**`, `**/terms/**`, `**/privacy/**`, `**/cookie*`, `**/gdpr/**`, `**/dpa/**` |
+| Events | `**/events/**`, `**/webinars/**` |
+| Community | `**/community/**`, `**/forum/**` |
+| Auth / app | `**/login*`, `**/signup*`, `**/register*`, `**/app/**`, `**/dashboard/**` |
+| API docs | `**/api/**`, `**/developer/**` |
+| Blog taxonomy | `**/tag/**`, `**/category/**`, `**/author/**`, `**/archive/**` |
+| Misc | `**/status/**`, `**/search*`, `**/*404*`, `**/sitemap*` |
+
+**Note on blog:** Blog content is excluded from the main crawl. A separate `/blog` crawl is planned for value-statement extraction (blog posts reveal vendor positioning and use cases). Track as a future milestone.
+
+**Note on proxy:** Tier 3 uses `RESIDENTIAL` Apify proxy group to avoid IP blocks when crawling from a home IP. This is required — running Tier 3 without proxy from a residential connection will trigger rate limits and bot detection.
+
+### 2.4 Merge Priority Rules
 
 The merge module applies these rules per field. First non-null value from the priority chain wins.
 

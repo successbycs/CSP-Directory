@@ -1153,20 +1153,33 @@
         "VendorIntelligence has trustpilot_rating (float | None) and trustpilot_review_count (int | None) fields",
         "admin_api.py _SCALAR_FIELDS includes trustpilot_rating and trustpilot_review_count",
         "Supabase cs_vendors table has trustpilot_rating and trustpilot_review_count columns",
-        "csp-trustpilot-enrichment n8n workflow deployed and activated on n8n cloud",
         "Workflow uses plain HTTP GET (no Apify) \u2014 Trustpilot serves static HTML",
         "JSON-LD AggregateRating block extracted with regex; graceful miss if not found",
-        "At least 3 of 10 sampled vendors return valid trustpilot_rating values"
+        "At least 3 of 10 sampled vendors return valid trustpilot_rating values",
+        "csp-trustpilot-enrichment: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-trustpilot-enrichment.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing."
       ],
       "proof_artifact": "runs/proofs/M71_trustpilot_enrichment.json",
       "interaction_targets": [
-        "system"
+        "system",
+        "n8n_cloud"
       ],
       "verify": [
         "python3 -m pytest tests/test_trustpilot_enrichment.py -v",
         "python3 scripts/autonomous_audit.py"
       ],
-      "notes": "Trustpilot serves fully static HTML with schema.org AggregateRating JSON-LD \u2014 no Cloudflare, no JS execution needed. B2B SaaS coverage is thin (many CS tools have <10 reviews) so this is a secondary signal, not a primary rating. Use as fallback when g2_rating is empty. Slug derivation: lowercase vendor name, replace spaces/special chars with hyphens."
+      "notes": "Trustpilot serves fully static HTML with schema.org AggregateRating JSON-LD \u2014 no Cloudflare, no JS execution needed. B2B SaaS coverage is thin (many CS tools have <10 reviews) so this is a secondary signal, not a primary rating. Use as fallback when g2_rating is empty. Slug derivation: lowercase vendor name, replace spaces/special chars with hyphens.",
+      "evidence": {
+        "changed_files": [
+          "n8n/workflows/csp-trustpilot-enrichment.workflow.json",
+          "services/extraction/vendor_intel.py",
+          "services/admin/admin_api.py",
+          "tests/test_trustpilot_enrichment.py",
+          "scripts/prove_m71_trustpilot_enrichment.py"
+        ],
+        "artifact_paths": [
+          "runs/proofs/M71_trustpilot_enrichment.json"
+        ]
+      }
     },
     {
       "id": "M72",
@@ -1300,12 +1313,17 @@
         "web_search.py delegates to N8N_DISCOVERY_WEBHOOK when set; falls back to existing SerpAPI logic",
         "Domain name prefix stripping: get/try/use/my/the stripped from domain stem for name fallback",
         "Tracxn n8n workflow marked active:false; tracxn_enricher.py has deprecation warning",
-        "End-to-end proof: 10 vendors crawled, tier_used distribution recorded, enriched fields written to cs_vendors"
+        "End-to-end proof: 10 vendors crawled, tier_used distribution recorded, enriched fields written to cs_vendors",
+        "csp-crawl-tier1-direct: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-crawl-tier1-direct.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing.",
+        "csp-crawl-tier2-rag: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-crawl-tier2-rag.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing.",
+        "csp-crawl-tier3-wcc: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-crawl-tier3-wcc.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing.",
+        "csp-google-discovery: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-google-discovery.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing."
       ],
       "proof_artifact": "runs/proofs/M74_n8n_crawl_pipeline.json",
       "interaction_targets": [
         "system",
-        "human"
+        "human",
+        "n8n_cloud"
       ],
       "verify": [
         "python3 -m pytest tests/test_vendor_fetcher.py -v",
@@ -1667,17 +1685,18 @@
       ],
       "proof_description": "The csp-vendor-feedback n8n workflow is imported to n8n Cloud, activated, and wired to the admin API enrich-write endpoint for Supabase persistence. The Suggest an edit button on vendor pages triggers Discord notification, email to chris@successbycs.com, and a vendor_feedback row in Supabase.",
       "acceptance_criteria": [
-        "csp-vendor-feedback workflow imported and active in n8n Cloud",
         "POST to /webhook/csp-vendor-feedback returns ok:true",
         "Discord notification fires to operator webhook",
         "Email sent to chris@successbycs.com with feedback details",
         "vendor_feedback row written to Supabase via POST /admin/store-feedback",
-        "Suggest an edit button on vendor.html successfully submits and shows confirmation"
+        "Suggest an edit button on vendor.html successfully submits and shows confirmation",
+        "csp-vendor-feedback: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-vendor-feedback.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing."
       ],
       "proof_artifact": "runs/proofs/M99_vendor_feedback_activation.json",
       "interaction_targets": [
         "system",
-        "operator"
+        "operator",
+        "n8n_cloud"
       ],
       "verify": [
         "python3 -m pytest tests/ -v",
@@ -1715,6 +1734,62 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "Bug: button used data-ops-run='ops_export_dataset' with opsRunStep() which guards on _opsVendor. Fix: removed data-ops-run attribute, added dedicated opsExportPublish() function that calls /admin/publish directly."
+    },
+    {
+      "id": "M100",
+      "title": "Blog crawl \u2014 extract vendor positioning and value statements from /blog",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M74"
+      ],
+      "proof_description": "A dedicated blog crawl tier that fetches the /blog index and up to 10 recent posts per vendor. Extracts value statements, use cases, and customer evidence mentioned in blog content. Stored as a separate crawl_blog_result column \u2014 not mixed with the main site crawl so blog noise does not pollute core fields.",
+      "rationale": "Blog posts reveal how vendors position themselves, what problems they solve, and which customers they serve. This context improves ai_summary, value_statements, icp, and lifecycle_stages accuracy. Blog is excluded from main crawl to keep core crawl budget focused on commercial pages.",
+      "acceptance_criteria": [
+        "n8n workflow csp-crawl-blog.workflow.json created with webhook path csp-crawl-blog",
+        "Workflow fetches /blog index + up to 10 recent post URLs",
+        "Extracted text stored in crawl_blog_result column (JSONB)",
+        "LLM extraction (M52) reads blog blob for value_statements and icp augmentation",
+        "Blog crawl does not affect word_count threshold used for tier escalation",
+        "csp-crawl-blog: imported and activated in n8n Cloud via import_and_activate_workflow(\"n8n/workflows/csp-crawl-blog.workflow.json\") \u2014 requires N8N_API_KEY. Approach assessor must check this env var and flag as operator action if missing."
+      ],
+      "proof_artifact": "runs/proofs/M100_blog_crawl.json",
+      "interaction_targets": [
+        "system",
+        "n8n_cloud"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Blog is currently excluded from all three main crawl tiers via excludeGlobs. This milestone adds blog as an optional fourth crawl pass, run after the main crawl completes."
+    },
+    {
+      "id": "M101",
+      "title": "Proxy configuration \u2014 protect home IP from rate limits during crawl",
+      "delivery_type": "capability_delivering",
+      "status": "not_started",
+      "dependencies": [
+        "M74"
+      ],
+      "proof_description": "Configure proxy usage across crawl tiers to prevent IP blocking when running from a residential home IP. Tier 3 already uses Apify RESIDENTIAL proxy. Tier 1 and Tier 2 need proxy support added. Python-side HTTP requests (vendor fetcher, health checks) need a configurable proxy setting.",
+      "rationale": "The pipeline runs from a home computer (WSL2 on residential IP). Without proxy rotation: repeated crawl requests to the same vendor will trigger rate limits; Cloudflare and bot-detection systems will block the IP; Tier 1 direct HTTP becomes unusable after a few runs. Tier 3 is protected by Apify RESIDENTIAL proxy already. Tiers 1 and 2 are unprotected.",
+      "acceptance_criteria": [
+        "Tier 1 direct HTTP crawl supports optional HTTP_PROXY env var, passed to requests headers",
+        "Tier 2 Apify RAG: apifyProxyGroups RESIDENTIAL added to startUrls requests",
+        "Tier 3 Apify WCC: already uses RESIDENTIAL \u2014 verify this is correctly configured",
+        "Python vendor_fetcher.py and any direct HTTP scripts respect HTTP_PROXY / HTTPS_PROXY env vars",
+        "Config option CRAWL_USE_PROXY (bool) in pipeline_config.json controls proxy usage",
+        "Proof: crawl a known Cloudflare-protected vendor with Tier 1 and confirm word_count > 200"
+      ],
+      "proof_artifact": "runs/proofs/M101_proxy_config.json",
+      "interaction_targets": [
+        "system",
+        "operator"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Running pipeline from home IP without proxy will cause sporadic failures that look like vendor site issues but are actually IP-based rate limits. Tier 3 Apify proxy is the most robust solution but costs ~/bin/bash.004/page. For Tier 1 free crawl, a free/cheap rotating proxy service (e.g. Webshare free tier) may suffice. Operator must configure HTTP_PROXY env var or enable CRAWL_USE_PROXY in config."
     }
   ]
 }
