@@ -947,7 +947,7 @@
     if (disclaimer) disclaimer.textContent = 'Saving your details — this takes a moment.';
 
     try {
-      const response = await fetch('https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake', {
+      const response = await fetch('/api/lead-capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
