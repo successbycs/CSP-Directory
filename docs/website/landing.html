@@ -927,6 +927,32 @@
   function handleOverlayClick(e) {
     if (e.target === document.getElementById('modal')) closeModal();
   }
+  const LEAD_CAPTURE_ENDPOINTS = [
+    '/api/lead-capture',
+    'https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake',
+  ];
+
+  async function postLeadCapture(payload) {
+    let lastError = null;
+    for (const endpoint of LEAD_CAPTURE_ENDPOINTS) {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok === false) {
+          throw new Error(result.error || `Request failed: ${response.status}`);
+        }
+        return result;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError || new Error('Request failed');
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const name    = document.getElementById('f-name').value;
@@ -947,24 +973,16 @@
     if (disclaimer) disclaimer.textContent = 'Saving your details — this takes a moment.';
 
     try {
-      const response = await fetch('/api/lead-capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lead_name: name,
-          lead_email: email,
-          company_name: company,
-          lead_intent: intent,
-          entry_page: 'landing.html',
-          cta_surface: 'landing-access-modal',
-          cta_variant: intent,
-          cta_label: 'Get access',
-        }),
+      const result = await postLeadCapture({
+        lead_name: name,
+        lead_email: email,
+        company_name: company,
+        lead_intent: intent,
+        entry_page: 'landing.html',
+        cta_surface: 'landing-access-modal',
+        cta_variant: intent,
+        cta_label: 'Get access',
       });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || result.ok === false) {
-        throw new Error(result.error || `Request failed: ${response.status}`);
-      }
 
       if (shouldPersistAccess(email)) {
         localStorage.setItem('csp_access', email);
