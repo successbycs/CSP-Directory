@@ -65,13 +65,6 @@ const DEFAULT_PIPELINE_CONTROLS = [
       "Single domain call via Datagma (RapidAPI) returns founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Requires RAPIDAPI_KEY + Datagma subscription.",
   },
   {
-    pipeline_id: "linkedin_enrichment",
-    name: "Step 6 — LinkedIn Enrichment",
-    group: "enrichment",
-    description:
-      "Fills ceo_linkedin, linkedin_url, leadership via LinkedIn Data API (RapidAPI). Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
-  },
-  {
     pipeline_id: "g2_rapidapi_enrichment",
     name: "Step 7 — G2 RapidAPI Enrichment",
     group: "enrichment",
@@ -745,7 +738,6 @@ const BATCH_PIPELINE_IDS = [
   "tier3_batch_crawl",
   "embed_vendor_pages",
   "firmographic_enrichment",
-  "linkedin_enrichment",
   "g2_rapidapi_enrichment",
   "trustpilot_enrichment",
   "feature_depth_enrichment",
@@ -761,7 +753,6 @@ const BATCH_PIPELINE_SOURCES = {
   embed_vendor_pages:       { label: "Ollama · local",    cls: "source-merge" },
   g2_rapidapi_enrichment:   { label: "RapidAPI · G2",  cls: "source-g2" },
   firmographic_enrichment:  { label: "RapidAPI · Datagma", cls: "source-datagma" },
-  linkedin_enrichment:      { label: "RapidAPI · LinkedIn", cls: "source-datagma" },
   trustpilot_enrichment:    { label: "Trustpilot · HTTP",   cls: "source-g2" },
   feature_depth_enrichment: { label: "Help crawl · GPT-4o mini", cls: "source-llm" },
   site_crawl_enrichment:    { label: "Apify · Crawl",  cls: "source-tier" },

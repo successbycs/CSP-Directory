@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "csp-trustpilot-enrichment",
-        "responseMode": "onReceived",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "trustpilot-0001-0001-0001-0001-000000000001",
@@ -118,7 +118,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const vendor = $('Build Slug').first().json;\nconst respJson = $input.first().json;\n// fullResponse mode: data=body, statusCode available\nconst html = respJson.data || respJson.body || '';\nconst statusCode = respJson.statusCode || 200;\n\nif (!html || statusCode !== 200) {\n  return [{ json: {\n    vendor_name: vendor.vendor_name,\n    website: vendor.website,\n    trustpilot_slug: vendor.trustpilot_slug,\n    _has_data: false,\n    _miss_reason: statusCode === 404 ? 'page_not_found' : `http_${statusCode || 'error'}`,\n    _http_status: statusCode\n  } }];\n}\n\nfunction extractAggregateRating(obj) {\n  if (!obj || typeof obj !== 'object') return null;\n  if (obj['@type'] === 'AggregateRating' && obj.ratingValue !== undefined) {\n    try { return { rating: parseFloat(obj.ratingValue), count: parseInt(obj.reviewCount, 10) }; } catch(e) {}\n  }\n  if (obj.aggregateRating) { const r = extractAggregateRating(obj.aggregateRating); if (r) return r; }\n  if (Array.isArray(obj['@graph'])) { for (const item of obj['@graph']) { const r = extractAggregateRating(item); if (r) return r; } }\n  if (Array.isArray(obj)) { for (const item of obj) { const r = extractAggregateRating(item); if (r) return r; } }\n  return null;\n}\n\n// Extract all JSON-LD blocks and search for AggregateRating\nconst scriptTags = html.match(/<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi) || [];\nlet rating = null;\nfor (const tag of scriptTags) {\n  const content = tag.replace(/<\\/?script[^>]*>/gi, '').trim();\n  try { const r = extractAggregateRating(JSON.parse(content)); if (r) { rating = r; break; } } catch(e) {}\n}\n\nif (!rating) {\n  return [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, _has_data: false, _miss_reason: 'no_rating_found' } }];\n}\n\nreturn [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, trustpilot_rating: rating.rating, trustpilot_review_count: rating.count, _has_data: true } }];"
+        "jsCode": "const vendor = $('Build Slug').item.json;\nconst respJson = $input.first().json;\nconst html = respJson.data || respJson.body || '';\nconst statusCode = respJson.statusCode || 200;\n\nif (!html || statusCode !== 200) {\n  return [{ json: {\n    vendor_name: vendor.vendor_name,\n    website: vendor.website,\n    trustpilot_slug: vendor.trustpilot_slug,\n    supabase_url: vendor.supabase_url,\n    supabase_key: vendor.supabase_key,\n    _has_data: false,\n    _miss_reason: statusCode === 404 ? 'page_not_found' : `http_${statusCode || 'error'}`,\n    _http_status: statusCode\n  } }];\n}\n\nfunction extractAggregateRating(obj) {\n  if (!obj || typeof obj !== 'object') return null;\n  if (obj['@type'] === 'AggregateRating' && obj.ratingValue !== undefined) {\n    try { return { rating: parseFloat(obj.ratingValue), count: parseInt(obj.reviewCount, 10) }; } catch(e) {}\n  }\n  if (obj.aggregateRating) { const r = extractAggregateRating(obj.aggregateRating); if (r) return r; }\n  if (Array.isArray(obj['@graph'])) { for (const item of obj['@graph']) { const r = extractAggregateRating(item); if (r) return r; } }\n  if (Array.isArray(obj)) { for (const item of obj) { const r = extractAggregateRating(item); if (r) return r; } }\n  return null;\n}\n\nconst scriptTags = html.match(/<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi) || [];\nlet rating = null;\nfor (const tag of scriptTags) {\n  const content = tag.replace(/<\\/?script[^>]*>/gi, '').trim();\n  try { const r = extractAggregateRating(JSON.parse(content)); if (r) { rating = r; break; } } catch(e) {}\n}\n\nif (!rating) {\n  return [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, supabase_url: vendor.supabase_url, supabase_key: vendor.supabase_key, _has_data: false, _miss_reason: 'no_rating_found' } }];\n}\n\nreturn [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, supabase_url: vendor.supabase_url, supabase_key: vendor.supabase_key, trustpilot_rating: rating.rating, trustpilot_review_count: rating.count, _has_data: true } }];"
       },
       "id": "trustpilot-0005-0005-0005-0005-000000000005",
       "name": "Extract Rating Data",
@@ -185,18 +185,18 @@
       ],
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $('Split Vendors').first().json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($('Build Upsert Row').first().json.website) }}",
+        "url": "={{ $json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($json.website) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "apikey", "value": "={{ $('Split Vendors').first().json.supabase_key }}" },
-            { "name": "Authorization", "value": "=Bearer {{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "apikey", "value": "={{ $json.supabase_key }}" },
+            { "name": "Authorization", "value": "={{ 'Bearer ' + $json.supabase_key }}" },
             { "name": "Prefer", "value": "return=minimal" }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { trustpilot_rating: $('Build Upsert Row').first().json.trustpilot_rating, trustpilot_review_count: $('Build Upsert Row').first().json.trustpilot_review_count } }}",
+        "jsonBody": "={{ { trustpilot_rating: $json.trustpilot_rating, trustpilot_review_count: $json.trustpilot_review_count } }}",
         "options": {
           "timeout": 15000,
           "response": {
@@ -210,7 +210,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ \n  ok: true, \n  vendor: $('Extract Rating Data').first().json.vendor_name, \n  trustpilot_slug: $('Extract Rating Data').first().json.trustpilot_slug,\n  trustpilot_rating: $('Extract Rating Data').first().json.trustpilot_rating,\n  trustpilot_review_count: $('Extract Rating Data').first().json.trustpilot_review_count,\n  supabase_status: $json.ok || 'written'\n}) }}",
+        "responseBody": "={{ JSON.stringify({ \n  ok: true, \n  vendor: $json.vendor_name, \n  trustpilot_slug: $json.trustpilot_slug,\n  trustpilot_rating: $json.trustpilot_rating,\n  trustpilot_review_count: $json.trustpilot_review_count,\n  supabase_status: $json.statusCode || $json.ok || 'written'\n}) }}",
         "options": {}
       },
       "id": "trustpilot-0009-0009-0009-0009-000000000009",

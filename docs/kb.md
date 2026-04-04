@@ -438,7 +438,7 @@ The Autonomous Framework (AF) convention separates research/planning agents from
 
 ### 8.2 Batch pipeline execution order (admin panel)
 
-The admin panel `BATCH_PIPELINE_IDS` controls which pipelines are shown and in what order. As of 2026-04-04:
+The admin panel `BATCH_PIPELINE_IDS` controls which pipelines are shown and in what order. As of 2026-04-05:
 
 | Step | Pipeline ID | Name | Tool |
 |---|---|---|---|
@@ -448,7 +448,6 @@ The admin panel `BATCH_PIPELINE_IDS` controls which pipelines are shown and in w
 | Step 3 | `tier3_batch_crawl` | Step 3 — Tier 3 Batch Crawl | Apify WCC · async |
 | Step 4 | `embed_vendor_pages` | Step 4 — Embed Vendor Pages | Ollama · local |
 | Step 5 | `firmographic_enrichment` | Step 5 — Firmographic Enrichment | RapidAPI · Datagma |
-| Step 6 | `linkedin_enrichment` | Step 6 — LinkedIn Enrichment | RapidAPI · LinkedIn |
 | Step 7 | `g2_rapidapi_enrichment` | Step 7 — G2 RapidAPI Enrichment | RapidAPI · G2 |
 | Step 8 | `trustpilot_enrichment` | Step 8 — Trustpilot Enrichment | Trustpilot · HTTP |
 | Step 9 | `feature_depth_enrichment` | Step 9 — Feature Depth Enrichment | Help crawl · GPT-4o mini |

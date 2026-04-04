@@ -193,6 +193,5 @@ The following pipelines are / will be exposed as manual trigger buttons in `/adm
 | `g2_rapidapi_enrichment` | G2 Enrichment (all vendors) | Existing |
 | `site_crawl_enrichment` | Site Crawl (Tiered) | Add |
 | `firmographic_enrichment` | Firmographic (Datagma) | Add |
-| `linkedin_enrichment` | LinkedIn Enrichment | Add |
 | `google_discovery` | Google Discovery | Add |
 | `full_enrichment_cycle` | **Full Enrichment Cycle** (all sources in order) | Add |

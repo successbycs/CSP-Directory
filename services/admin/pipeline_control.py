@@ -50,12 +50,6 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
         "command": ["scripts/enrich_firmographic.py"],
     },
     {
-        "pipeline_id": "linkedin_enrichment",
-        "name": "Step 6 — LinkedIn Enrichment",
-        "description": "Enriches vendors with LinkedIn data via LinkedIn Data API (RapidAPI). Fills ceo_linkedin, linkedin_url, leadership. Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
-        "command": ["scripts/enrich_linkedin.py"],
-    },
-    {
         "pipeline_id": "site_crawl_enrichment",
         "name": "Step 2 — Site Crawl (Tiered)",
         "description": "Re-crawls vendor homepages using three-tier strategy: Tier 1 (free HTTP) → Tier 2 (Apify RAG) → Tier 3 (Apify WCC + proxy). Requires N8N_CRAWL_TIER1/2/3_WEBHOOK env vars.",
@@ -256,6 +250,9 @@ def reset_pipeline_state(pipeline_id: str) -> dict[str, Any]:
 
 
 def _python_executable() -> str:
+    venv_python = PROJECT_ROOT / ".venv" / "bin" / "python"
+    if venv_python.exists() and os.access(venv_python, os.X_OK):
+        return str(venv_python)
     return sys.executable
 
 
@@ -336,4 +333,3 @@ def _save_state_unlocked(state: dict[str, Any]) -> None:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
-

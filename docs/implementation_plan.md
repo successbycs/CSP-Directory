@@ -4,6 +4,8 @@ This is the operator-readable milestone plan. The machine-readable source of tru
 
 **Current focus:** M109 — Production bug fix for lead capture backend across Vercel, Supabase, and n8n
 
+**Blocked:** M110 — LinkedIn enrichment removed from the admin flow pending replacement API selection
+
 ---
 
 ## Completed

@@ -50,6 +50,8 @@ def main() -> None:
         sys.exit(1)
 
     admin_url = os.environ.get("ADMIN_BASE_URL", "http://127.0.0.1:8787").strip()
+    supabase_url = os.environ.get("SUPABASE_URL", "").strip()
+    supabase_key = os.environ.get("SUPABASE_KEY", "").strip()
 
     client = supabase_client.get_supabase_client()
 
@@ -83,6 +85,8 @@ def main() -> None:
                 json={
                     "vendors": [{"vendor_name": name, "website": website}],
                     "rapidapi_key": rapidapi_key,
+                    "supabase_url": supabase_url,
+                    "supabase_key": supabase_key,
                     "admin_url": admin_url,
                 },
                 timeout=60,

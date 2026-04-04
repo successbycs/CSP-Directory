@@ -14,7 +14,7 @@
       "parameters": {
         "path": "csp-linkedin-enrichment",
         "httpMethod": "POST",
-        "responseMode": "onReceived",
+        "responseMode": "responseNode",
         "options": {}
       }
     },
@@ -25,7 +25,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '', linkedin_url: body.linkedin_url || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', linkedin_url: v.linkedin_url || '', rapidapi_key, supabase_url, supabase_key } }));"
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '', linkedin_url: body.linkedin_url || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\n\nfunction normalizeDomain(value) {\n  const rawValue = String(value || '').trim();\n  if (!rawValue) return '';\n  try {\n    const candidate = /^https?:\\/\\//i.test(rawValue) ? rawValue : `https://${rawValue}`;\n    return new URL(candidate).hostname.replace(/^www\\./i, '').toLowerCase();\n  } catch {\n    return rawValue.replace(/^https?:\\/\\//i, '').replace(/^www\\./i, '').split('/')[0].toLowerCase();\n  }\n}\n\nreturn vendors\n  .map(v => ({\n    json: {\n      website: v.website,\n      vendor_name: v.vendor_name || '',\n      linkedin_url: v.linkedin_url || '',\n      domain: normalizeDomain(v.website),\n      rapidapi_key,\n      supabase_url,\n      supabase_key,\n    }\n  }))\n  .filter(item => item.json.domain);"
       }
     },
     {
@@ -39,7 +39,7 @@
         "url": "https://linkedin-data-api.p.rapidapi.com/get-company-by-domain",
         "queryParameters": {
           "parameters": [
-            { "name": "domain", "value": "={{ new URL($json.website).hostname.replace(/^www\\./, '') }}" }
+            { "name": "domain", "value": "={{ $json.domain }}" }
           ]
         },
         "headers": {
@@ -48,7 +48,10 @@
             { "name": "x-rapidapi-key", "value": "={{ $json.rapidapi_key }}" }
           ]
         },
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "neverError": true, "fullResponse": true } }
+        }
       }
     },
     {
@@ -58,7 +61,7 @@
       "typeVersion": 2,
       "position": [900, 300],
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nconst website = $('Split Vendors').first().json.website;\nconst vendor_name = $('Split Vendors').first().json.vendor_name;\n\nconst company = data.data || data.company || data || {};\nconst extracted = {};\n\n// Company LinkedIn URL\nconst linkedinUrl = company.linkedin_url || company.linkedInUrl || company.url;\nif (linkedinUrl && linkedinUrl.includes('linkedin.com')) {\n  extracted.linkedin_url = linkedinUrl;\n}\n\n// Extract executives / leadership\nconst employees = company.employees || company.executives || company.keyPeople || [];\nconst leadership = [];\nlet ceo_linkedin = '';\nlet ceo_name = '';\n\nfor (const person of employees) {\n  const title = person.title || person.headline || '';\n  const name = person.name || person.full_name || [person.firstName, person.lastName].filter(Boolean).join(' ');\n  const profileUrl = person.linkedin_url || person.profile_url || person.url || '';\n  if (name) {\n    leadership.push({ name, title, linkedin_url: profileUrl });\n    if (!ceo_name && /ceo|chief executive|founder|co.?founder/i.test(title)) {\n      ceo_name = name;\n      ceo_linkedin = profileUrl;\n    }\n  }\n}\n\nif (leadership.length) extracted.leadership = leadership;\nif (ceo_name) extracted.ceo_name = ceo_name;\nif (ceo_linkedin) extracted.ceo_linkedin = ceo_linkedin;\n\nconst has_data = Object.keys(extracted).length > 0;\nreturn [{ json: { website, vendor_name, extracted, has_data, pipeline_name: 'csp-linkedin-enrichment' } }];"
+        "jsCode": "const response = $input.first().json;\nconst vendor = $('Split Vendors').first().json;\nconst website = vendor.website;\nconst vendor_name = vendor.vendor_name;\nconst statusCode = response.statusCode || response.$response?.statusCode || 0;\nconst payload = response.body || response.data || response;\nconst company = payload?.data || payload?.company || payload || {};\nconst extracted = {};\n\nlet providerError = '';\nif (statusCode >= 400) {\n  providerError = payload?.message || payload?.error || `http_${statusCode}`;\n}\nif (!providerError && company?.success === false) {\n  providerError = company.message || company.error || 'provider_unavailable';\n}\nif (!providerError && payload?.success === false) {\n  providerError = payload.message || payload.error || 'provider_unavailable';\n}\n\nconst linkedinUrl = company.linkedin_url || company.linkedinUrl || company.linkedInUrl || company.url;\nif (linkedinUrl && String(linkedinUrl).includes('linkedin.com')) {\n  extracted.linkedin_url = linkedinUrl;\n}\n\nconst employees = company.employees || company.executives || company.keyPeople || company.teamMembers || [];\nconst leadership = [];\nlet ceo_linkedin = '';\nlet ceo_name = '';\n\nfor (const person of employees) {\n  const title = person.title || person.headline || person.role || '';\n  const name = person.name || person.full_name || [person.firstName, person.lastName].filter(Boolean).join(' ');\n  const profileUrl = person.linkedin_url || person.linkedinUrl || person.profile_url || person.profileUrl || person.url || '';\n  if (!name) continue;\n  leadership.push({ name, title, linkedin_url: profileUrl });\n  if (!ceo_name && /ceo|chief executive|founder|co.?founder/i.test(title)) {\n    ceo_name = name;\n    ceo_linkedin = profileUrl;\n  }\n}\n\nif (leadership.length) extracted.leadership = leadership;\nif (ceo_name) extracted.ceo_name = ceo_name;\nif (ceo_linkedin) extracted.ceo_linkedin = ceo_linkedin;\n\nconst has_data = Object.keys(extracted).length > 0;\nreturn [{ json: { website, vendor_name, extracted, has_data, error: providerError, status_code: statusCode, pipeline_name: 'csp-linkedin-enrichment' } }];"
       }
     },
     {
@@ -96,7 +99,7 @@
         "headerParameters": {
           "parameters": [
             { "name": "apikey", "value": "={{ $('Split Vendors').first().json.supabase_key }}" },
-            { "name": "Authorization", "value": "=Bearer {{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "={{ 'Bearer ' + $('Split Vendors').first().json.supabase_key }}" },
             { "name": "Prefer", "value": "return=minimal" }
           ]
         },
@@ -117,7 +120,7 @@
       "position": [1340, 420],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={ \"ok\": false, \"reason\": \"no_linkedin_data\", \"website\": \"{{ $json.website }}\" }"
+        "responseBody": "={{ { ok: false, reason: $json.error || 'no_linkedin_data', website: $json.website, status_code: $json.status_code || 0 } }}"
       }
     },
     {

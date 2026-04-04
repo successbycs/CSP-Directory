@@ -2114,13 +2114,17 @@
         "CLAUDE.md documents: kill pattern for cleaning stale processes and checkpoints"
       ],
       "proof_artifact": "runs/proofs/M-AF18_monitor_fix.json",
-      "interaction_targets": ["system"],
-      "verify": ["python3 scripts/autonomous_audit.py"],
+      "interaction_targets": [
+        "system"
+      ],
+      "verify": [
+        "python3 scripts/autonomous_audit.py"
+      ],
       "notes": "Root cause: Claude Code spawned 15+ staggered background monitoring tasks in a single session. When context reset, all fired as stale notifications. Fix: single reusable polling script + CLAUDE.md rule limiting monitors to max 2 per AF cycle."
     },
     {
       "id": "M109",
-      "title": "Production bug fix — lead capture backend hardening across Vercel, Supabase, and n8n",
+      "title": "Production bug fix \u2014 lead capture backend hardening across Vercel, Supabase, and n8n",
       "delivery_type": "capability_delivering",
       "executor": "af",
       "status": "in_progress",
@@ -2151,6 +2155,32 @@
         "python3 scripts/autonomous_audit.py"
       ],
       "notes": "Incident captured from live triage on 2026-04-05. n8n execution 2445 failed with 'Unused Respond to Webhook node found in the workflow' because the webhook was set to onReceived while Respond to Webhook nodes existed; live workflow was corrected to responseNode and verified with Discord delivery. Remaining production issue: https://vendors.successbycs.com/api/lead-capture still returns 500 with HTTP Error 404: Not Found, which was reproduced against the configured Supabase REST endpoint for lead_captures. Workspace .env currently resolves SUPABASE_KEY to an anon token, so operator must repair the Vercel Supabase credential and apply the core_persistence_schema.sql lead_captures DDL to the target project."
+    },
+    {
+      "id": "M110",
+      "title": "LinkedIn enrichment blocked pending provider replacement",
+      "delivery_type": "capability_delivering",
+      "status": "blocked",
+      "dependencies": [
+        "M109"
+      ],
+      "proof_description": "Retire the broken LinkedIn Data API Step 6 path from the admin control surface until a replacement provider is selected and wired. Preserve the enrichment script and n8n workflow as implementation stubs, but prevent operators from launching Step 6 from the admin panel while the provider decision is unresolved.",
+      "acceptance_criteria": [
+        "Step 6 \u2014 LinkedIn Enrichment is removed from the admin batch pipeline cards and default pipeline controls",
+        "pipeline_control no longer exposes linkedin_enrichment as a runnable admin pipeline",
+        "Implementation plan records LinkedIn enrichment as blocked pending replacement API selection",
+        "Replacement-provider follow-up is explicitly tracked against scripts/enrich_linkedin.py and n8n/workflows/csp-linkedin-enrichment.workflow.json"
+      ],
+      "proof_artifact": "runs/proofs/M110_linkedin_blocked_pending_provider.json",
+      "interaction_targets": [
+        "operator",
+        "system"
+      ],
+      "verify": [
+        ".venv/bin/python -m py_compile services/admin/pipeline_control.py",
+        "node --check docs/website/admin.js"
+      ],
+      "notes": "Blocked on provider decision. RapidAPI linkedin-data-api is not viable for Step 6. Candidate replacements under review: Captain Data and Apollo. Re-enable only after a new provider contract, field mapping, and live webhook test are in place."
     }
   ]
 }

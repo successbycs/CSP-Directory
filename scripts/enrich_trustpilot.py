@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -60,31 +61,46 @@ def main(vendor_website: str = "", limit: int = 0, skip_existing: bool = True) -
         print("No vendors to enrich (all may already have Trustpilot data).", flush=True)
         return 0
 
-    print(f"Trustpilot enrichment: posting {len(vendors)} vendors to n8n", flush=True)
-
-    payload = json.dumps({
-        "vendors": [{"vendor_name": v.get("name") or "", "website": v.get("website") or ""} for v in vendors],
-        "supabase_url": SUPABASE_URL,
-        "supabase_key": SUPABASE_KEY,
-    }).encode()
-
     webhook_url = f"{N8N_BASE_URL}/webhook/{WEBHOOK_PATH}"
-    req = urllib.request.Request(webhook_url, data=payload, method="POST")
-    req.add_header("Content-Type", "application/json")
+    print(f"Trustpilot enrichment: processing {len(vendors)} vendors via n8n", flush=True)
 
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            raw = r.read()
+    hits = misses = errors = 0
+    for idx, vendor in enumerate(vendors, start=1):
+        payload = json.dumps({
+            "vendors": [{
+                "vendor_name": vendor.get("name") or "",
+                "website": vendor.get("website") or "",
+            }],
+            "supabase_url": SUPABASE_URL,
+            "supabase_key": SUPABASE_KEY,
+        }).encode()
+        req = urllib.request.Request(webhook_url, data=payload, method="POST")
+        req.add_header("Content-Type", "application/json")
+        name = vendor.get("name") or vendor.get("website") or f"vendor-{idx}"
+        try:
+            with urllib.request.urlopen(req, timeout=120) as response:
+                raw = response.read()
             result = json.loads(raw) if raw.strip() else {"ok": True, "async": True}
-        print(f"Done: {result}", flush=True)
-        return 0
-    except urllib.error.HTTPError as e:
-        body = e.read().decode(errors="replace")
-        print(f"ERROR {e.code}: {body}", flush=True)
-        return 1
-    except Exception as exc:
-        print(f"ERROR: {exc}", flush=True)
-        return 1
+            if result.get("ok"):
+                hits += 1
+                print(
+                    f"[{idx}/{len(vendors)}] {name}: hit rating={result.get('trustpilot_rating')} reviews={result.get('trustpilot_review_count')}",
+                    flush=True,
+                )
+            else:
+                misses += 1
+                print(f"[{idx}/{len(vendors)}] {name}: miss {result.get('reason', 'no_data')}", flush=True)
+        except urllib.error.HTTPError as error:
+            body = error.read().decode(errors="replace")
+            errors += 1
+            print(f"[{idx}/{len(vendors)}] {name}: HTTP {error.code} {body}", flush=True)
+        except Exception as exc:
+            errors += 1
+            print(f"[{idx}/{len(vendors)}] {name}: ERROR {exc}", flush=True)
+        time.sleep(0.2)
+
+    print(f"Done. Hits: {hits}, Misses: {misses}, Errors: {errors}, Total: {len(vendors)}", flush=True)
+    return 0 if errors == 0 else 1
 
 
 if __name__ == "__main__":

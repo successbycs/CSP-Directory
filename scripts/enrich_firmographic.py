@@ -33,6 +33,8 @@ RAPIDAPI_KEY  = os.environ.get("RAPIDAPI_KEY", "")
 RAPIDAPI_HOST = "enrichment-b2b-linkedin-crunchbase-datagma.p.rapidapi.com"
 SUPABASE_URL  = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY  = os.environ.get("SUPABASE_KEY", "")
+MAX_DATAGMA_RETRIES = 3
+DEFAULT_RETRY_AFTER_SECONDS = 2.0
 
 
 def _sb_get(path: str) -> list[dict]:
@@ -60,17 +62,26 @@ def fetch_datagma(domain: str) -> dict | None:
     if not RAPIDAPI_KEY:
         raise RuntimeError("RAPIDAPI_KEY not set")
     url = f"https://{RAPIDAPI_HOST}/api/search?domain={domain}"
-    req = urllib.request.Request(url)
-    req.add_header("x-rapidapi-key", RAPIDAPI_KEY)
-    req.add_header("x-rapidapi-host", RAPIDAPI_HOST)
-    try:
-        with urllib.request.urlopen(req, timeout=20) as r:
-            data = json.loads(r.read())
-            return data if isinstance(data, dict) and data.get("domain") else None
-    except urllib.error.HTTPError as e:
-        if e.code in (404, 402):
-            return None
-        raise
+    for attempt in range(1, MAX_DATAGMA_RETRIES + 1):
+        req = urllib.request.Request(url)
+        req.add_header("x-rapidapi-key", RAPIDAPI_KEY)
+        req.add_header("x-rapidapi-host", RAPIDAPI_HOST)
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.loads(r.read())
+                return data if isinstance(data, dict) and data.get("domain") else None
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 402):
+                return None
+            if e.code == 429 and attempt < MAX_DATAGMA_RETRIES:
+                retry_after = e.headers.get("Retry-After")
+                try:
+                    wait_seconds = max(float(retry_after), DEFAULT_RETRY_AFTER_SECONDS)
+                except (TypeError, ValueError):
+                    wait_seconds = DEFAULT_RETRY_AFTER_SECONDS * attempt
+                time.sleep(wait_seconds)
+                continue
+            raise
 
 
 def main(dry_run: bool = False, limit: int | None = None, vendor_filter: str | None = None) -> int:

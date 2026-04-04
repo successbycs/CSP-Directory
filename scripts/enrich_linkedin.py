@@ -1,15 +1,12 @@
 """
-LinkedIn enrichment via RapidAPI Real-Time LinkedIn Scraper API.
+LinkedIn enrichment via n8n csp-linkedin-enrichment workflow.
 
 Usage:
-    python scripts/enrich_linkedin.py [--dry-run] [--limit N] [--vendor WEBSITE]
+    python scripts/enrich_linkedin.py [--vendor WEBSITE] [--limit N] [--all]
 
-Fetches company profile by domain for each vendor in cs_vendors and writes
-linkedin_url, ceo_linkedin, leadership fields via admin enrich-write.
-
-Requires:
-    RAPIDAPI_KEY env var
-    RapidAPI subscription to 'linkedin-api8.p.rapidapi.com'
+Posts vendor batch to the n8n LinkedIn enrichment webhook. The workflow uses
+the maintained RapidAPI provider and writes linkedin_url, ceo_linkedin, and
+leadership data back to cs_vendors.
 """
 from __future__ import annotations
 
@@ -17,24 +14,23 @@ import argparse
 import json
 import os
 import sys
-import time
+import urllib.error
+import urllib.request
 from pathlib import Path
-from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(PROJECT_ROOT / ".env")
-
-import urllib.request
-import urllib.error
-
-RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "")
-RAPIDAPI_HOST = "linkedin-api8.p.rapidapi.com"
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+RAPIDAPI_KEY = os.environ.get("RAPIDAPI_KEY", "")
+N8N_BASE_URL = os.environ.get("N8N_BASE_URL", "https://successbycs.app.n8n.cloud").rstrip("/")
+N8N_LINKEDIN_WEBHOOK = os.environ.get("N8N_LINKEDIN_WEBHOOK", "").strip()
+WEBHOOK_PATH = "csp-linkedin-enrichment"
 
 
 def _sb_get(path: str) -> list[dict]:
@@ -42,40 +38,17 @@ def _sb_get(path: str) -> list[dict]:
     req = urllib.request.Request(url)
     req.add_header("apikey", SUPABASE_KEY)
     req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
-    with urllib.request.urlopen(req, timeout=15) as r:
-        return json.loads(r.read())
+    with urllib.request.urlopen(req, timeout=15) as response:
+        return json.loads(response.read())
 
 
-def _sb_patch(website: str, fields: dict) -> None:
-    url = f"{SUPABASE_URL}/rest/v1/cs_vendors?website=eq.{urllib.request.quote(website, safe='')}"
-    data = json.dumps(fields).encode()
-    req = urllib.request.Request(url, data=data, method="PATCH")
-    req.add_header("apikey", SUPABASE_KEY)
-    req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
-    req.add_header("Content-Type", "application/json")
-    req.add_header("Prefer", "return=minimal")
-    with urllib.request.urlopen(req, timeout=15) as r:
-        r.read()
+def _webhook_url() -> str:
+    if N8N_LINKEDIN_WEBHOOK:
+        return N8N_LINKEDIN_WEBHOOK
+    return f"{N8N_BASE_URL}/webhook/{WEBHOOK_PATH}"
 
 
-def fetch_linkedin_company(domain: str) -> dict | None:
-    if not RAPIDAPI_KEY:
-        raise RuntimeError("RAPIDAPI_KEY not set")
-    url = f"https://{RAPIDAPI_HOST}/getCompanyByDomain?domain={domain}"
-    req = urllib.request.Request(url)
-    req.add_header("x-rapidapi-key", RAPIDAPI_KEY)
-    req.add_header("x-rapidapi-host", RAPIDAPI_HOST)
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            data = json.loads(r.read())
-            return data if isinstance(data, dict) and data.get("linkedInUrl") else None
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None
-        raise
-
-
-def main(dry_run: bool = False, limit: int | None = None, vendor_filter: str | None = None) -> int:
+def main(vendor_website: str = "", limit: int = 0, skip_existing: bool = True) -> int:
     if not RAPIDAPI_KEY:
         print("ERROR: RAPIDAPI_KEY not set — LinkedIn enrichment cannot run", flush=True)
         return 1
@@ -83,64 +56,62 @@ def main(dry_run: bool = False, limit: int | None = None, vendor_filter: str | N
         print("ERROR: SUPABASE_KEY not set", flush=True)
         return 1
 
-    vendors = _sb_get("cs_vendors?select=website,name,linkedin_url&include_in_directory=eq.true&limit=200")
-    if vendor_filter:
-        vendors = [v for v in vendors if vendor_filter.lower() in (v.get("website") or "").lower()]
+    vendors = _sb_get(
+        "cs_vendors?select=website,name,linkedin_url"
+        "&include_in_directory=eq.true&limit=200"
+    )
+
+    if vendor_website:
+        vendors = [v for v in vendors if vendor_website.lower() in (v.get("website") or "").lower()]
+    if skip_existing:
+        vendors = [v for v in vendors if not v.get("linkedin_url")]
     if limit:
         vendors = vendors[:limit]
 
-    print(f"LinkedIn enrichment: {len(vendors)} vendors", flush=True)
-    hits = misses = errors = 0
+    if not vendors:
+        print("No vendors to enrich (all may already have LinkedIn data).", flush=True)
+        return 0
 
-    for v in vendors:
-        website = v.get("website") or ""
-        name = v.get("name") or ""
-        if v.get("linkedin_url"):
-            print(f"  SKIP {name} — already has linkedin_url", flush=True)
-            continue
+    print(f"LinkedIn enrichment: posting {len(vendors)} vendors to n8n", flush=True)
 
-        domain = website.replace("https://", "").replace("http://", "").rstrip("/").split("/")[0]
-        print(f"  {name} ({domain})… ", end="", flush=True)
+    payload = json.dumps(
+        {
+            "vendors": [
+                {
+                    "vendor_name": v.get("name") or "",
+                    "website": v.get("website") or "",
+                    "linkedin_url": v.get("linkedin_url") or "",
+                }
+                for v in vendors
+            ],
+            "rapidapi_key": RAPIDAPI_KEY,
+            "supabase_url": SUPABASE_URL,
+            "supabase_key": SUPABASE_KEY,
+        }
+    ).encode()
 
-        try:
-            data = fetch_linkedin_company(domain)
-            if not data:
-                print("miss", flush=True)
-                misses += 1
-                continue
+    req = urllib.request.Request(_webhook_url(), data=payload, method="POST")
+    req.add_header("Content-Type", "application/json")
 
-            fields: dict[str, Any] = {}
-            if data.get("linkedInUrl"):
-                fields["linkedin_url"] = data["linkedInUrl"]
-            if data.get("staffCount"):
-                fields["company_size"] = str(data["staffCount"])
-            if data.get("headquarter"):
-                hq = data["headquarter"]
-                parts = [hq.get("city"), hq.get("country")]
-                fields["hq_address"] = ", ".join(p for p in parts if p)
-            if data.get("foundedOn", {}).get("year"):
-                fields["founded"] = str(data["foundedOn"]["year"])
-
-            print(f"hit → {fields.get('linkedin_url', '?')}", flush=True)
-            hits += 1
-
-            if not dry_run and fields:
-                _sb_patch(website, fields)
-
-        except Exception as e:
-            print(f"ERROR: {e}", flush=True)
-            errors += 1
-
-        time.sleep(0.5)
-
-    print(f"\nDone: {hits} hits, {misses} misses, {errors} errors", flush=True)
-    return 0
+    try:
+        with urllib.request.urlopen(req, timeout=120) as response:
+            raw = response.read()
+        result = json.loads(raw) if raw.strip() else {"ok": True, "async": True}
+        print(f"Done: {result}", flush=True)
+        return 0 if result.get("ok", True) else 1
+    except urllib.error.HTTPError as error:
+        body = error.read().decode(errors="replace")
+        print(f"ERROR {error.code}: {body}", flush=True)
+        return 1
+    except Exception as exc:
+        print(f"ERROR: {exc}", flush=True)
+        return 1
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--limit", type=int)
-    parser.add_argument("--vendor")
+    parser.add_argument("--vendor", default="", help="Filter to one vendor website")
+    parser.add_argument("--limit", type=int, default=0, help="Max vendors to process")
+    parser.add_argument("--all", dest="run_all", action="store_true", help="Include already-enriched vendors")
     args = parser.parse_args()
-    sys.exit(main(dry_run=args.dry_run, limit=args.limit, vendor_filter=args.vendor))
+    raise SystemExit(main(vendor_website=args.vendor, limit=args.limit, skip_existing=not args.run_all))
