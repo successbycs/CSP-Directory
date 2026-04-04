@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "csp-vendor-feedback",
-        "responseMode": "onReceived",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "vfb-0001-0001-0001-0001-000000000001",

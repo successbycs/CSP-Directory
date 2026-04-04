@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "csp-lead-capture-intake",
-        "responseMode": "onReceived",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "lead-0001-0001-0001-0001-000000000001",

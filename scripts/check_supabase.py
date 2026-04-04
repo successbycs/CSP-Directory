@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from services.discovery import discovery_store
 from services.persistence import run_store
 from services.persistence import search_visibility_store
+from services.persistence import lead_capture_store
 from services.persistence import supabase_client
 
 SCHEMA_SQL_PATH = PROJECT_ROOT / "supabase" / "core_persistence_schema.sql"
@@ -55,6 +56,11 @@ def build_required_schema() -> list[dict[str, Any]]:
             "table": search_visibility_store.BUYER_SEARCH_RESULT_TABLE,
             "columns": list(search_visibility_store.get_buyer_search_result_columns()),
             "purpose": "ranked search visibility persistence for operator reporting",
+        },
+        {
+            "table": lead_capture_store.LEAD_CAPTURE_TABLE,
+            "columns": list(lead_capture_store.LEAD_CAPTURE_COLUMNS),
+            "purpose": "lead capture intake persistence and admin lead visibility",
         },
     ]
 

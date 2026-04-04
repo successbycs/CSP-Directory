@@ -2117,6 +2117,40 @@
       "interaction_targets": ["system"],
       "verify": ["python3 scripts/autonomous_audit.py"],
       "notes": "Root cause: Claude Code spawned 15+ staggered background monitoring tasks in a single session. When context reset, all fired as stale notifications. Fix: single reusable polling script + CLAUDE.md rule limiting monitors to max 2 per AF cycle."
+    },
+    {
+      "id": "M109",
+      "title": "Production bug fix — lead capture backend hardening across Vercel, Supabase, and n8n",
+      "delivery_type": "capability_delivering",
+      "executor": "af",
+      "status": "in_progress",
+      "dependencies": [
+        "M53"
+      ],
+      "proof_description": "Fix the live lead capture outage on vendors.successbycs.com. The public popup currently falls through a broken /api/lead-capture path because the Vercel backend is configured with an invalid or under-privileged Supabase key and/or a target project missing the lead_captures schema. The n8n webhook also shipped with a broken response mode and must remain aligned with its Respond to Webhook nodes. Harden the code paths, restore the live Vercel API, and prove the public popup completes end-to-end.",
+      "rationale": "This is a production bug fix. The lead capture popup is a core conversion surface and was failing live with HTTP 500/404 responses. The incident spans three systems: Vercel runtime env, Supabase schema/key validity, and n8n webhook configuration. Tracking it explicitly prevents the partial fix from getting lost and makes the remaining operator actions auditable.",
+      "acceptance_criteria": [
+        "Live n8n workflow CSP Lead Capture Intake uses Webhook responseMode=responseNode and responds 200 to POST /webhook/csp-lead-capture-intake",
+        "Vercel project has a valid server-side Supabase credential configured via SUPABASE_SERVICE_ROLE_KEY or equivalent trusted key alias",
+        "Target Supabase project contains public.lead_captures with the repo-owned schema applied",
+        "POST https://vendors.successbycs.com/api/lead-capture with a valid payload returns ok:true",
+        "Landing page lead capture popup succeeds end-to-end from the browser and triggers Discord notification",
+        "scripts/check_supabase.py explicitly validates lead_captures so future deploys catch this class of failure before release"
+      ],
+      "proof_artifact": "runs/proofs/M109_lead_capture_production_fix.json",
+      "interaction_targets": [
+        "system",
+        "operator",
+        "n8n_cloud",
+        "vercel",
+        "supabase"
+      ],
+      "verify": [
+        "python3 scripts/check_supabase.py",
+        "curl -f -X POST https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake -H 'Content-Type: application/json' -d '{\"lead_name\":\"Test User\",\"lead_email\":\"chris@successbycs.com\",\"company_name\":\"SuccessByCS\",\"lead_intent\":\"browse_directory\"}'",
+        "python3 scripts/autonomous_audit.py"
+      ],
+      "notes": "Incident captured from live triage on 2026-04-05. n8n execution 2445 failed with 'Unused Respond to Webhook node found in the workflow' because the webhook was set to onReceived while Respond to Webhook nodes existed; live workflow was corrected to responseNode and verified with Discord delivery. Remaining production issue: https://vendors.successbycs.com/api/lead-capture still returns 500 with HTTP Error 404: Not Found, which was reproduced against the configured Supabase REST endpoint for lead_captures. Workspace .env currently resolves SUPABASE_KEY to an anon token, so operator must repair the Vercel Supabase credential and apply the core_persistence_schema.sql lead_captures DDL to the target project."
     }
   ]
 }

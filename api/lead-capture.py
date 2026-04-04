@@ -43,21 +43,41 @@ class handler(BaseHTTPRequestHandler):
             self._respond(400, {"ok": False, "error": str(error)})
             return
 
+        storage_error = None
+        storage_saved = False
         try:
             _upsert(row)
-            notification = _trigger_n8n_lead_notification(row)
+            storage_saved = True
+        except Exception as error:
+            storage_error = str(error)
+
+        notification = _trigger_n8n_lead_notification(row)
+        notification_error = notification.get("error") if isinstance(notification, dict) else None
+
+        if not storage_saved and notification_error:
             self._respond(
-                200,
+                502,
                 {
-                    "ok": True,
-                    "lead": row,
+                    "ok": False,
+                    "error": "lead_capture_failed",
+                    "storage_error": storage_error,
                     "notification": notification,
-                    "thank_you_message": notification.get("thank_you_message"),
-                    "booking_url": notification.get("booking_url"),
                 },
             )
-        except Exception as error:
-            self._respond(500, {"ok": False, "error": str(error)})
+            return
+
+        self._respond(
+            200,
+            {
+                "ok": True,
+                "lead": row,
+                "storage_saved": storage_saved,
+                "storage_error": storage_error,
+                "notification": notification,
+                "thank_you_message": notification.get("thank_you_message") if isinstance(notification, dict) else None,
+                "booking_url": notification.get("booking_url") if isinstance(notification, dict) else None,
+            },
+        )
 
     def do_OPTIONS(self):
         self._respond(200, {"ok": True})
@@ -128,7 +148,7 @@ def _build_row(payload: dict) -> dict:
 
 def _upsert(row: dict) -> None:
     url = os.environ.get("SUPABASE_URL", "").rstrip("/")
-    key = os.environ.get("SUPABASE_KEY", "")
+    key = _resolve_supabase_key()
     if not url or not key:
         raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set")
 
@@ -149,6 +169,14 @@ def _upsert(row: dict) -> None:
     with urllib.request.urlopen(req, timeout=10) as resp:
         if resp.status not in (200, 201):
             raise RuntimeError(f"Supabase returned {resp.status}")
+
+
+def _resolve_supabase_key() -> str:
+    for env_name in ("SUPABASE_SERVICE_ROLE_KEY", "SERVICE_ROLE_KEY", "SUPABASE_KEY", "SUPABASE_ANON_KEY"):
+        value = os.environ.get(env_name, "").strip()
+        if value:
+            return value
+    return ""
 
 
 def _trigger_n8n_lead_notification(row: dict) -> dict:

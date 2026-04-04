@@ -2,7 +2,7 @@
 
 This is the operator-readable milestone plan. The machine-readable source of truth is `milestone_registry.json`.
 
-**Current focus:** M42 — Expand vendor catalog to 50+ vendors (48 included as of 2026-03-26)
+**Current focus:** M109 — Production bug fix for lead capture backend across Vercel, Supabase, and n8n
 
 ---
 
@@ -133,6 +133,31 @@ Depends on: M41
 python3 scripts/enrich_vendors_deterministic.py --vendor-id <gainsight_id>
 python3 scripts/enrich_vendors_deterministic.py --vendor-id <outreach_id>
 python3 -m pytest tests/test_canonical_name.py -v
+python3 scripts/autonomous_audit.py
+```
+
+---
+
+### M109 Production bug fix — lead capture backend hardening across Vercel, Supabase, and n8n
+Status: `in_progress`
+Depends on: M53
+
+**Objective:** Fix the live lead capture outage on `vendors.successbycs.com`. The public popup currently falls through a broken `/api/lead-capture` path because the Vercel backend is configured with an invalid or under-privileged Supabase key and/or a target project missing the `lead_captures` schema. The n8n webhook also shipped with a broken response mode and must remain aligned with its `Respond to Webhook` nodes.
+
+**Bug-fix status:** n8n root cause already identified and corrected live. Execution `2445` failed with `Unused Respond to Webhook node found in the workflow`; the live `CSP Lead Capture Intake` workflow was updated from `onReceived` to `responseNode` and verified with a real Discord delivery. Remaining production issue: `https://vendors.successbycs.com/api/lead-capture` still returns `500` with `HTTP Error 404: Not Found`, reproduced against the configured Supabase REST endpoint for `lead_captures`.
+
+**Acceptance criteria:**
+- Live n8n workflow `CSP Lead Capture Intake` uses `Webhook.responseMode=responseNode` and responds `200` to POST `/webhook/csp-lead-capture-intake`
+- Vercel project has a valid server-side Supabase credential configured via `SUPABASE_SERVICE_ROLE_KEY` or equivalent trusted key alias
+- Target Supabase project contains `public.lead_captures` with the repo-owned schema applied
+- `POST https://vendors.successbycs.com/api/lead-capture` with a valid payload returns `ok:true`
+- Landing page lead capture popup succeeds end-to-end from the browser and triggers Discord notification
+- `scripts/check_supabase.py` explicitly validates `lead_captures` so future deploys catch this class of failure before release
+
+**Verification:**
+```sh
+python3 scripts/check_supabase.py
+curl -f -X POST https://successbycs.app.n8n.cloud/webhook/csp-lead-capture-intake -H 'Content-Type: application/json' -d '{"lead_name":"Test User","lead_email":"chris@successbycs.com","company_name":"SuccessByCS","lead_intent":"browse_directory"}'
 python3 scripts/autonomous_audit.py
 ```
 

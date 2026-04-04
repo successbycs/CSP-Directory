@@ -203,7 +203,7 @@ def is_configured() -> bool:
 def get_supabase_config() -> dict[str, str] | None:
     """Return Supabase config from environment variables when present."""
     supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
+    supabase_key = _resolve_supabase_key()
 
     if not supabase_url or not supabase_key:
         return None
@@ -212,6 +212,15 @@ def get_supabase_config() -> dict[str, str] | None:
         "url": supabase_url,
         "key": supabase_key,
     }
+
+
+def _resolve_supabase_key() -> str | None:
+    """Prefer a privileged key when one is available in the environment."""
+    for env_name in ("SUPABASE_SERVICE_ROLE_KEY", "SERVICE_ROLE_KEY", "SUPABASE_KEY", "SUPABASE_ANON_KEY"):
+        value = os.getenv(env_name)
+        if value:
+            return value
+    return None
 
 
 def get_supabase_client() -> "Client":
