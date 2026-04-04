@@ -39,31 +39,31 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
     },
     {
         "pipeline_id": "g2_rapidapi_enrichment",
-        "name": "G2 RapidAPI Enrichment",
+        "name": "Step 7 — G2 RapidAPI Enrichment",
         "description": "Runs G2 RapidAPI enrichment over all include_in_directory vendors. Fills g2_url, g2_rating, g2_review_count, g2_categories.",
         "command": ["scripts/enrich_g2_rapidapi.py"],
     },
     {
         "pipeline_id": "firmographic_enrichment",
-        "name": "Firmographic Enrichment (Datagma)",
+        "name": "Step 5 — Firmographic Enrichment",
         "description": "Enriches vendors with firmographic data via Datagma (RapidAPI). Fills founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Requires RAPIDAPI_KEY + Datagma subscription.",
         "command": ["scripts/enrich_firmographic.py"],
     },
     {
         "pipeline_id": "linkedin_enrichment",
-        "name": "LinkedIn Enrichment",
+        "name": "Step 6 — LinkedIn Enrichment",
         "description": "Enriches vendors with LinkedIn data via LinkedIn Data API (RapidAPI). Fills ceo_linkedin, linkedin_url, leadership. Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
         "command": ["scripts/enrich_linkedin.py"],
     },
     {
         "pipeline_id": "site_crawl_enrichment",
-        "name": "Site Crawl (Tiered)",
+        "name": "Step 2 — Site Crawl (Tiered)",
         "description": "Re-crawls vendor homepages using three-tier strategy: Tier 1 (free HTTP) → Tier 2 (Apify RAG) → Tier 3 (Apify WCC + proxy). Requires N8N_CRAWL_TIER1/2/3_WEBHOOK env vars.",
         "command": ["scripts/enrich_site_crawl.py"],
     },
     {
         "pipeline_id": "google_discovery",
-        "name": "Google Discovery",
+        "name": "Step 1 — Google Discovery",
         "description": "Discovers new vendor candidates via Apify Google Search. Requires N8N_DISCOVERY_WEBHOOK and APIFY_API_TOKEN.",
         "command": ["scripts/run_discovery.py"],
     },
@@ -124,32 +124,45 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
     },
     {
         "pipeline_id": "ops_llm_enrichment_batch",
-        "name": "Step 7 — Batch LLM Enrichment (GPT-4o)",
+        "name": "Step 10 — Batch LLM Enrichment (GPT-4o)",
         "description": "Run crawl → embed → GPT-4o RAG extraction for all vendors not yet enriched. Updates directory_dataset.json incrementally. Falls back to local Ollama if available.",
         "command": ["scripts/run_batch_enrichment.py"],
     },
     {
         "pipeline_id": "ops_ai_summary",
-        "name": "Step 8 — AI Summary (GPT-4o mini)",
+        "name": "Step 11 — AI Summary (GPT-4o mini)",
         "description": "Generate a 400-word vendor summary using GPT-4o mini from live web fetch + stored pages. Stored in ai_summary column and exported to directory dataset. Skips vendors that already have a summary.",
         "command": ["-m", "services.ops.run_ai_summary"],
     },
     {
         "pipeline_id": "ops_export_dataset",
-        "name": "Step 9 — Export Dataset to Vercel",
+        "name": "Step 12 — Export Dataset to Vercel",
         "description": "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to update the live directory.",
         "command": ["scripts/export_directory_dataset.py"],
+    },
+    # ── batch crawl + embedding ────────────────────────────────────────────
+    {
+        "pipeline_id": "tier3_batch_crawl",
+        "name": "Step 3 — Tier 3 Batch Crawl",
+        "description": "Triggers csp-crawl-tier3-wcc for all directory vendors without sufficient pages. Apify WCC, async, ~$0.004/page. Skips vendors with 20+ pages already.",
+        "command": ["scripts/crawl_tier3_batch.py"],
+    },
+    {
+        "pipeline_id": "embed_vendor_pages",
+        "name": "Step 4 — Embed Vendor Pages",
+        "description": "Chunks vendor_pages text and embeds with nomic-embed-text (local Ollama). Stores in vendor_page_embeddings for RAG retrieval. Skips already-embedded vendors.",
+        "command": ["scripts/embed_vendor_pages.py"],
     },
     # ── n8n-backed enrichments ─────────────────────────────────────────────
     {
         "pipeline_id": "trustpilot_enrichment",
-        "name": "Trustpilot Enrichment",
+        "name": "Step 8 — Trustpilot Enrichment",
         "description": "Scrapes Trustpilot review pages for all include_in_directory vendors. Fills trustpilot_rating and trustpilot_review_count. Triggered via n8n csp-trustpilot-enrichment workflow.",
         "command": ["scripts/enrich_trustpilot.py"],
     },
     {
         "pipeline_id": "feature_depth_enrichment",
-        "name": "Feature Depth Enrichment",
+        "name": "Step 9 — Feature Depth Enrichment",
         "description": "Crawls vendor help/docs sites and runs LLM feature taxonomy extraction across 6 dimensions. Computes category-relative feature_depth_score (0-100) and feature_signals list. Triggered via n8n csp-feature-depth-enrichment workflow.",
         "command": ["scripts/enrich_feature_depth.py"],
     },
@@ -264,6 +277,24 @@ def _build_pipeline_view(spec: dict[str, Any], state: dict[str, Any]) -> dict[st
 def _refresh_pipeline_status_unlocked(pipeline_id: str, state: dict[str, Any], now_iso: str) -> None:
     process = _ACTIVE_RUNS.get(pipeline_id)
     if process is None:
+        # If state says running but we lost the handle (e.g. server restart),
+        # check if the PID is still alive before marking failed.
+        if state.get("status") == "running":
+            pid = state.get("pid")
+            if pid:
+                import signal
+                try:
+                    os.kill(int(pid), 0)  # 0 = just check existence
+                    # PID still alive — leave as running
+                    state["updated_at"] = now_iso
+                    return
+                except (OSError, ProcessLookupError):
+                    pass
+            # PID gone — mark failed so it can be re-triggered
+            state["status"] = "failed"
+            state["last_exit_code"] = -1
+            state["last_finished_at"] = now_iso
+            state["updated_at"] = now_iso
         return
     return_code = process.poll()
     if return_code is None:

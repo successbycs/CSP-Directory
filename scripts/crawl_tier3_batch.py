@@ -32,6 +32,8 @@ N8N_BASE_URL = os.environ.get("N8N_BASE_URL", "https://successbycs.app.n8n.cloud
 WEBHOOK_PATH = "csp-crawl-tier3-wcc"
 
 MIN_PAGES_THRESHOLD = 20  # skip vendors already at this many pages
+BATCH_SIZE = 8            # max concurrent Apify runs (8 × 2048MB = 16384MB, well under 32768MB cap)
+BATCH_SLEEP = 120         # seconds to wait between batches for earlier runs to free memory
 
 
 def _sb_get(path: str) -> list[dict]:
@@ -84,7 +86,7 @@ def trigger_crawl(vendor: dict, max_pages: int) -> bool:
         return False
 
 
-def main(limit: int = 0, max_pages: int = 50, vendor_filter: str = "", force: bool = False) -> int:
+def main(limit: int = 0, max_pages: int = 10, vendor_filter: str = "", force: bool = False) -> int:
     if not APIFY_API_TOKEN:
         print("ERROR: APIFY_API_TOKEN not set", flush=True)
         return 1
@@ -126,13 +128,14 @@ def main(limit: int = 0, max_pages: int = 50, vendor_filter: str = "", force: bo
         print("Nothing to crawl — all vendors already have sufficient pages. Use --force to re-crawl.", flush=True)
         return 0
 
+    batches = (total + BATCH_SIZE - 1) // BATCH_SIZE
     print(f"\nTier 3 batch crawl: {total} vendors at max {max_pages} pages each", flush=True)
+    print(f"Batches: {batches} × {BATCH_SIZE} vendors, {BATCH_SLEEP}s pause between batches", flush=True)
     print(f"Estimated cost: ~${total * max_pages * 0.004:.2f}\n", flush=True)
 
     success = failed = 0
     for i, (vendor, existing) in enumerate(vendors_with_counts, 1):
         name = vendor.get("name") or vendor.get("website", "")
-        website = vendor.get("website", "")
         print(f"[{i}/{total}] {name} ({existing} existing pages)… ", end="", flush=True)
 
         ok = trigger_crawl(vendor, max_pages)
@@ -141,8 +144,12 @@ def main(limit: int = 0, max_pages: int = 50, vendor_filter: str = "", force: bo
         else:
             failed += 1
 
-        if i < total:
-            time.sleep(2)  # brief pause between vendors
+        # After each full batch (except the last), pause to let Apify free memory
+        if i < total and i % BATCH_SIZE == 0:
+            print(f"\n--- Batch {i // BATCH_SIZE}/{batches} complete — waiting {BATCH_SLEEP}s for Apify to free memory ---\n", flush=True)
+            time.sleep(BATCH_SLEEP)
+        elif i < total:
+            time.sleep(2)
 
     print(f"\nDone: {success} crawled, {failed} failed out of {total}", flush=True)
     return 0 if failed == 0 else 1
@@ -151,7 +158,7 @@ def main(limit: int = 0, max_pages: int = 50, vendor_filter: str = "", force: bo
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Batch Tier 3 crawl for all directory vendors")
     parser.add_argument("--limit", type=int, default=0, help="Max vendors to process")
-    parser.add_argument("--max-pages", type=int, default=50, help="Max pages per vendor (default 50)")
+    parser.add_argument("--max-pages", type=int, default=10, help="Max pages per vendor (default 10)")
     parser.add_argument("--vendor", default="", help="Filter to one vendor website")
     parser.add_argument("--force", action="store_true", help="Re-crawl vendors that already have pages")
     args = parser.parse_args()

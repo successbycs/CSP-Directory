@@ -230,8 +230,8 @@ def main() -> int:
     log.step_start("llm_extraction", f"Loading vendor_pages for {vendor_website}")
     pages = _load_pages(vendor_website)
     if not pages:
-        log.step_error("llm_extraction", "No vendor_pages found — run Step 2 (crawl) first")
-        return 1
+        log.step_error("llm_extraction", "No vendor_pages found — skipping (run crawl first)")
+        return 0
 
     log.step_progress("llm_extraction", f"{len(pages)} pages loaded — building chunks")
 

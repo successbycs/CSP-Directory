@@ -1,7 +1,7 @@
 # CSP Directory — Knowledge Base & Architectural Decisions
 
 **Source of truth for all design decisions, rejected alternatives, and rationale.**  
-**Last updated:** 2026-04-03  
+**Last updated:** 2026-04-04  
 **Maintainer:** Updated at the end of every significant decision conversation.
 
 ---
@@ -19,6 +19,7 @@
 9. [Milestone Map](#9-milestone-map)
 10. [Environment & Infrastructure](#10-environment--infrastructure)
 11. [M76 Build Record — Decisions & Execution](#11-m76-build-record--decisions--execution)
+12. [Post-M76 Session Record (2026-04-04)](#12-post-m76-session-record-2026-04-04)
 
 ---
 
@@ -325,15 +326,19 @@ Each column is JSONB, written exclusively by its step, never overwritten by anot
 | `csp-lead-capture-intake.workflow.json` | `csp-lead-capture` | ✅ Active | Lead forms | — |
 | `csp-crawl-tier1-direct.workflow.json` | `csp-crawl-tier1-direct` | 🔧 Built, deploy needed | Free HTTP | M74 |
 | `csp-crawl-tier2-rag.workflow.json` | `csp-crawl-tier2-rag` | 🔧 Built, deploy needed | Apify RAG | M74 |
-| `csp-crawl-tier3-wcc.workflow.json` | `csp-crawl-tier3-wcc` | 🔧 Built, deploy needed | Apify WCC | M74 |
+| `csp-crawl-tier3-wcc.workflow.json` | `csp-crawl-tier3-wcc` | ✅ Deployed — n8n Cloud ID `yeK12kXpQMdDD57Z` | Apify WCC | M74 |
 | `csp-google-discovery.workflow.json` | `csp-google-discovery` | 🔧 Built, deploy needed | Apify Google Search | M74 |
 | `csp-firmographic-enrichment.workflow.json` | `csp-firmographic-enrichment` | 🔧 Built, deploy needed | Datagma (RapidAPI) | M75 |
 | `csp-linkedin-enrichment.workflow.json` | `csp-linkedin-enrichment` | 🔧 Built, excluded M76 | LinkedIn Data API | Deferred to M78 |
+| `csp-trustpilot-enrichment.workflow.json` | `csp-trustpilot-enrichment` | ✅ Deployed, working | Trustpilot HTML scrape | Post-M76 |
 
-**M76 workflow updates required (not new builds):**
-- Tier 1/2/3: add `store-pages` write node + configurable `max_pages`
-- Datagma: write to `crawl_datagma_result` (currently writes direct to main columns)
-- G2: write to `crawl_g2_result` (currently writes direct to main columns)
+**n8n webhook key design notes (learned 2026-04-04):**
+- Webhook nodes require `typeVersion: 2` + `webhookId` field to register properly in n8n Cloud
+- `responseMode: "onReceived"` (async, responds immediately) is required for long-running jobs — n8n Cloud sits behind Cloudflare which enforces a hard 100s timeout, causing 524 errors on synchronous mode
+- Body parsing: n8n typeVersion 2 webhooks wrap the body under `.body` key — use `const body = raw.body || raw` to handle both versions
+- HTTP Request body: use `specifyBody: "json"` + `jsonBody` (no JSON.stringify) — NOT `contentType: "json"` + `body` which double-encodes
+- Tier 3 WCC: vendor_website key in vendor_pages must be domain-only (e.g. `vitally.io`), not full URL — extract domain in Validate Input node
+- Supabase upsert from n8n: requires `?on_conflict=vendor_website,page_url` in URL + `Prefer: resolution=merge-duplicates` header
 
 ---
 
@@ -431,14 +436,38 @@ The Autonomous Framework (AF) convention separates research/planning agents from
 - Pipeline state persisted in `runs/pipeline_control_state.json`
 - Log files stored in `runs/pipeline_logs/`
 
-### 8.2 Live log panel
+### 8.2 Batch pipeline execution order (admin panel)
+
+The admin panel `BATCH_PIPELINE_IDS` controls which pipelines are shown and in what order. As of 2026-04-04:
+
+| Step | Pipeline ID | Name | Tool |
+|---|---|---|---|
+| (orchestrator) | `full_pipeline` | Full Discovery + Enrichment | Full cycle |
+| Step 1 | `google_discovery` | Step 1 — Google Discovery | Apify · Google |
+| Step 2 | `site_crawl_enrichment` | Step 2 — Site Crawl (Tiered) | Apify · Crawl |
+| Step 3 | `tier3_batch_crawl` | Step 3 — Tier 3 Batch Crawl | Apify WCC · async |
+| Step 4 | `embed_vendor_pages` | Step 4 — Embed Vendor Pages | Ollama · local |
+| Step 5 | `firmographic_enrichment` | Step 5 — Firmographic Enrichment | RapidAPI · Datagma |
+| Step 6 | `linkedin_enrichment` | Step 6 — LinkedIn Enrichment | RapidAPI · LinkedIn |
+| Step 7 | `g2_rapidapi_enrichment` | Step 7 — G2 RapidAPI Enrichment | RapidAPI · G2 |
+| Step 8 | `trustpilot_enrichment` | Step 8 — Trustpilot Enrichment | Trustpilot · HTTP |
+| Step 9 | `feature_depth_enrichment` | Step 9 — Feature Depth Enrichment | Help crawl · GPT-4o mini |
+| Step 10 | `ops_llm_enrichment_batch` | Step 10 — Batch LLM Enrichment (GPT-4o) | GPT-4o |
+| Step 11 | `ops_ai_summary` | Step 11 — AI Summary (GPT-4o mini) | GPT-4o mini |
+| Step 12 | `ops_export_dataset` | Step 12 — Export Dataset to Vercel | Supabase → JSON |
+
+**Admin API trigger endpoint:** `POST /admin/pipelines/run` with body `{"pipeline_id": "..."}` — NOT `/admin/pipeline/trigger`.
+
+**Pipeline state after server restart:** `_ACTIVE_RUNS` dict is cleared on restart. The `_refresh_pipeline_status_unlocked` function now checks PID liveness via `os.kill(pid, 0)` before marking a running pipeline as failed. Pipelines still running survive a restart.
+
+### 8.3 Live log panel
 
 - Endpoint: `GET /admin/pipeline-log`
 - Poll interval: 3 seconds (from ops page JS)
 - Entry schema: `{timestamp, phase, milestone, action, message, success}`
 - Colour coding: timestamp=grey, phase=blue, action=light blue, message=white, ✓=green, ✗=red
 
-### 8.3 M76 logging additions
+### 8.4 M76 logging additions
 
 New service: `services/ops/ops_logger.py` — `OpsLogger` class with:
 - `step_start(action, message)`
@@ -451,7 +480,7 @@ All M76 Python services (llm_extractor_ollama.py, merge_module.py) use OpsLogger
 - LLM: field-by-field extraction results
 - Merge: every field decision with winning source
 
-### 8.4 Timestamp convention
+### 8.5 Timestamp convention
 
 - **Storage:** UTC ISO 8601 in all database columns and JSONB fields
 - **Display:** NZST (Pacific/Auckland) via existing `formatNzDateTime()` in admin.js
@@ -721,3 +750,52 @@ The AF `ollama_client.py` at `/home/chris/SuccessByCS-Builder/Autonomous-Framewo
 5. Open `http://127.0.0.1:8787` → Enrichment Workbench → set vendor to `https://gainsight.com`
 6. Run steps 2 → 3 → 4 → 5 → 6 in order, watching Pipeline Log
 7. Write proof artifact to `runs/proofs/M76_ops_enrichment_workbench.json`
+
+---
+
+## 12. Post-M76 Session Record (2026-04-04)
+
+### 12.1 What was built / fixed
+
+| File | Change |
+|---|---|
+| `n8n/workflows/csp-crawl-tier3-wcc.workflow.json` | Full rewrite — deployed to n8n Cloud (ID: `yeK12kXpQMdDD57Z`). See §12.2 for key fixes. |
+| `n8n/workflows/csp-trustpilot-enrichment.workflow.json` | Rewrote Extract Rating Data node (was truncated — no return statement). Changed write path from localhost admin → direct Supabase PATCH. Payload now passes `supabase_url`/`supabase_key` instead of `admin_url`. |
+| `scripts/crawl_tier3_batch.py` | Replaced `ADMIN_URL` payload with `supabase_url`/`supabase_key`. Reduced trigger timeout to 30s (async). |
+| `scripts/enrich_trustpilot.py` | Replaced `admin_url` payload key with `supabase_url`/`supabase_key`. |
+| `scripts/embed_vendor_pages.py` | New script: reads `vendor_pages`, chunks text (400w/50 overlap), embeds with `nomic-embed-text` via Ollama, upserts to `vendor_page_embeddings`. Supports `--vendor`, `--limit`, `--force`. Ran on 84 vendors → 1000 chunks stored. |
+| `services/admin/pipeline_control.py` | Added `tier3_batch_crawl` + `embed_vendor_pages` pipeline specs. Added PID liveness check in `_refresh_pipeline_status_unlocked` (handles server restart without losing running state). Fixed `ops_llm_enrichment_batch` "no pages → exit 0" (was exit 1). Renamed all batch pipeline names with Step 1–12 ordering. |
+| `docs/website/admin.js` | Added `tier3_batch_crawl` and `embed_vendor_pages` to `BATCH_PIPELINE_IDS` and `BATCH_PIPELINE_SOURCES`. Added `ops_ai_summary` to `DEFAULT_PIPELINE_CONTROLS`. Reordered `BATCH_PIPELINE_IDS` to match execution order. Updated all pipeline names with Step 1–12 numbering. |
+
+### 12.2 Tier 3 WCC workflow — key fixes applied during deployment
+
+All of these caused real failures that were debugged end-to-end:
+
+| Issue | Fix |
+|---|---|
+| Webhook 404 after deploy | Upgraded to `typeVersion: 2`, added `webhookId: "csp-crawl-tier3-wcc"` |
+| Cloudflare 524 timeout | Changed `responseMode: "onReceived"` (async) — Cloudflare kills sync connections at 100s |
+| `"website is required"` error | typeVersion 2 wraps body under `.body` key — fixed: `const body = raw.body \|\| raw` |
+| Apify "startUrls is required" | n8n `contentType: "json"` + `body` double-encodes — fixed: `specifyBody: "json"` + `jsonBody` without JSON.stringify |
+| Apify TIMED-OUT | Increased `timeout=300` in URL param, `360000ms` in n8n options |
+| Supabase duplicate key 23505 | Added `?on_conflict=vendor_website,page_url` to upsert URL |
+| `page_label` column not found | Removed (column doesn't exist in vendor_pages schema) |
+| `vendor_website` stored as `https://vitally.io` | Added domain extraction in Validate Input: `website.replace(/^https?:\/\//, '').replace(/\/+$/, '')` |
+
+### 12.3 Enrichment state as of 2026-04-04
+
+- 84 vendors in directory
+- 568 pages in `vendor_pages` (avg 6.7/vendor — sparse pre-Tier 3 batch)
+- 1000 embedding chunks across 31 vendors in `vendor_page_embeddings`
+- 2 vendors with Trustpilot ratings (enrichment ran; most vendors not on Trustpilot)
+- Tier 3 batch crawl ready to run from admin panel (Step 3) — ~$17 for 84 vendors at 50 pages each
+
+### 12.4 Pending work
+
+| Task | Command / method |
+|---|---|
+| Run Tier 3 batch crawl (all 84 vendors) | Admin panel → Step 3 — Tier 3 Batch Crawl |
+| Re-embed after crawl | Admin panel → Step 4 — Embed Vendor Pages |
+| Run Trustpilot for all vendors | Admin panel → Step 8 — Trustpilot Enrichment |
+| Run AI Summary | Admin panel → Step 11 — AI Summary |
+| Export to Vercel | Admin panel → Step 12 — Export Dataset to Vercel |

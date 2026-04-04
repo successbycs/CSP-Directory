@@ -8,12 +8,14 @@
       "id": "webhook-tier2",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
+      "webhookId": "csp-crawl-tier2-rag",
       "position": [240, 300],
       "parameters": {
         "path": "csp-crawl-tier2-rag",
         "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "responseMode": "onReceived",
+        "options": {}
       }
     },
     {
@@ -23,7 +25,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "const body = $input.first().json;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token is required');\nconst base = website.replace(/\\/+$/, '');\nreturn [{ json: { website, vendor_name: body.vendor_name || '', apify_token, base } }];"
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst website = (body.website || '').trim();\nif (!website) throw new Error('website is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token is required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nconst base = website.replace(/\\/+$/, '');\nreturn [{ json: { website, vendor_name: body.vendor_name || '', apify_token, supabase_url, supabase_key, base } }];"
       }
     },
     {
@@ -36,8 +38,8 @@
         "method": "POST",
         "url": "=https://api.apify.com/v2/acts/apify~rag-web-browser/run-sync-get-dataset-items?token={{ $json.apify_token }}&timeout=90",
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify({ startUrls: [ { url: $json.website }, { url: $json.base + '/pricing' }, { url: $json.base + '/plans' }, { url: $json.base + '/pricing-plans' }, { url: $json.base + '/features' }, { url: $json.base + '/product' }, { url: $json.base + '/platform' }, { url: $json.base + '/integrations' }, { url: $json.base + '/customers' }, { url: $json.base + '/case-studies' }, { url: $json.base + '/about' } ], maxCrawlPages: 10 }) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ startUrls: [ { url: $json.website }, { url: $json.base + '/pricing' }, { url: $json.base + '/plans' }, { url: $json.base + '/pricing-plans' }, { url: $json.base + '/features' }, { url: $json.base + '/product' }, { url: $json.base + '/platform' }, { url: $json.base + '/integrations' }, { url: $json.base + '/customers' }, { url: $json.base + '/case-studies' }, { url: $json.base + '/about' } ], maxCrawlPages: 10 }) }}",
         "options": { "timeout": 120000 }
       }
     },
@@ -52,14 +54,55 @@
       }
     },
     {
-      "id": "respond",
-      "name": "Respond",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "id": "store-pages-tier2",
+      "name": "Store Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
       "position": [1120, 300],
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}"
+        "method": "POST",
+        "url": "={{ $('Validate Input').first().json.supabase_url + '/rest/v1/vendor_pages?on_conflict=vendor_website,page_url' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ [{ vendor_website: $('Extract Name + Text').first().json.website, page_url: $('Extract Name + Text').first().json.website, title: $('Extract Name + Text').first().json.name, clean_text: $('Extract Name + Text').first().json.text, word_count: $('Extract Name + Text').first().json.word_count, page_depth: 0, tier_used: 'tier2_rag' }] }}",
+        "options": {
+          "timeout": 15000,
+          "response": { "response": { "neverError": true } }
+        }
+      }
+    },
+    {
+      "id": "store-crawl-result-tier2",
+      "name": "Store Crawl Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 300],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Validate Input').first().json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($('Validate Input').first().json.website) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { crawl_tier2_result: { ok: $('Extract Name + Text').first().json.ok, pipeline: 'csp-crawl-tier2-rag', crawled_at: new Date().toISOString(), pages_fetched: $('Extract Name + Text').first().json.pages_fetched, word_count: $('Extract Name + Text').first().json.word_count, pricing_page_found: $('Extract Name + Text').first().json.pricing_page_found, fields: { name: $('Extract Name + Text').first().json.name } } } }}",
+        "options": {
+          "timeout": 15000,
+          "response": { "response": { "neverError": true } }
+        }
       }
     }
   ],
@@ -67,7 +110,9 @@
     "Webhook": { "main": [[{ "node": "Validate Input", "type": "main", "index": 0 }]] },
     "Validate Input": { "main": [[{ "node": "Run RAG Web Browser", "type": "main", "index": 0 }]] },
     "Run RAG Web Browser": { "main": [[{ "node": "Extract Name + Text", "type": "main", "index": 0 }]] },
-    "Extract Name + Text": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+    "Extract Name + Text": { "main": [[{ "node": "Store Pages", "type": "main", "index": 0 }]] },
+    "Store Pages": { "main": [[{ "node": "Store Crawl Result", "type": "main", "index": 0 }]] },
+    "Store Crawl Result": { "main": [[]] }
   },
   "settings": { "executionOrder": "v1", "saveManualExecutions": true },
   "staticData": null,

@@ -1,19 +1,21 @@
 {
   "name": "CSP LinkedIn Enrichment",
   "meta": {
-    "description": "LinkedIn company enrichment via LinkedIn Data API on RapidAPI. Looks up company by domain → returns ceo_linkedin, linkedin_url, leadership array. Safe-upsert via /admin/enrich-write. Part of M75. Pre-requisite: subscribe to linkedin-data-api.p.rapidapi.com."
+    "description": "LinkedIn company enrichment via LinkedIn Data API on RapidAPI. Looks up company by domain \u2192 returns ceo_linkedin, linkedin_url, leadership array. Safe-upsert directly to Supabase REST. Part of M75. Pre-requisite: subscribe to linkedin-data-api.p.rapidapi.com."
   },
   "nodes": [
     {
       "id": "webhook-linkedin",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
+      "webhookId": "csp-linkedin-enrichment",
       "position": [240, 300],
       "parameters": {
         "path": "csp-linkedin-enrichment",
         "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "responseMode": "onReceived",
+        "options": {}
       }
     },
     {
@@ -23,7 +25,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "const body = $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '', linkedin_url: body.linkedin_url || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst admin_url = (body.admin_url || process.env.ADMIN_BASE_URL || 'http://127.0.0.1:8787').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', linkedin_url: v.linkedin_url || '', rapidapi_key, admin_url } }));"
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '', linkedin_url: body.linkedin_url || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', linkedin_url: v.linkedin_url || '', rapidapi_key, supabase_url, supabase_key } }));"
       }
     },
     {
@@ -63,26 +65,48 @@
       "id": "has-data",
       "name": "Has Data?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [1120, 300],
       "parameters": {
         "conditions": {
-          "boolean": [{ "value1": "={{ $json.has_data }}", "value2": true }]
-        }
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
     },
     {
-      "id": "enrich-write",
-      "name": "Enrich Write",
+      "id": "write-to-supabase",
+      "name": "Write to Supabase",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1340, 200],
       "parameters": {
-        "method": "POST",
-        "url": "={{ $('Split Vendors').first().json.admin_url }}/admin/enrich-write",
+        "method": "PATCH",
+        "url": "={{ $('Split Vendors').first().json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($('Extract LinkedIn Fields').first().json.website) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify({ website: $json.website, vendor_name: $json.vendor_name, pipeline_name: $json.pipeline_name, ...$json.extracted }) }}"
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Extract LinkedIn Fields').first().json.extracted }}",
+        "options": {
+          "timeout": 15000,
+          "response": { "response": { "neverError": true } }
+        }
       }
     },
     {
@@ -115,11 +139,11 @@
     "Extract LinkedIn Fields": { "main": [[{ "node": "Has Data?", "type": "main", "index": 0 }]] },
     "Has Data?": {
       "main": [
-        [{ "node": "Enrich Write", "type": "main", "index": 0 }],
+        [{ "node": "Write to Supabase", "type": "main", "index": 0 }],
         [{ "node": "Respond Miss", "type": "main", "index": 0 }]
       ]
     },
-    "Enrich Write": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
+    "Write to Supabase": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
   },
   "settings": { "executionOrder": "v1", "saveManualExecutions": true },
   "staticData": null,

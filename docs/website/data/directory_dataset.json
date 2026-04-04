@@ -6786,17 +6786,10 @@
   {
     "vendor_name": "Supportbench",
     "website": "https://supportbench.com",
-    "mission": "The product is strong, intuitive, and keeps getting better.",
-    "usp": "reduce churn",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "support teams",
-      "Customer Success Managers",
-      "Support Team Leads",
-      "Technical Support Directors"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "Supportbench offers a unified agent workspace that integrates multiple communication channels, provides AI-driven insights, and automates various support processes, making it unique in its comprehensive approach to customer support management.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "adoption guidance",
       "health scoring",
@@ -6816,27 +6809,13 @@
       "Generating internal knowledge base articles automatically"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
       "onboarding",
-      "support",
-      "renewal"
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "$",
-      "per user",
-      "per month",
-      "per year",
-      "contact sales",
-      "per seat"
-    ],
-    "free_trial": true,
+    "pricing": "$32/user",
+    "free_trial": null,
     "soc2": false,
     "founded": "2025",
     "case_study_details": [
@@ -6862,11 +6841,7 @@
         "source_url": "https://supportbench.com/customer-stories"
       }
     ],
-    "customers": [
-      "teams",
-      "significantly",
-      "had"
-    ],
+    "customers": null,
     "value_statements": [
       "reduce churn",
       "improve customer health",
@@ -6973,25 +6948,66 @@
     "company_size": "",
     "hq_address": "",
     "integrations": [
-      "Salesforce",
-      "HubSpot",
-      "Catalyst",
-      "Monday.com",
-      "Zapier",
-      "Outlook",
-      "Office 365",
+      "email",
+      "chat",
       "Slack",
-      "Zendesk",
-      "Freshdesk",
-      "Front",
-      "Snowflake",
-      "Databricks",
-      "Segment"
+      "Teams"
     ],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "how_it_works": "Supportbench provides a unified platform for managing customer support by integrating various communication channels into a single workspace. It allows for the customization of views, dashboards, and case management policies to tailor the support experience. The tool leverages AI for sentiment analysis, ticket prioritization, and customer insights, enhancing the efficiency and effectiveness of support operations.",
+    "key_features": [
+      "Unified Agent Workspace",
+      "Customizable Dashboards",
+      "Bulk Responses",
+      "Merging and Splitting Cases",
+      "Task Management",
+      "Follow-The-Sun Support",
+      "Collision Detection",
+      "Mobile App",
+      "CSAT and CES Prediction",
+      "AI Searching",
+      "Knowledge Base GenAI Bot",
+      "Automated Article Creation",
+      "Activity Summarization",
+      "Ticket Resolution Summarizations",
+      "GenAI-Driven Customer Insights",
+      "Smart Auto Prioritization of Tickets",
+      "Auto-Tagging of Keywords",
+      "Sentiment Analysis",
+      "AI Reporting",
+      "Large Outlook/Gmail-like Editor",
+      "Unlimited Inbound and Outbound Emails",
+      "Customized Signatures",
+      "Pixel Tracking",
+      "Real-time Email Delivery Notifications",
+      "Email Forwarding to Activity",
+      "Block Lists",
+      "Routing Forms",
+      "Scheduling",
+      "Fully White Labeled Email Authentication",
+      "Dynamic SLAs",
+      "Trigger Actions",
+      "Multi-Level SLA",
+      "Escalation Management"
+    ],
+    "outcomes": [
+      "Improved organization and searchability of support content",
+      "Prompt addressing of critical issues",
+      "Comprehensive insights into customer sentiment",
+      "Streamlined process of building knowledge base",
+      "Easier review and understanding of case outcomes"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Supportbench streamlines customer support operations by unifying communication channels, automating ticket prioritization and tagging, and providing AI-driven insights, ultimately enhancing efficiency and customer satisfaction.",
+    "workflows": [
+      "Agents manage customer interactions through a unified workspace, handling emails, chats, and other communication channels.",
+      "Custom views and dashboards are created to monitor and analyze support data.",
+      "Bulk responses and templates are used to streamline communication with customers.",
+      "Cases are merged, split, and managed according to custom policies and divisions.",
+      "Tasks are assigned and managed within cases to ensure timely resolution.",
+      "AI tools are used to predict customer satisfaction, prioritize tickets, and provide insights.",
+      "Escalation processes are managed through multi-level templates and dynamic SLAs."
+    ],
+    "metrics": null
   },
   {
     "vendor_name": "Survicate",
@@ -8292,18 +8308,10 @@
   {
     "vendor_name": "Vitally",
     "website": "https://vitally.io",
-    "mission": "Start Product Tour Get a Demo 4.5 based on 600+ Reviews Rated #1 in Momentum Trusted by 600+ Leading B2B Customer Success Teams The Problem Why Vitally The Problem Why Vitally Thousands of Data Points",
-    "usp": "Vitally combines customer data, teams, and insights into a single platform to maximize successful business outcomes.",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "support teams",
-      "revenue teams",
-      "B2B Customer Success Managers",
-      "Customer Success Directors",
-      "Sales Enablement Managers"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "sales-to-cs handoff",
       "meeting intelligence",
@@ -8323,25 +8331,8 @@
       "Analyze customer data for actionable insights",
       "Monitor customer engagement metrics"
     ],
-    "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "onboarding",
-      "engagement",
-      "retention",
-      "escalation",
-      "renewal"
-    ],
-    "pricing": [
-      "contact sales",
-      "per user",
-      "per month"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": false,
     "founded": "2017",
@@ -8415,18 +8406,7 @@
         "metric": "Reduction in time spent on tasks"
       }
     ],
-    "customers": [
-      "Customers",
-      "ve",
-      "Instruqt",
-      "WiseStamp",
-      "Time",
-      "Navattic",
-      "Shogun",
-      "Productboard",
-      "team",
-      "Salesmsg"
-    ],
+    "customers": null,
     "value_statements": [
       "improve handoff",
       "speed time to value",
@@ -8589,11 +8569,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "New York",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "X icon",

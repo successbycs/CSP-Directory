@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "csp-trustpilot-enrichment",
-        "responseMode": "responseNode",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "trustpilot-0001-0001-0001-0001-000000000001",

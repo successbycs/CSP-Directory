@@ -8,12 +8,14 @@
       "id": "webhook-discovery",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
+      "webhookId": "csp-google-discovery",
       "position": [240, 300],
       "parameters": {
         "path": "csp-google-discovery",
         "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "responseMode": "onReceived",
+        "options": {}
       }
     },
     {
@@ -23,7 +25,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "const body = $input.first().json;\nconst queries = body.queries || body.query ? [body.query] : [];\nif (!queries.length) throw new Error('queries array is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token required');\nconst admin_url = (body.admin_url || process.env.ADMIN_BASE_URL || 'http://127.0.0.1:8787').trim();\nreturn queries.map(q => ({ json: { query: q, apify_token, admin_url, results_per_page: body.results_per_page || 10 } }));"
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst queries = body.queries || (body.query ? [body.query] : []);\nif (!queries.length) throw new Error('queries array is required');\nconst apify_token = (body.apify_token || process.env.APIFY_API_TOKEN || '').trim();\nif (!apify_token) throw new Error('apify_token required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn queries.map(q => ({ json: { query: q, apify_token, supabase_url, supabase_key, results_per_page: body.results_per_page || 10 } }));"
       }
     },
     {
@@ -36,8 +38,8 @@
         "method": "POST",
         "url": "=https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items?token={{ $json.apify_token }}&timeout=60",
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify({ queries: $json.query, maxPagesPerQuery: 1, resultsPerPage: $json.results_per_page, countryCode: 'us', languageCode: 'en' }) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ queries: $json.query, maxPagesPerQuery: 1, resultsPerPage: $json.results_per_page, countryCode: 'us', languageCode: 'en' }) }}",
         "options": { "timeout": 90000 }
       }
     },
@@ -59,10 +61,22 @@
       "position": [1120, 300],
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Validate Input').first().json.admin_url }}/admin/discovery-upsert",
+        "url": "={{ $('Validate Input').first().json.supabase_url + '/rest/v1/cs_vendor_candidates?on_conflict=url' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Validate Input').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates" }
+          ]
+        },
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify({ url: $json.url, title: $json.title, snippet: $json.snippet, source: $json.source }) }}"
+        "specifyBody": "json",
+        "jsonBody": "={{ { url: $json.url, title: $json.title, snippet: $json.snippet, source: $json.source } }}",
+        "options": {
+          "timeout": 15000,
+          "response": { "response": { "neverError": true } }
+        }
       }
     },
     {

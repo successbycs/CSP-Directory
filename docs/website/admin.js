@@ -17,7 +17,7 @@ const DEFAULT_PIPELINE_CONTROLS = [
   },
   {
     pipeline_id: "google_discovery",
-    name: "Google Discovery (n8n)",
+    name: "Step 1 — Google Discovery",
     group: "discovery",
     description:
       "Discovers new vendor candidates via Apify Google Search → n8n workflow → filters review/directory sites → upserts candidates.",
@@ -38,56 +38,77 @@ const DEFAULT_PIPELINE_CONTROLS = [
   },
   {
     pipeline_id: "site_crawl_enrichment",
-    name: "Site Crawl (Tiered)",
+    name: "Step 2 — Site Crawl (Tiered)",
     group: "enrichment",
     description:
       "Re-crawls vendor homepages: Tier 1 (free HTTP) → Tier 2 (Apify RAG ~$0.001/page) → Tier 3 (Apify WCC + proxy ~$0.004/page). Requires N8N_CRAWL_TIER1/2/3_WEBHOOK.",
   },
   {
+    pipeline_id: "tier3_batch_crawl",
+    name: "Step 3 — Tier 3 Batch Crawl",
+    group: "enrichment",
+    description:
+      "Triggers csp-crawl-tier3-wcc for all directory vendors without sufficient pages. Apify WCC, async, ~$0.004/page. Skips vendors with 20+ pages already.",
+  },
+  {
+    pipeline_id: "embed_vendor_pages",
+    name: "Step 4 — Embed Vendor Pages",
+    group: "enrichment",
+    description:
+      "Chunks vendor_pages text and embeds with nomic-embed-text (local Ollama). Stores in vendor_page_embeddings for RAG retrieval. Skips already-embedded vendors.",
+  },
+  {
     pipeline_id: "firmographic_enrichment",
-    name: "Firmographic Enrichment (Datagma)",
+    name: "Step 5 — Firmographic Enrichment",
     group: "enrichment",
     description:
       "Single domain call via Datagma (RapidAPI) returns founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Requires RAPIDAPI_KEY + Datagma subscription.",
   },
   {
     pipeline_id: "linkedin_enrichment",
-    name: "LinkedIn Enrichment",
+    name: "Step 6 — LinkedIn Enrichment",
     group: "enrichment",
     description:
       "Fills ceo_linkedin, linkedin_url, leadership via LinkedIn Data API (RapidAPI). Requires RAPIDAPI_KEY + LinkedIn Data API subscription.",
   },
   {
     pipeline_id: "g2_rapidapi_enrichment",
-    name: "G2 Enrichment (RapidAPI)",
+    name: "Step 7 — G2 RapidAPI Enrichment",
     group: "enrichment",
     description:
       "G2 product data via RapidAPI G2 Data API. Fills g2_url, g2_rating, g2_review_count, g2_categories. Currently 20/119 vendors covered — run to fill remaining 99.",
   },
   {
     pipeline_id: "trustpilot_enrichment",
-    name: "Trustpilot Enrichment",
+    name: "Step 8 — Trustpilot Enrichment",
     group: "enrichment",
     description:
       "Scrapes Trustpilot review pages for all include_in_directory vendors. Fills trustpilot_rating and trustpilot_review_count. Triggered via n8n csp-trustpilot-enrichment workflow.",
   },
   {
     pipeline_id: "feature_depth_enrichment",
-    name: "Feature Depth Enrichment",
+    name: "Step 9 — Feature Depth Enrichment",
     group: "enrichment",
     description:
       "Crawls vendor help/docs site and runs LLM feature taxonomy extraction across 6 dimensions. Computes category-relative feature_depth_score (0–100) and feature_signals list. Triggered via n8n csp-feature-depth-enrichment workflow.",
   },
   {
     pipeline_id: "ops_llm_enrichment_batch",
-    name: "Batch LLM Enrichment — All Vendors",
+    name: "Step 10 — Batch LLM Enrichment (GPT-4o)",
     group: "enrichment",
     description:
       "Runs full crawl → embed → GPT-4o extraction pipeline for every vendor not yet enriched. Saves progress after each vendor — safe to interrupt and resume. ~$0.05–0.10 per vendor.",
   },
   {
+    pipeline_id: "ops_ai_summary",
+    name: "Step 11 — AI Summary (GPT-4o mini)",
+    group: "enrichment",
+    description:
+      "Generate a 400-word vendor summary using GPT-4o mini from live web fetch + stored pages. Stored in ai_summary column and exported to directory dataset. Skips vendors that already have a summary.",
+  },
+  {
     pipeline_id: "ops_export_dataset",
-    name: "Export Dataset → Vercel",
+    name: "Step 12 — Export Dataset to Vercel",
     group: "enrichment",
     description:
       "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to publish changes to the live directory.",
@@ -720,12 +741,14 @@ function renderEnrichmentMetrics() {
 const BATCH_PIPELINE_IDS = [
   "full_pipeline",
   "google_discovery",
-  "g2_rapidapi_enrichment",
+  "site_crawl_enrichment",
+  "tier3_batch_crawl",
+  "embed_vendor_pages",
   "firmographic_enrichment",
   "linkedin_enrichment",
+  "g2_rapidapi_enrichment",
   "trustpilot_enrichment",
   "feature_depth_enrichment",
-  "site_crawl_enrichment",
   "ops_llm_enrichment_batch",
   "ops_ai_summary",
   "ops_export_dataset",
@@ -734,6 +757,8 @@ const BATCH_PIPELINE_IDS = [
 const BATCH_PIPELINE_SOURCES = {
   full_pipeline:            { label: "Full cycle",     cls: "source-tier" },
   google_discovery:         { label: "Apify · Google", cls: "source-tier" },
+  tier3_batch_crawl:        { label: "Apify WCC · async", cls: "source-tier" },
+  embed_vendor_pages:       { label: "Ollama · local",    cls: "source-merge" },
   g2_rapidapi_enrichment:   { label: "RapidAPI · G2",  cls: "source-g2" },
   firmographic_enrichment:  { label: "RapidAPI · Datagma", cls: "source-datagma" },
   linkedin_enrichment:      { label: "RapidAPI · LinkedIn", cls: "source-datagma" },

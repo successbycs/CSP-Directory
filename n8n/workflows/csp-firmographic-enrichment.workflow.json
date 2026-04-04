@@ -1,22 +1,21 @@
 {
   "name": "CSP Firmographic Enrichment \u2014 Datagma",
   "meta": {
-    "description": "Firmographic enrichment via Datagma (RapidAPI). Single domain call returns founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Safe-upsert via /admin/enrich-write \u2014 skips already-populated fields. Replaces dead Tracxn enricher (M75)."
+    "description": "Firmographic enrichment via Datagma (RapidAPI). Single domain call returns founded, hq_address, funding_stage, total_funding, ceo_name, company_size, revenue. Safe-upsert directly to Supabase REST \u2014 skips already-populated fields. Replaces dead Tracxn enricher (M75)."
   },
   "nodes": [
     {
       "id": "webhook-firmo",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        240,
-        300
-      ],
+      "typeVersion": 2,
+      "webhookId": "csp-firmographic-enrichment",
+      "position": [240, 300],
       "parameters": {
         "path": "csp-firmographic-enrichment",
         "httpMethod": "POST",
-        "responseMode": "responseNode"
+        "responseMode": "onReceived",
+        "options": {}
       }
     },
     {
@@ -24,12 +23,9 @@
       "name": "Split Vendors",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        460,
-        300
-      ],
+      "position": [460, 300],
       "parameters": {
-        "jsCode": "const body = $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst admin_url = (body.admin_url || process.env.ADMIN_BASE_URL || 'http://127.0.0.1:8787').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', rapidapi_key, admin_url } }));"
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body || raw;\nconst vendors = body.vendors || (body.website ? [{ website: body.website, vendor_name: body.vendor_name || '' }] : []);\nif (!vendors.length) throw new Error('vendors array required');\nconst rapidapi_key = (body.rapidapi_key || process.env.RAPIDAPI_KEY || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn vendors.map(v => ({ json: { website: v.website, vendor_name: v.vendor_name || '', rapidapi_key, supabase_url, supabase_key } }));"
       }
     },
     {
@@ -37,10 +33,7 @@
       "name": "Call Datagma",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        680,
-        300
-      ],
+      "position": [680, 300],
       "parameters": {
         "method": "GET",
         "url": "=https://enrichment-b2b-linkedin-crunchbase-datagma.p.rapidapi.com/company",
@@ -74,10 +67,7 @@
       "name": "Map Fields",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        900,
-        300
-      ],
+      "position": [900, 300],
       "parameters": {
         "jsCode": "const data = $input.first().json;\nconst website = $('Split Vendors').first().json.website;\nconst vendor_name = $('Split Vendors').first().json.vendor_name;\n\n// Datagma field mapping\nconst company = data.company || data.data || data || {};\n\nfunction formatFunding(amount, currency) {\n  if (!amount || amount === 0) return null;\n  const n = parseFloat(amount);\n  if (isNaN(n)) return null;\n  if (n >= 1_000_000_000) return `$${(n/1_000_000_000).toFixed(1)}B`;\n  if (n >= 1_000_000) return `$${(n/1_000_000).toFixed(0)}M`;\n  if (n >= 1_000) return `$${(n/1_000).toFixed(0)}K`;\n  return `$${n.toFixed(0)}`;\n}\n\nconst extracted = {};\n\n// Founded year\nconst founded = company.yearFounded || company.founded_year || company.foundedOn || company.founded;\nif (founded) extracted.founded = String(founded);\n\n// HQ\nconst city = company.city || company.locality || '';\nconst region = company.region || company.state || '';\nconst country = company.country || company.country_code || '';\nconst hq_parts = [city, region, country].filter(Boolean);\nif (hq_parts.length) extracted.hq_address = hq_parts.join(', ');\nif (city || region) extracted.company_hq = [city, region].filter(Boolean).join(', ');\n\n// Funding\nconst fundingStage = company.lastFundingType || company.funding_stage || company.last_funding_round_type;\nif (fundingStage) extracted.funding_stage = fundingStage;\n\nconst totalFunding = formatFunding(company.totalFunding || company.total_funding_amount || company.fundingTotal);\nif (totalFunding) extracted.total_funding = totalFunding;\n\n// CEO / executive\nconst executives = company.executives || company.keyPeople || company.leadership || [];\nif (Array.isArray(executives) && executives.length) {\n  const ceo = executives.find(e => /ceo|chief executive|founder|co-founder/i.test(e.title || e.role || ''));\n  if (ceo) {\n    extracted.ceo_name = ceo.name || ceo.full_name || '';\n    if (ceo.linkedin_url || ceo.linkedinUrl) extracted.ceo_linkedin = ceo.linkedin_url || ceo.linkedinUrl;\n  }\n}\n// Fallback: direct CEO fields\nif (!extracted.ceo_name && (company.ceo_name || company.ceoName)) {\n  extracted.ceo_name = company.ceo_name || company.ceoName;\n}\n\n// Company size\nconst size = company.employeeCount || company.employee_count || company.headcount || company.companySize;\nif (size) extracted.company_size = String(size);\n\n// Revenue\nconst revenue = company.revenue || company.annualRevenue;\nif (revenue) extracted.revenue = String(revenue);\n\n// LinkedIn URL of company\nif (company.linkedin_url || company.linkedinUrl) {\n  extracted.linkedin_url = company.linkedin_url || company.linkedinUrl;\n}\n\nconst has_data = Object.keys(extracted).length > 0;\nreturn [{ json: { website, vendor_name, extracted, has_data, pipeline_name: 'csp-firmographic-enrichment' } }];"
       }
@@ -86,44 +76,47 @@
       "id": "has-data",
       "name": "Has Data?",
       "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        1120,
-        300
-      ],
+      "typeVersion": 2,
+      "position": [1120, 300],
       "parameters": {
         "conditions": {
-          "boolean": [
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
             {
-              "value1": "={{ $json.has_data }}",
-              "value2": true
+              "id": "c1",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
             }
-          ]
-        }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
       }
     },
     {
-      "id": "store-crawl-result-datagma",
-      "name": "Store Crawl Result",
+      "id": "write-to-supabase",
+      "name": "Write to Supabase",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [
-        1340,
-        200
-      ],
+      "position": [1340, 200],
       "parameters": {
-        "method": "POST",
-        "url": "={{ $('Split Vendors').first().json.admin_url }}/admin/ops/store-crawl-result",
+        "method": "PATCH",
+        "url": "={{ $('Split Vendors').first().json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($('Map Fields').first().json.website) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify({ vendor_website: $json.website, column: 'crawl_datagma_result', payload: { ok: true, pipeline: 'csp-firmographic-enrichment', crawled_at: new Date().toISOString(), fields: $json.extracted } }) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ $('Map Fields').first().json.extracted }}",
         "options": {
           "timeout": 15000,
-          "response": {
-            "response": {
-              "neverError": true
-            }
-          }
+          "response": { "response": { "neverError": true } }
         }
       }
     },
@@ -132,10 +125,7 @@
       "name": "Respond Miss",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [
-        1340,
-        420
-      ],
+      "position": [1340, 420],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={ \"ok\": false, \"reason\": \"no_data_from_datagma\", \"website\": \"{{ $json.website }}\" }"
@@ -146,10 +136,7 @@
       "name": "Respond Success",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [
-        1560,
-        200
-      ],
+      "position": [1560, 200],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ ok: true, website: $('Map Fields').first().json.website, fields_written: Object.keys($('Map Fields').first().json.extracted) }) }}"
@@ -158,77 +145,25 @@
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Split Vendors",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Split Vendors", "type": "main", "index": 0 }]]
     },
     "Split Vendors": {
-      "main": [
-        [
-          {
-            "node": "Call Datagma",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Call Datagma", "type": "main", "index": 0 }]]
     },
     "Call Datagma": {
-      "main": [
-        [
-          {
-            "node": "Map Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Map Fields", "type": "main", "index": 0 }]]
     },
     "Map Fields": {
-      "main": [
-        [
-          {
-            "node": "Has Data?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "Has Data?", "type": "main", "index": 0 }]]
     },
     "Has Data?": {
       "main": [
-        [
-          {
-            "node": "Store Crawl Result",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Respond Miss",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Write to Supabase", "type": "main", "index": 0 }],
+        [{ "node": "Respond Miss", "type": "main", "index": 0 }]
       ]
     },
-    "Store Crawl Result": {
-      "main": [
-        [
-          {
-            "node": "Respond Success",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Write to Supabase": {
+      "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]]
     }
   },
   "settings": {

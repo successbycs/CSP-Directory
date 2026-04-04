@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "framework-g2-enrichment",
-        "responseMode": "responseNode",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "b2c3d4e5-0001-0001-0001-000000000001",
