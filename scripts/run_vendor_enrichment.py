@@ -20,6 +20,7 @@ import math
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -97,6 +98,22 @@ def _sb_req(method: str, path: str, body: dict | list | None = None) -> dict | l
         body_text = e.read().decode()
         print(f"  [supabase] {method} {path} → {e.code}: {body_text[:200]}", flush=True)
         return {}
+
+
+def fetch_existing_pages(domain: str) -> list[dict]:
+    """Return already-crawled pages from vendor_pages for this domain."""
+    encoded = urllib.parse.quote(domain, safe="")
+    path = f"vendor_pages?vendor_website=eq.{encoded}&select=page_url,clean_text,title&limit=300"
+    rows = _sb_req("GET", path)
+    if not isinstance(rows, list):
+        return []
+    result = []
+    for r in rows:
+        text = str(r.get("clean_text") or "").strip()
+        url = str(r.get("page_url") or "").strip()
+        if text and url:
+            result.append({"url": url, "text": text, "title": str(r.get("title") or "")})
+    return result
 
 
 def upsert_pages(vendor_website: str, pages: list[dict]) -> int:
@@ -211,43 +228,20 @@ def run(vendor_website: str, llm_model: str) -> dict:
     print(f"LLM model: {llm_model}", flush=True)
     print(f"{'─'*60}\n", flush=True)
 
-    # ── Step 1: Crawl ──────────────────────────────────────────────────────
-    print("Step 1 — Crawling website…", flush=True)
-    homepage = fetch_vendor_homepage({"website": vendor_website, "vendor_name": domain})
-    status = homepage.get("status_code", 0)
-    print(f"  Homepage status: {status}", flush=True)
-    if int(status) == 0 or int(status) >= 400:
-        print("  WARNING: Homepage fetch failed — proceeding with empty page", flush=True)
-
-    bundle = explore_vendor_site(homepage)
-    all_pages: list[dict] = [homepage]
-    all_pages += bundle.get("extra_pages", [])
-    for key in ["about", "pricing", "features", "customers", "integrations", "solutions"]:
-        if key in bundle:
-            all_pages.append(bundle[key])
-
-    # normalise page dicts so each has url + text
+    # ── Step 1: Load pages (existing crawl data preferred) ────────────────
+    print("Step 1 — Loading crawled pages…", flush=True)
     normalised: list[dict] = []
-    for p in all_pages:
-        url  = str(p.get("website") or p.get("url") or p.get("page_url") or "").strip()
-        html = str(p.get("html") or "")
-        text = str(p.get("text") or p.get("clean_text") or "")
-        if not text and html:
-            text = extract_visible_text(html)
-        if len(text.split()) >= 30 and url:
-            normalised.append({"url": url, "text": text, "title": str(p.get("title") or "")})
 
-    print(f"  Pages collected: {len(normalised)}", flush=True)
-    for p in normalised:
-        print(f"    {p['url']}  ({len(p['text'].split())} words)", flush=True)
-
-    # ── Step 2: Store in Supabase ──────────────────────────────────────────
-    print("\nStep 2 — Storing pages in Supabase vendor_pages…", flush=True)
     if SUPABASE_KEY:
-        stored = upsert_pages(domain, normalised)
-        print(f"  Upserted {stored} rows", flush=True)
-    else:
-        print("  SUPABASE_KEY not set — skipping DB write", flush=True)
+        normalised = fetch_existing_pages(domain)
+        if normalised:
+            print(f"  Using {len(normalised)} existing pages from vendor_pages (no re-crawl needed)", flush=True)
+
+    if not normalised:
+        print("  No pages in vendor_pages — run the tier crawl (Step 2) for this vendor first.", flush=True)
+        return {}
+
+    print("\nStep 2 — Skipped (pages already in Supabase)", flush=True)
 
     # ── Step 3: Chunk + embed ──────────────────────────────────────────────
     print("\nStep 3 — Chunking and embedding…", flush=True)

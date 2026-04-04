@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import threading
 from typing import Any
 
@@ -139,6 +140,19 @@ _PIPELINE_SPECS: tuple[dict[str, Any], ...] = (
         "description": "Pull latest vendor data from Supabase and write docs/website/data/directory_dataset.json. Run after any enrichment to update the live directory.",
         "command": ["scripts/export_directory_dataset.py"],
     },
+    # ── n8n-backed enrichments ─────────────────────────────────────────────
+    {
+        "pipeline_id": "trustpilot_enrichment",
+        "name": "Trustpilot Enrichment",
+        "description": "Scrapes Trustpilot review pages for all include_in_directory vendors. Fills trustpilot_rating and trustpilot_review_count. Triggered via n8n csp-trustpilot-enrichment workflow.",
+        "command": ["scripts/enrich_trustpilot.py"],
+    },
+    {
+        "pipeline_id": "feature_depth_enrichment",
+        "name": "Feature Depth Enrichment",
+        "description": "Crawls vendor help/docs sites and runs LLM feature taxonomy extraction across 6 dimensions. Computes category-relative feature_depth_score (0-100) and feature_signals list. Triggered via n8n csp-feature-depth-enrichment workflow.",
+        "command": ["scripts/enrich_feature_depth.py"],
+    },
 )
 
 
@@ -229,7 +243,7 @@ def reset_pipeline_state(pipeline_id: str) -> dict[str, Any]:
 
 
 def _python_executable() -> str:
-    return os.environ.get("VIRTUAL_ENV", "") and str(Path(os.environ["VIRTUAL_ENV"]) / "bin" / "python") or "python3"
+    return sys.executable
 
 
 def _build_pipeline_view(spec: dict[str, Any], state: dict[str, Any]) -> dict[str, Any]:

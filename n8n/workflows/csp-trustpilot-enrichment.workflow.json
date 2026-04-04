@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ vendor_name: body.vendor_name || '', website: body.website }] : []);\nif (!vendors.length) return [{ json: { _no_vendors: true } }];\nconst admin_url = (body.admin_url || 'http://127.0.0.1:8787').trim();\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    trustpilot_slug: v.trustpilot_slug || '',\n    admin_url,\n  }\n}));"
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ vendor_name: body.vendor_name || '', website: body.website }] : []);\nif (!vendors.length) return [{ json: { _no_vendors: true } }];\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    trustpilot_slug: v.trustpilot_slug || '',\n    supabase_url,\n    supabase_key,\n  }\n}));"
       },
       "id": "trustpilot-0002-0002-0002-0002-000000000002",
       "name": "Split Vendors",
@@ -101,7 +101,8 @@
           "timeout": 30000,
           "response": {
             "response": {
-              "neverError": true
+              "neverError": true,
+              "fullResponse": true
             }
           }
         }
@@ -117,7 +118,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const vendor = $('Build Slug').first().json;\nconst resp = $input.first();\nconst html = resp.body;\n\nif (!html || resp.statusCode !== 200) {\n  return [{ json: { \n    vendor_name: vendor.vendor_name, \n    website: vendor.website, \n    trustpilot_slug: vendor.trustpilot_slug, \n    _has_data: false, \n    _miss_reason: resp.statusCode === 404 ? 'page_not_found' : `http_${resp.statusCode || 'error'}`,\n    _http_status: resp.statusCode\n  } }];\n}\n\n// Extract JSON-LD AggregateRating block\nfunction extractAggregateRating(obj) {\n  if (!obj || typeof obj !== 'object') return null;\n  // Direct AggregateRating node\n  if (obj['@type'] === 'AggregateRating' && obj.ratingValue !== undefined) {\n    try { return { rating: parseFloat(obj.ratingValue), count: parseInt(obj.reviewCount, 10) }; }\n    catch(e) {}\n  }\n  // aggregateRating sub-key (LocalBusiness pattern used by Trustpilot)\n  if (obj.aggregateRating) {\n    const r = extractAggregateRating(obj.aggregateRating);\n    if (r) return r;\n  }\n  // @graph array\n  if (Array.isArray(obj['@graph'])) {\n    for (const item of obj['@graph']) {\n      const r = extractAggregateRating(item);\n      if (r) return r;\n    }\n  }\n  // Regular array\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      const r = extractAggregateRating(item);\n      if (r) return r;\n    }\n  }\n  return null;\n}"
+        "jsCode": "const vendor = $('Build Slug').first().json;\nconst respJson = $input.first().json;\n// fullResponse mode: data=body, statusCode available\nconst html = respJson.data || respJson.body || '';\nconst statusCode = respJson.statusCode || 200;\n\nif (!html || statusCode !== 200) {\n  return [{ json: {\n    vendor_name: vendor.vendor_name,\n    website: vendor.website,\n    trustpilot_slug: vendor.trustpilot_slug,\n    _has_data: false,\n    _miss_reason: statusCode === 404 ? 'page_not_found' : `http_${statusCode || 'error'}`,\n    _http_status: statusCode\n  } }];\n}\n\nfunction extractAggregateRating(obj) {\n  if (!obj || typeof obj !== 'object') return null;\n  if (obj['@type'] === 'AggregateRating' && obj.ratingValue !== undefined) {\n    try { return { rating: parseFloat(obj.ratingValue), count: parseInt(obj.reviewCount, 10) }; } catch(e) {}\n  }\n  if (obj.aggregateRating) { const r = extractAggregateRating(obj.aggregateRating); if (r) return r; }\n  if (Array.isArray(obj['@graph'])) { for (const item of obj['@graph']) { const r = extractAggregateRating(item); if (r) return r; } }\n  if (Array.isArray(obj)) { for (const item of obj) { const r = extractAggregateRating(item); if (r) return r; } }\n  return null;\n}\n\n// Extract all JSON-LD blocks and search for AggregateRating\nconst scriptTags = html.match(/<script[^>]*type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi) || [];\nlet rating = null;\nfor (const tag of scriptTags) {\n  const content = tag.replace(/<\\/?script[^>]*>/gi, '').trim();\n  try { const r = extractAggregateRating(JSON.parse(content)); if (r) { rating = r; break; } } catch(e) {}\n}\n\nif (!rating) {\n  return [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, _has_data: false, _miss_reason: 'no_rating_found' } }];\n}\n\nreturn [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, trustpilot_slug: vendor.trustpilot_slug, trustpilot_rating: rating.rating, trustpilot_review_count: rating.count, _has_data: true } }];"
       },
       "id": "trustpilot-0005-0005-0005-0005-000000000005",
       "name": "Extract Rating Data",
@@ -183,11 +184,19 @@
         -160
       ],
       "parameters": {
-        "method": "POST",
-        "url": "={{ $('Split Vendors').first().json.admin_url }}/admin/enrich-write",
+        "method": "PATCH",
+        "url": "={{ $('Split Vendors').first().json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($('Build Upsert Row').first().json.website) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Authorization", "value": "=Bearer {{ $('Split Vendors').first().json.supabase_key }}" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
         "sendBody": true,
-        "contentType": "json",
-        "body": "={{ JSON.stringify($('Build Upsert Row').first().json._upsert_row) }}",
+        "specifyBody": "json",
+        "jsonBody": "={{ { trustpilot_rating: $('Build Upsert Row').first().json.trustpilot_rating, trustpilot_review_count: $('Build Upsert Row').first().json.trustpilot_review_count } }}",
         "options": {
           "timeout": 15000,
           "response": {

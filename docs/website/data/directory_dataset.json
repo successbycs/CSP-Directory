@@ -2,35 +2,51 @@
   {
     "vendor_name": "Abloomify",
     "website": "https://abloomify.com",
-    "mission": "AI-powered workforce analytics to improve delivery, quality, and engagement. Boost productivity up to 40% with privacy-first decisions.",
-    "usp": "speed time to value",
-    "icp": [
-      "Chief Operating Officer (COO)",
-      "Head of People Operations (CHRO)",
-      "IT Manager"
+    "mission": "Transform tech companies with AI to enhance productivity, protect culture, and enable efficient growth.",
+    "usp": "Abloomify offers a unified AI platform that integrates productivity insights, performance management, and secure AI assistance, tailored to specific roles and use cases.",
+    "icp": "Marketing leaders and teams",
+    "icp_buyer": [
+      "CMO",
+      "VP of Marketing"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "time to value",
       "knowledge base",
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Onboard",
-      "Support",
-      "Renew",
-      "Advocate"
+      "onboarding",
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "$",
-      "per seat",
-      "per month"
-    ],
-    "free_trial": null,
+    "pricing": "annual, per-employee subscription",
+    "free_trial": true,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      {
+        "name": "Matthew W.",
+        "title": "COO"
+      },
+      {
+        "name": "Emily J.",
+        "title": "Head of People Culture"
+      },
+      {
+        "name": "Michael R.",
+        "title": "Head of IT"
+      },
+      {
+        "name": "David L.",
+        "title": "CEO"
+      },
+      {
+        "name": "Sarah K.",
+        "title": "VP of Technology"
+      }
+    ],
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -47,26 +63,66 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Okta",
+      "Azure AD",
+      "Google",
+      "GitHub",
+      "GitLab",
+      "Jira",
+      "Asana",
+      "Planner",
+      "Monday.com",
+      "Slack",
+      "Teams",
+      "Zoom"
+    ],
+    "how_it_works": "Abloomify connects to business systems to collect data from devices and apps, transforming this data into business metrics using AI analytics. Bloomy, the AI agent, assists in decision-making, task automation, and productivity improvement by providing insights and alerts.",
+    "key_features": [
+      "IT discovery",
+      "SaaS tool usage analysis",
+      "AI agent for decision-making",
+      "Task automation",
+      "Proactive alerts",
+      "Control over AI models",
+      "Privacy-first approach",
+      "Integration with conferencing apps and calendars"
+    ],
+    "outcomes": [
+      "40% more relevant content",
+      "2x faster content creation",
+      "25% better lead quality",
+      "60% less messaging guesswork",
+      "3x faster content creation from idea to publish",
+      "45% higher email open rate",
+      "2.3x more social engagement",
+      "60% less research time for competitive content"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Boost efficiency by 40% while cutting operational costs through AI-powered productivity and performance management solutions.",
+    "workflows": "Day-to-day, customers use Abloomify to analyze usage patterns, automate tasks, receive alerts for attention-required issues, and make data-driven decisions. The tool helps optimize operations by identifying under-used software licenses and over-staffed functions, and it provides insights into meeting times and hybrid schedules.",
+    "metrics": {
+      "license_savings": "5-12%",
+      "revenue_per_employee_increase": "10-25%",
+      "content_relevance_increase": "40%",
+      "content_creation_speed_increase": "2x",
+      "lead_quality_increase": "25%",
+      "messaging_guesswork_reduction": "60%",
+      "email_open_rate_increase": "45%",
+      "social_engagement_increase": "2.3x",
+      "research_time_reduction": "60%"
+    }
   },
   {
     "vendor_name": "Appcues",
     "website": "https://appcues.com",
-    "mission": "To help teams deliver personalized in-app, email, and push experiences based on user behavior to drive long-term growth.",
-    "usp": "An AI-powered growth engine that continuously adapts user experiences based on behavior signals, helping retain and engage customers effectively.",
-    "icp": [
-      "customer success teams",
-      "support teams",
-      "SaaS Companies",
-      "Marketing Teams",
-      "Product Managers",
-      "Customer Success Managers"
+    "mission": "To help people succeed without friction by creating experiences that drive growth and guide users toward actions that matter most.",
+    "usp": "Appcues offers a Product-Led Growth Platform that empowers non-technical teams to publish in-product experiences quickly, ensuring personalized and frictionless user experiences.",
+    "icp": "Scaling businesses looking to improve user experiences",
+    "icp_buyer": [
+      "Customer service professional",
+      "Head of Marketing"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "time to value",
       "product activation",
@@ -82,24 +138,12 @@
       "Driving product-led growth"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Support",
-      "Renew",
-      "Advocate",
       "onboarding",
-      "engagement",
+      "adoption",
       "retention",
-      "expansion",
-      "renewal"
+      "expansion"
     ],
-    "pricing": [
-      "per month",
-      "per user",
-      "monthly active users",
-      "contact sales"
-    ],
+    "pricing": "Pricing is based on monthly active users and number of installations.",
     "free_trial": true,
     "soc2": true,
     "founded": "2013",
@@ -153,28 +197,29 @@
       }
     ],
     "customers": [
-      "Appcues",
-      "they",
-      "hrs",
-      "Litmus",
-      "Arbitrage",
-      "Radancy",
-      "Blip",
-      "Bynder",
-      "ProfitWell",
-      "Hotjar",
-      "Foresyte",
-      "MYOB",
-      "Zywave",
-      "Fullstory",
-      "Xometry",
-      "ve",
-      "also",
+      "Palmer M.",
+      "Jessie G.",
+      "Rachel H.",
+      "Jeff C.",
+      "Julie N.",
+      "Amanda B.",
+      "Ron Kinkade",
       "SourceDay",
       "LingQ",
+      "Litmus",
       "AdRoll",
       "Tactical Arbitrage",
-      "GetResponse"
+      "GetResponse",
+      "Feefo",
+      "Printify",
+      "Circa",
+      "Radancy",
+      "Encamp",
+      "Blip",
+      "Bynder",
+      "Hotjar",
+      "ProfitWell",
+      "Foresyte"
     ],
     "value_statements": [
       "speed time to value",
@@ -347,21 +392,46 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [
-      "Salesforce",
-      "HubSpot",
-      "Jira",
-      "Zapier",
-      "Calendly",
-      "Slack",
-      "Zendesk",
-      "Intercom",
-      "Segment"
+    "integrations": null,
+    "how_it_works": "Appcues allows users to create branded messages and in-app experiences without needing engineering support. Users install the Appcues SDK, create and target messages, publish them, and measure their performance. The platform integrates with other tools to enhance user engagement and automate workflows.",
+    "key_features": [
+      "Multi-channel messaging including in-app experiences, personalized emails, and mobile push notifications",
+      "No-code design and editing capabilities",
+      "Targeting based on user behavior and attributes",
+      "Integration with tools like Heap, Salesforce, and Segment",
+      "MCP Server for AI tool integration"
     ],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "outcomes": [
+      "Increased user retention",
+      "Increased user activation",
+      "Increased feature adoption",
+      "Saved time",
+      "Improved onboarding success rate"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Appcues enables businesses to deliver exceptional user experiences at scale, helping them grow faster by aligning product and go-to-market teams around user needs and commercial goals.",
+    "workflows": [
+      "Create and publish in-app experiences and messages",
+      "Track and measure user engagement and product usage",
+      "Integrate with other tools for seamless data exchange",
+      "Automate reporting and workflows using AI tools",
+      "Use integrations to enhance personalized communication and visibility"
+    ],
+    "metrics": {
+      "user_retention_increase": "20%",
+      "user_activation_increase": "55%",
+      "feature_adoption_increase": "112%",
+      "time_saved_per_week": "39hrs",
+      "lesson_open_rate_increase": "10%",
+      "feature_adoption_increase_litmus": "2100%",
+      "adoption_rate_adroll": "60%",
+      "live_attendance_increase": "60%",
+      "flow_conversion_uplift": "10%",
+      "activation_increase_blip": "124%",
+      "time_to_value_reduction": "9.7X",
+      "first_week_retention_increase": "20%",
+      "onboarding_success_rate_increase": "15%"
+    }
   },
   {
     "vendor_name": "Arrows",
