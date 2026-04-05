@@ -2,12 +2,13 @@
   {
     "vendor_name": "Abloomify",
     "website": "https://abloomify.com",
-    "mission": "Transform tech companies with AI to enhance productivity, protect culture, and enable efficient growth.",
-    "usp": "Abloomify offers a unified AI platform that integrates productivity insights, performance management, and secure AI assistance, tailored to specific roles and use cases.",
-    "icp": "Marketing leaders and teams",
+    "mission": "To integrate the power of AI into the leadership layer of tech companies to help them stay lean and efficient as they grow, protect culture, and unlock new levels of productivity.",
+    "usp": "Abloomify offers AI-powered solutions tailored to specific roles and use cases, providing real-time visibility into productivity, costs, and strategic workforce planning, with a focus on data-driven insights and secure AI deployment.",
+    "icp": "Marketing leaders, CMOs, VPs of Marketing, Directors of Demand Gen, mid-market and enterprise segments",
     "icp_buyer": [
       "CMO",
-      "VP of Marketing"
+      "VP of Marketing",
+      "Director of Demand Gen"
     ],
     "use_cases": [
       "time to value",
@@ -20,32 +21,19 @@
       "renewal",
       "expansion"
     ],
-    "pricing": "annual, per-employee subscription",
+    "pricing": "annual, per-employee subscription with volume tiers and usage-based AI overages",
     "free_trial": true,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
     "customers": [
-      {
-        "name": "Matthew W.",
-        "title": "COO"
-      },
-      {
-        "name": "Emily J.",
-        "title": "Head of People Culture"
-      },
-      {
-        "name": "Michael R.",
-        "title": "Head of IT"
-      },
-      {
-        "name": "David L.",
-        "title": "CEO"
-      },
-      {
-        "name": "Sarah K.",
-        "title": "VP of Technology"
-      }
+      "Emily C., VP Marketing, B2B SaaS",
+      "David K., Director of Demand Gen, HR Tech",
+      "Matthew W., COO",
+      "Emily J., Head of People Culture",
+      "Michael R., Head of IT",
+      "David L., CEO",
+      "Sarah K., VP of Technology"
     ],
     "value_statements": [],
     "confidence": "high",
@@ -64,53 +52,68 @@
     "company_size": "",
     "hq_address": "",
     "integrations": [
-      "Okta",
-      "Azure AD",
-      "Google",
-      "GitHub",
-      "GitLab",
+      "Slack",
+      "Teams",
+      "Google Workspace",
+      "Microsoft 365",
+      "HRIS",
+      "Code repositories",
+      "CRM",
+      "Gmail",
+      "Outlook",
+      "Task management",
       "Jira",
       "Asana",
       "Planner",
       "Monday.com",
-      "Slack",
-      "Teams",
-      "Zoom"
+      "Zoom",
+      "VDI platforms"
     ],
-    "how_it_works": "Abloomify connects to business systems to collect data from devices and apps, transforming this data into business metrics using AI analytics. Bloomy, the AI agent, assists in decision-making, task automation, and productivity improvement by providing insights and alerts.",
+    "how_it_works": "Abloomify deploys a lightweight device agent and browser extension to collect high-level activity metadata from devices and apps. It integrates with existing SaaS tools and uses AI to analyze patterns, flag anomalies, and suggest optimizations. Insights are surfaced through a dashboard, providing visibility into team effort and output without invasive monitoring.",
     "key_features": [
-      "IT discovery",
-      "SaaS tool usage analysis",
-      "AI agent for decision-making",
-      "Task automation",
-      "Proactive alerts",
-      "Control over AI models",
-      "Privacy-first approach",
-      "Integration with conferencing apps and calendars"
+      "Lightweight device agent and browser extension",
+      "Integration with SaaS tools like Jira, GitHub, HRIS",
+      "Custom productivity models with drag-and-drop builder",
+      "AI-powered insights and recommendations",
+      "Predictive workload planning",
+      "SaaS usage insights",
+      "Privacy-first design with no screenshots or keylogging",
+      "Real-time visibility into team productivity",
+      "Data-driven resource allocation"
     ],
     "outcomes": [
+      "2x organic lead generation",
+      "45% improvement in content engagement",
+      "30% reduction in content production time",
+      "35% lower customer acquisition cost",
+      "3x improvement in mid-market engagement",
+      "Pipeline contribution up 60% YoY",
       "40% more relevant content",
       "2x faster content creation",
       "25% better lead quality",
-      "60% less messaging guesswork",
-      "3x faster content creation from idea to publish",
-      "45% higher email open rate",
-      "2.3x more social engagement",
-      "60% less research time for competitive content"
+      "60% less messaging guesswork"
     ],
     "ai_summary": "",
-    "value_proposition": "Boost efficiency by 40% while cutting operational costs through AI-powered productivity and performance management solutions.",
-    "workflows": "Day-to-day, customers use Abloomify to analyze usage patterns, automate tasks, receive alerts for attention-required issues, and make data-driven decisions. The tool helps optimize operations by identifying under-used software licenses and over-staffed functions, and it provides insights into meeting times and hybrid schedules.",
+    "value_proposition": "Abloomify transforms organizations by providing AI-powered intelligence for every revenue-facing role, optimizing marketing campaigns, improving content strategy, and enhancing productivity and decision-making through personalized AI agents.",
+    "workflows": [
+      "Connect existing tools and define success metrics",
+      "Deploy device agents via MDM for comprehensive insights",
+      "Use AI to detect trends, retention risks, and burnout signals",
+      "Optimize team capacity and prevent burnout with predictive analytics",
+      "Track tool usage vs. licenses paid to optimize software spend",
+      "Sync with calendars to reconcile meeting invites with device activity"
+    ],
     "metrics": {
-      "license_savings": "5-12%",
-      "revenue_per_employee_increase": "10-25%",
-      "content_relevance_increase": "40%",
-      "content_creation_speed_increase": "2x",
-      "lead_quality_increase": "25%",
-      "messaging_guesswork_reduction": "60%",
-      "email_open_rate_increase": "45%",
-      "social_engagement_increase": "2.3x",
-      "research_time_reduction": "60%"
+      "organic_leads": "2x",
+      "content_engagement": "45% improvement",
+      "content_production_time": "30% reduction",
+      "customer_acquisition_cost": "35% lower",
+      "mid_market_engagement": "3x improvement",
+      "pipeline_contribution": "60% YoY increase",
+      "relevant_content": "40% more",
+      "faster_content_creation": "2x",
+      "better_lead_quality": "25%",
+      "less_messaging_guesswork": "60%"
     }
   },
   {
@@ -118,10 +121,10 @@
     "website": "https://appcues.com",
     "mission": "To help people succeed without friction by creating experiences that drive growth and guide users toward actions that matter most.",
     "usp": "Appcues offers a Product-Led Growth Platform that empowers non-technical teams to publish in-product experiences quickly, ensuring personalized and frictionless user experiences.",
-    "icp": "Scaling businesses looking to improve user experiences",
+    "icp": "Scaling businesses across various industries such as Martech, HR & workforce, Healthcare, Education, Professional services, Consumer services, Travel & lifestyle.",
     "icp_buyer": [
-      "Customer service professional",
-      "Head of Marketing"
+      "Head of Marketing",
+      "Customer service professional"
     ],
     "use_cases": [
       "time to value",
@@ -197,13 +200,6 @@
       }
     ],
     "customers": [
-      "Palmer M.",
-      "Jessie G.",
-      "Rachel H.",
-      "Jeff C.",
-      "Julie N.",
-      "Amanda B.",
-      "Ron Kinkade",
       "SourceDay",
       "LingQ",
       "Litmus",
@@ -402,20 +398,21 @@
       "MCP Server for AI tool integration"
     ],
     "outcomes": [
-      "Increased user retention",
-      "Increased user activation",
-      "Increased feature adoption",
+      "Increase in user retention",
+      "Increase in user activation",
+      "Increase in feature adoption",
       "Saved time",
+      "Boost in UX personalization",
       "Improved onboarding success rate"
     ],
     "ai_summary": "",
     "value_proposition": "Appcues enables businesses to deliver exceptional user experiences at scale, helping them grow faster by aligning product and go-to-market teams around user needs and commercial goals.",
     "workflows": [
       "Create and publish in-app experiences and messages",
-      "Track and measure user engagement and product usage",
-      "Integrate with other tools for seamless data exchange",
-      "Automate reporting and workflows using AI tools",
-      "Use integrations to enhance personalized communication and visibility"
+      "Track and measure user engagement and message performance",
+      "Integrate with other tools for enhanced data flow and automation",
+      "Use AI tools to query and manage Appcues data",
+      "Automate reporting and user engagement tasks"
     ],
     "metrics": {
       "user_retention_increase": "20%",
@@ -896,33 +893,21 @@
   {
     "vendor_name": "Churned",
     "website": "https://churned.io",
-    "mission": "AI-powered predictive retention platform for B2C subscriptions and Publishers. Reduce churn and drive growth with automated actions.",
-    "usp": "reduce churn",
-    "icp": [
-      "Customer Success Manager",
-      "Marketing Manager",
-      "VP of Revenue",
-      "customer success teams"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "Co-Pilot analyzes customer behavior, finds what works best for a specific segment, and automates the next best action.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "expansion",
       "churn prevention"
     ],
-    "lifecycle_stages": [
-      "Expand",
-      "Renew"
-    ],
-    "pricing": [
-      "Basic: \u20ac199.00\n3 Users Per Month",
-      "Pro: \u20ac999.00\n5 Users Per Month",
-      "Enterprise: Contact Us\n5 Users Per Month"
-    ],
-    "free_trial": false,
+    "lifecycle_stages": null,
+    "pricing": "All plans include a set number of Co-Pilots. Additional Co-Pilots can be purchased as your needs grow.",
+    "free_trial": null,
     "soc2": false,
     "founded": "2019",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "medium",
     "evidence_urls": [
@@ -941,11 +926,24 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "Amsterdam, NL",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "The product delivers value by automating workflows to enhance campaign effectiveness. It analyzes customer behavior to determine optimal actions for specific segments and automates these actions.",
+    "key_features": [
+      "Automated workflows",
+      "Customer behavior analysis",
+      "Segment-specific optimization",
+      "Next best action automation"
+    ],
+    "outcomes": [
+      "Automate workflows",
+      "Analyze customer behavior",
+      "Find what works best for a specific segment",
+      "Automate the next best action"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Automate workflows to power your campaigns.",
+    "workflows": "Customers use the tool to automate and optimize their marketing campaigns by leveraging Co-Pilots that analyze and act on customer data.",
+    "metrics": null
   },
   {
     "vendor_name": "ChurnZero",
@@ -1103,17 +1101,12 @@
   {
     "vendor_name": "ClientSuccess",
     "website": "https://clientsuccess.com",
-    "mission": "\ud83d\ude80 Big News: ClientSuccess Acquires Product Signals to Transform Product Feedback into Actionable Insights Learn More \ue815 Simple, Powerful Customer Success The easiest to use, fastest to implement softwa",
-    "usp": "ClientSuccess offers an intuitive platform that transforms customer journey management with AI-driven insights and proactive engagement strategies.",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "Customer Success Managers",
-      "Product Managers",
-      "Sales Leaders",
-      "Marketing Executives"
+    "mission": "Deliver world-class customer experiences and enable success by reducing churn and increasing customer revenue.",
+    "usp": "The easiest to use, fastest to implement software that is simple yet powerful, providing visibility into retention, renewal, and growth.",
+    "icp": null,
+    "icp_buyer": [
+      "Director of Customer Success"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "time to value",
       "health scoring",
@@ -1131,23 +1124,12 @@
       "Customer health analytics"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "Onboarding",
-      "Adoption",
-      "Retention",
-      "Renewal",
-      "Expansion"
+      "onboarding",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "ClientSuccess: Contact Us"
-    ],
-    "free_trial": false,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "2014",
     "case_study_details": [
@@ -1177,8 +1159,7 @@
       }
     ],
     "customers": [
-      "it",
-      "AddShoppers"
+      "Jean Marie S."
     ],
     "value_statements": [
       "speed time to value",
@@ -1353,43 +1334,56 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "American Fork, UT",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "ClientSuccess delivers value by providing a platform that reduces churn and increases customer revenue through enhanced customer success management. It offers visibility into retention, renewal, and growth rates, enabling actionable feedback and data-driven decision-making across various functions.",
+    "key_features": [
+      "Easy to use and fast to implement",
+      "Visibility into retention, renewal, and growth rates",
+      "Actionable feedback for driving results",
+      "Scalable customer success program",
+      "Data-driven growth across Product, Sales, Marketing, and Support"
+    ],
+    "outcomes": [
+      "reduce churn",
+      "increase customer revenue",
+      "gain visibility into retention, renewal, and growth rates",
+      "provide actionable feedback",
+      "build a scalable customer success program",
+      "make data-driven decisions"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Build a scalable customer success program with data-driven growth across all functions, making decisions with customer data to supercharge growth.",
+    "workflows": [
+      "Delivering world-class customer experiences",
+      "Reporting results to enable success",
+      "Coaching teams to deliver great results",
+      "Making decisions with customer data"
+    ],
+    "metrics": null
   },
   {
     "vendor_name": "Cloud Coach",
     "website": "https://cloudcoach.com",
-    "mission": "Project Management, Customer Onboarding, Professional Services Automation (PSA) and PPM solutions native to Salesforce.",
-    "usp": "increase retention",
-    "icp": [
-      "Head of Professional Services",
-      "Project Manager",
-      "Finance Manager"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "Built entirely on Salesforce for clear visibility, secure data, and streamlined automation.",
+    "icp": "Teams looking to standardize delivery and collaboration, services teams managing resources, time, and profitability, PMOs and enterprises focused on governance and prioritization.",
+    "icp_buyer": null,
     "use_cases": [
       "renewal management",
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Renew"
+      "onboarding",
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "Ultimate: Contact Us",
-      "Enterprise: Contact Us",
-      "Connect: Contact Us",
-      "Starter: Free"
-    ],
-    "free_trial": true,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "2005",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "medium",
     "evidence_urls": [
@@ -1412,40 +1406,63 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "Fort Collins, Colorado",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Salesforce"
+    ],
+    "how_it_works": "Cloud Coach is built entirely on Salesforce to provide clear visibility, secure data, and streamlined automation for project tracking, delivery scaling, and portfolio management.",
+    "key_features": [
+      "Project tracking",
+      "Delivery scaling",
+      "Portfolio management",
+      "Standardized delivery and collaboration",
+      "Reporting and automation",
+      "Smarter workflows",
+      "Resource, time, and profitability management",
+      "Insight and governance for strategic growth"
+    ],
+    "outcomes": "Improve visibility and efficiency, connect delivery, resources, and financials to scale with confidence, guide strategic growth.",
+    "ai_summary": "",
+    "value_proposition": "Get your projects on track in Salesforce with consistency, visibility, and alignment across every project.",
+    "workflows": [
+      "Teams use Cloud Coach to standardize delivery and collaboration.",
+      "Users add reporting and automation to see progress clearly and keep work moving.",
+      "Services teams manage resources, time, and profitability.",
+      "PMOs and enterprises focus on governance and prioritization."
+    ],
+    "metrics": null
   },
   {
     "vendor_name": "Comm100",
     "website": "https://comm100.com",
-    "mission": "# AI-Powered Omnichannel Customer Service Platform ## Human Centered Service, Powered by AI Level up your self-serve and human-assisted customer service with AI-driven speed & efficiency.",
-    "usp": "From automated, context-aware support to real-time human assistance, onboarding, and evaluation, Comm100 solutions are d",
-    "icp": [
-      "Customer Relations Manager",
+    "mission": "To shorten the path between question and answer by providing AI-powered omnichannel customer service solutions.",
+    "usp": "Comm100 combines every communication channel into one unified platform, offering AI-driven automation and real-time human assistance tailored to various industries.",
+    "icp": "Organizations in higher education, iGaming, banking, healthcare, technology, government, and finance.",
+    "icp_buyer": [
       "Communications & Systems Coordinator",
-      "Customer Success Manager"
+      "Manager, Academic & Career Advising",
+      "Sr. Business Operations Manager",
+      "Customer Relations Manager"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "sentiment analysis",
       "knowledge base"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Adopt",
-      "Support"
+      "onboarding",
+      "adoption"
     ],
-    "pricing": [
-      "$"
-    ],
-    "free_trial": true,
+    "pricing": "flexible, usage-based pricing",
+    "free_trial": null,
     "soc2": null,
     "founded": "2016",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Thompson Rivers University",
+      "University of British Columbia",
+      "Google Fitbit",
+      "Global Affairs Canada",
+      "Canadian Blood Services"
+    ],
     "value_statements": [],
     "confidence": "medium",
     "evidence_urls": [
@@ -1462,11 +1479,44 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "Comm100 integrates multiple communication channels into a single platform, allowing users to connect with customers efficiently. It uses AI to automate responses to common queries and provides real-time assistance to human agents. The platform is designed to shorten the path between question and answer, enhancing customer service through AI-driven speed and efficiency.",
+    "key_features": [
+      "AI-powered omnichannel customer service",
+      "Automated, context-aware support",
+      "Real-time human assistance",
+      "AI-driven analytics and insights",
+      "Unified agent console",
+      "Integration of text, audio, video, and screen sharing",
+      "Management of email, SMS, social, and messaging apps",
+      "Crystal-clear voice calls",
+      "Streamlined queueing experience",
+      "Appointment and meeting booking"
+    ],
+    "outcomes": [
+      "Reduced student wait time",
+      "Generated net new pipeline",
+      "Handled incoming chats",
+      "Automated customer queries",
+      "Improved efficiency and customer experience"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Comm100 empowers organizations to deliver efficient, accurate, and personalized support through a seamless, integrated platform that enhances customer service with AI-driven speed and efficiency.",
+    "workflows": [
+      "Automate 80% of customer queries with AI",
+      "Empower agents with AI suggestions and workflows",
+      "Gain visibility into chat resolutions and sentiments",
+      "Auto-score conversations for coaching",
+      "Convert insights into training and quizzes",
+      "Route live chat queries to AI Agent",
+      "Connect with customers in real-time across channels"
+    ],
+    "metrics": {
+      "University of British Columbia": "Reduced student wait time by 30%",
+      "Google Fitbit": "$6M in net new pipeline in the first year",
+      "Global Affairs Canada": "Chatbot handles 78% of incoming chats",
+      "Canadian Blood Services": "70% of live chat queries routed to chatbot, 68% resolved without human interaction"
+    }
   },
   {
     "vendor_name": "Contentsquare",
@@ -1595,12 +1645,12 @@
   {
     "vendor_name": "Coworker AI",
     "website": "https://coworker.ai",
-    "mission": "Get Coworker Get Coworker What are the bottlenecks affecting our engineering productivity?",
-    "usp": "increase retention",
-    "icp": [
-      "support teams"
+    "mission": null,
+    "usp": "Coworker provides a live demo on actual workflows, offering a custom fit assessment to identify where it saves the most time, and enables teams to be live within 48 hours.",
+    "icp": null,
+    "icp_buyer": [
+      "VP IT Operations"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "sentiment analysis",
       "knowledge base",
@@ -1609,21 +1659,15 @@
       "voice of customer",
       "customer advocacy"
     ],
-    "lifecycle_stages": [
-      "Sign",
-      "Adopt",
-      "Support",
-      "Renew",
-      "Advocate"
-    ],
-    "pricing": [
-      "$"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": true,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Huuuge Games"
+    ],
     "value_statements": [
       "increase retention",
       "strengthen customer advocacy"
@@ -1653,92 +1697,37 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [
-      "Salesforce",
-      "HubSpot",
-      "Gainsight",
-      "ChurnZero",
-      "Planhat",
-      "Jira",
-      "Linear",
-      "ClickUp",
-      "Monday.com",
-      "Gmail",
-      "Slack",
-      "Microsoft Teams",
-      "Zendesk",
-      "Intercom",
-      "Snowflake",
-      "BigQuery",
-      "operating",
-      "providing the Services",
-      "your permitted use of the Services",
-      "solely for your personal",
-      "non-commercial purposes",
-      "an internet service provider to access your Coworker Accounts",
-      "policies",
-      "to perform certain transactions as available",
-      "THESE TERMS",
-      "FROM YOUR USE OF",
-      "INABILITY TO USE",
-      "THE SERVICES",
-      "WHETHER BASED ON WARRANTY",
-      "CONTRACT",
-      "TORT (INCLUDING NEGLIGENCE)",
-      "PRODUCT LIABILITY",
-      "ANY OTHER LEGAL THEORY",
-      "WHETHER",
-      "NOT Coworker",
-      "ANY OTHER PARTY HAS BEEN INFORMED OF THE POSSIBILITY OF SUCH DAMAGE",
-      "EVEN IF A LIMITED REMEDY SET FORTH HEREIN IS FOUND TO HAVE FAILED OF ITS ESSENTIAL PURPOSE",
-      "FROM THE USE OF",
-      "INABILITY TO USE THE SERVICES EXCEED ONE HUNDRED US DOLLARS ($100)",
-      "the Service",
-      "Company will have no liability",
-      "responsibility with respect thereto",
-      "the Services",
-      "the transmission of applicable data",
-      "if any",
-      "is subject to United States export controls",
-      "the processing of such payments",
-      "we do not retain any personally identifiable information",
-      "any financial information such as full credit card numbers",
-      "3rd-party workplace tools like Google Workspace",
-      "Zoom",
-      "Notion",
-      "other SaaS applications)",
-      "Business Transactions",
-      "the transaction",
-      "regulatory",
-      "tax",
-      "insurance",
-      "legal",
-      "administrative",
-      "other requirements",
-      "Your BI Stack Keep Power BI",
-      "Tableau",
-      "Looker",
-      "your analytics pipelines",
-      "Your BI",
-      "Data Stack Coworker complements Power BI",
-      "your data warehouse without replacing them"
+    "integrations": null,
+    "how_it_works": "Coworker delivers value by automating workflows and handling real tasks, allowing teams to save time and improve efficiency.",
+    "key_features": [
+      "Live demo on actual workflows",
+      "Custom fit assessment",
+      "Proof of concept plan",
+      "Quick implementation within 48 hours"
     ],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "outcomes": [
+      "save time",
+      "ROI calculation exceeded expectations"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Coworker helps teams save time by efficiently handling real tasks, with a straightforward ROI calculation that can be exceeded within the first few weeks.",
+    "workflows": "Customers use Coworker to automate their daily tasks and workflows, allowing them to save time and focus on more strategic activities.",
+    "metrics": [
+      "save two to two and a half hours per month per person"
+    ]
   },
   {
     "vendor_name": "Custify",
     "website": "https://custify.com",
-    "mission": "Custify's customer success software helps CS teams reduce churn, refine onboarding, and spur SaaS growth with a smart platform designed for CS pros.",
-    "usp": "reduce churn",
-    "icp": [
-      "Head of Customer Success",
-      "VP Revenue",
-      "SaaS Founder"
+    "mission": null,
+    "usp": "Custify offers a young and flexible platform with award-winning customer success features, seamless integration, and dedicated support, allowing teams to handle more clients with care and attention by automating manual tasks.",
+    "icp": "Customer success teams looking for automation and integration solutions",
+    "icp_buyer": [
+      "Team Lead Customer Success",
+      "Automation Lead & SM Strategist",
+      "Director of Customer Success & Support",
+      "Lead Customer Success Manager"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "health scoring",
       "expansion",
@@ -1748,20 +1737,20 @@
       "customer advocacy"
     ],
     "lifecycle_stages": [
-      "Adopt",
-      "Expand",
-      "Renew",
-      "Advocate"
+      "onboarding",
+      "adoption"
     ],
-    "pricing": [
-      "Small-Business",
-      "Mid-Market"
-    ],
-    "free_trial": false,
+    "pricing": "Flexible Pricing",
+    "free_trial": null,
     "soc2": false,
     "founded": "2017",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Stijn Smet",
+      "Daniel Snider",
+      "Ailyn Mendoza",
+      "Irina Vatafu"
+    ],
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -1788,11 +1777,34 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "Bucharest, Romania",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "native integrations"
+    ],
+    "how_it_works": "Custify automates customer success tasks, allowing teams to manage more clients efficiently by reducing manual tasks and providing a comprehensive view of customer data. It integrates seamlessly with existing tech stacks and offers personalized onboarding and support.",
+    "key_features": [
+      "Customer 360 view",
+      "Segmentation",
+      "Customer Lifecycle tracking",
+      "Health Scores",
+      "Custom Alerts",
+      "Task Management",
+      "CSM rating",
+      "Automation / Playbooks",
+      "Native Integrations",
+      "Concierge Onboarding"
+    ],
+    "outcomes": [
+      "Increased efficiency by automating manual tasks",
+      "Ability to handle 3X more clients with more care and attention",
+      "Empty inbox at the end of the day due to automation"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Custify enables customer success teams to efficiently manage client relationships by automating repetitive tasks, providing powerful integrations, and offering personalized onboarding and support, ultimately allowing teams to focus on strategic client interactions.",
+    "workflows": "Day-to-day, customers use Custify to automate repetitive tasks, manage customer interactions, track client health, and receive alerts for specific triggers. They also utilize segmentation and lifecycle tracking to tailor strategies for different client groups.",
+    "metrics": [
+      "98% NPS",
+      "3X more clients handled"
+    ]
   },
   {
     "vendor_name": "Customer Success Collective",
@@ -2064,18 +2076,10 @@
   {
     "vendor_name": "Dock",
     "website": "https://dock.us",
-    "mission": "Dock is the AI revenue enablement platform built for the way people buy today, enhancing collaboration and client engagement throughout the sales lifecycle.",
-    "usp": "An AI-native platform that automates sales enablement, onboarding, and content management, designed to enhance buyer and seller interactions.",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "support teams",
-      "revenue teams",
-      "Sales Teams",
-      "Customer Success Managers",
-      "Revenue Operations"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "We\u2019re the only tool in this category that gives away this much for free because people always love Dock when they try it.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "sales-to-cs handoff",
       "meeting intelligence",
@@ -2096,25 +2100,13 @@
       "Document automation"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "engagement",
       "onboarding",
-      "retention",
+      "adoption",
+      "renewal",
       "expansion"
     ],
-    "pricing": [
-      "Free: Free",
-      "Business: Starting at $49.00\n1 User Per Month",
-      "Platform: Contact Us\nPer Year"
-    ],
-    "free_trial": true,
+    "pricing": "Free plan available; Standard and Premium plans with additional seats at $50 per user, per month",
+    "free_trial": null,
     "soc2": false,
     "founded": "2021",
     "case_study_details": [
@@ -2171,18 +2163,7 @@
         "source_url": "https://dock.us/customers"
       }
     ],
-    "customers": [
-      "Lattice",
-      "Sales",
-      "team",
-      "founder",
-      "Assignar",
-      "ever",
-      "Merge",
-      "BrightHire",
-      "Nectar",
-      "Champify"
-    ],
+    "customers": null,
     "value_statements": [
       "improve handoff",
       "speed time to value",
@@ -2351,11 +2332,26 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "San Francisco, California",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Slack",
+      "Loom",
+      "Pandadoc"
+    ],
+    "how_it_works": "Dock provides a platform where companies can create workspaces to manage customer relationships. It offers a free plan with 50 workspaces and basic integrations, allowing users to collaborate with external partners without additional charges.",
+    "key_features": [
+      "50 customer workspaces",
+      "Basic integrations with tools like Slack, Loom, and Pandadoc",
+      "Free access for external collaborators"
+    ],
+    "outcomes": [
+      "Manage customer relationships at scale",
+      "Introduce new companies to Dock",
+      "Create a growth loop"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Dock offers a generous free plan with 50 customer workspaces and standard integrations, allowing users to manage customer relationships at scale without time limits or forced upgrades.",
+    "workflows": "Day-to-day, customers use Dock to create and manage workspaces for customer interactions, leveraging integrations to streamline communication and collaboration with external partners.",
+    "metrics": null
   },
   {
     "vendor_name": "Encharge",
@@ -3222,19 +3218,10 @@
   {
     "vendor_name": "HubSpot",
     "website": "https://hubspot.com",
-    "mission": "HubSpot Customer Platform Where go-to-market teams go to grow scale close retain grow Unite marketing, sales, and customer service on one AI-powered customer platform that delivers results fast.",
-    "usp": "HubSpot provides a comprehensive AI-powered customer platform that integrates marketing, sales, and customer service.",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "support teams",
-      "revenue teams",
-      "Marketing Teams",
-      "Sales Teams",
-      "Customer Service Teams",
-      "Small to Large Enterprises"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "HubSpot stands out by deeply engaging with clients, providing comprehensive pre-sales and support, and working closely with them during implementation.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "meeting intelligence",
       "time to value",
@@ -3254,28 +3241,9 @@
       "Sales automation",
       "Marketing campaign management"
     ],
-    "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "acquisition",
-      "engagement",
-      "retention"
-    ],
-    "pricing": [
-      "$",
-      "per seat",
-      "per user",
-      "per month",
-      "per year",
-      "contact sales",
-      "free tools"
-    ],
-    "free_trial": true,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": true,
     "founded": "2015",
     "case_study_details": [
@@ -3303,13 +3271,7 @@
         "metric": "25%"
       }
     ],
-    "customers": [
-      "customers",
-      "Lean",
-      "Rebel",
-      "HubSpot",
-      "238,000+ customers globally"
-    ],
+    "customers": null,
     "value_statements": [
       "speed time to value",
       "reduce churn",
@@ -3473,41 +3435,33 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "Cambridge, MA",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "HubSpot provides software and tools designed to meet business needs through deep engagement and support during implementation.",
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": "HubSpot offers software and tools tailored to business needs, ensuring thorough understanding and commitment to client success.",
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "HubSpot Blog",
     "website": "https://blog.hubspot.com",
-    "mission": "HubSpot\u2019s Marketing Blog covers everything you need to know to master inbound marketing.",
-    "usp": "strengthen customer advocacy",
-    "icp": [
-      "Head of Marketing",
-      "Chief Information Officer (CIO)",
-      "Operations Manager"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "knowledge base",
       "customer advocacy"
     ],
-    "lifecycle_stages": [
-      "Support",
-      "Advocate"
-    ],
-    "pricing": [
-      "$",
-      "per year",
-      "contact sales"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -3524,11 +3478,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Hyperengage",
@@ -3649,36 +3606,39 @@
   {
     "vendor_name": "Intercom",
     "website": "https://intercom.com",
-    "mission": "Intercom is the AI customer service company, helping businesses deliver incredible customer experiences at scale with Fin\u2014the #1 AI Agent\u2014and the Intercom Customer Service Suite, which combines Fin with a next-gen Helpdesk.",
-    "usp": "increase retention",
-    "icp": [
-      "Head of Customer Support",
-      "VP of Customer Experience",
-      "Product Support Manager",
-      "support teams"
+    "mission": null,
+    "usp": "Intercom offers an AI-first customer service platform with Fin AI Agent, providing powerful automation tools, collaboration, security, and multibrand features for support teams.",
+    "icp": "Individuals, startups, and small businesses",
+    "icp_buyer": [
+      "Investor Care Lead",
+      "Director, Technical Support",
+      "Customer Support Operations Manager",
+      "Customer Support Director",
+      "Global Director for Product Support"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "renewal management",
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Renew",
-      "Advocate"
+      "onboarding",
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "Essential: $39.00\n1 Seat Per Month",
-      "Advanced: $99.00\n1 Seat Per Month",
-      "Expert: $139.00\n1 seat Per Month",
-      "Proactive Support Plus add-on: Starting at $99.00\nPer Month",
-      "The Early Stage program: $65.00\n5 Seats Per Month"
-    ],
-    "free_trial": false,
+    "pricing": "$0.99 per Fin outcome, $29 per seat/mo for Essential, $85 per seat/mo for Advanced, $132 per seat/mo for Expert, billed annually",
+    "free_trial": "Free 14 day trial",
     "soc2": false,
     "founded": "2011",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Synthesia",
+      "Sharesies",
+      "Ruby",
+      "Dental Intelligence",
+      "Linktree",
+      "Culture Amp"
+    ],
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -3705,11 +3665,51 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "San Francisco, CA",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Zendesk",
+      "Salesforce"
+    ],
+    "how_it_works": "Intercom provides an AI-first customer service platform that integrates with existing helpdesk systems or can be used independently. It offers a seamless platform combining AI agents and helpdesk features to enhance customer support efficiency.",
+    "key_features": [
+      "Fin AI Agent",
+      "Messenger Shared Inbox",
+      "Ticketing system",
+      "Pre-built reports",
+      "Public Help Center",
+      "Workflows automation builder",
+      "Round robin assignment",
+      "Private and multilingual Help Center",
+      "SSO & identity management",
+      "HIPAA support",
+      "Service level agreements (SLAs)",
+      "Multibrand Messenger / Help Center",
+      "Pro AI features for visibility and control",
+      "Copilot AI assistant",
+      "Proactive Support Plus"
+    ],
+    "outcomes": [
+      "Resolved over 6,000 conversations",
+      "Saved over 1,300 hours",
+      "Pushed self-serve support rates as high as 87%",
+      "Achieved 70% resolution rate",
+      "Achieved 50% resolution rate",
+      "Achieved 97% CSAT Score",
+      "Resolved 42% of conversations within six days",
+      "Achieved 95% Global CSAT Score"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Intercom's platform enhances customer support efficiency by resolving conversations, saving time, and increasing self-serve support rates, with flexible pricing based on outcomes and team needs.",
+    "workflows": "Customers use Intercom to manage customer interactions through various channels such as email, live chat, and phone. The platform automates workflows with features like round robin assignment and workflows automation builder. It also allows for proactive support through in-app messages, surveys, and product tours. The AI agent, Fin, resolves customer queries and can be trained to handle complex issues, while the Copilot AI assistant helps increase agent efficiency.",
+    "metrics": {
+      "conversations_resolved": 6000,
+      "hours_saved": 1300,
+      "self_serve_support_rate": 87,
+      "resolution_rate_sharesies": 70,
+      "resolution_rate_ruby": 50,
+      "csat_score_dental_intelligence": 97,
+      "conversations_resolved_linktree": 42,
+      "global_csat_score_culture_amp": 95
+    }
   },
   {
     "vendor_name": "Journeyz",
@@ -4565,14 +4565,10 @@
   {
     "vendor_name": "Onboard.io",
     "website": "https://onboard.io",
-    "mission": "Onboard Customers faster with the software built to organize, automate, & manage your client onboarding process for modern customer success teams.",
-    "usp": "speed time to value",
-    "icp": [
-      "Customer Success Manager",
-      "Project Manager",
-      "VP of Operations"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "Automate onboarding playbooks and speed up customer value with scalable plans and advanced features.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "time to value",
       "sentiment analysis",
@@ -4580,22 +4576,27 @@
       "churn prevention"
     ],
     "lifecycle_stages": [
-      "Onboard",
-      "Adopt",
-      "Support",
-      "Renew"
+      "onboarding"
     ],
-    "pricing": [
-      "$",
-      "per seat",
-      "per month",
-      "per year"
-    ],
-    "free_trial": true,
+    "pricing": {
+      "Starter": "$25 /mo",
+      "Essentials": "$300 /mo",
+      "Pro": "$1,000 /mo",
+      "Per seat pricing": {
+        "Starter": "$25/mo",
+        "Essentials": "$60/mo",
+        "Pro": "$100/mo"
+      },
+      "Add-ons": {
+        "SSO": "$50/mo",
+        "Custom domains": "$50/mo"
+      }
+    },
+    "free_trial": "14-day",
     "soc2": null,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -4612,11 +4613,44 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Salesforce",
+      "HubSpot",
+      "Slack",
+      "Zapier"
+    ],
+    "how_it_works": "Onboard automates playbooks and speeds up customer value by supporting the onboarding process and integrating into existing workflows.",
+    "key_features": [
+      "Automated launch plans",
+      "Customer portal",
+      "Live discussions + inbox",
+      "Custom forms",
+      "AI Insights",
+      "Workflows",
+      "SSO",
+      "Custom domains",
+      "Custom branding",
+      "Custom reports",
+      "Custom integrations",
+      "Salesforce integration",
+      "HubSpot integration",
+      "Slack integration",
+      "Zapier integration",
+      "Data security",
+      "SOC 2 compliance",
+      "GDPR compliance",
+      "Data export"
+    ],
+    "outcomes": [
+      "Automate playbooks",
+      "Speed up customer value",
+      "Support onboarding process",
+      "Integrate with existing workflow"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Onboard provides automated launch plans, a customer portal, live discussions, AI insights, and integrations with popular platforms to streamline and enhance the onboarding process.",
+    "workflows": "Onboard supports workflows by providing automated launch plans, customer portals, and live discussions, along with integrations with tools like Salesforce, HubSpot, Slack, and Zapier.",
+    "metrics": null
   },
   {
     "vendor_name": "OnRamp",
@@ -5823,32 +5857,28 @@
   {
     "vendor_name": "SaaSquatch",
     "website": "https://saasquatch.com",
-    "mission": "Leverage the power and flexibility of our referral software to transform one-time buyers into lifelong advocates.",
-    "usp": "automate workflows",
-    "icp": [
-      "Retention Marketing Manager",
-      "Head of Customer Success",
-      "VP Revenue",
-      "SaaS companies",
-      "support teams"
+    "mission": "Transform loyal customers into advocates through innovative referral software.",
+    "usp": "The most flexible referral software that allows brands to build customized and fully-automated referral programs, engaging customers in the right way, in the right place, with the right offer.",
+    "icp": "Brands looking to drive new and recurring revenue through referral programs",
+    "icp_buyer": [
+      "Retention Marketing Manager"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "expansion",
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Expand",
-      "Advocate"
+      "onboarding",
+      "adoption"
     ],
-    "pricing": [
-      "$"
-    ],
-    "free_trial": true,
+    "pricing": null,
+    "free_trial": null,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Jobber"
+    ],
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -5865,24 +5895,48 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "SaaSquatch enables brands to create customized and fully-automated referral programs that engage customers effectively, resulting in higher referral rates and happier customers. It allows teams to reach customers at key moments in their journey and place referral programs where customers are more likely to convert.",
+    "key_features": [
+      "Customized referral programs",
+      "Fully-automated referral processes",
+      "Tiered rewards",
+      "Robust reward library",
+      "Custom rewards",
+      "Time-based or recurring offers",
+      "Customizable email and widget templates",
+      "Unique share codes and links",
+      "Flexible sharing mediums",
+      "Leaderboards and reward exchanges"
+    ],
+    "outcomes": [
+      "Drive new and recurring revenue for less costs",
+      "Increase retention and repeat-purchase rates",
+      "Engage 10x more users",
+      "Get 5x more referrals",
+      "Acquire customers at an 18% higher selling price"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Drive new and recurring revenue by increasing retention and repeat-purchase rates through authentic and trusted customer referrals.",
+    "workflows": "Day-to-day, customers use SaaSquatch to manage and adjust their referral programs without needing technical assistance. Marketing teams can change referral prizes or in-app widgets independently. The platform supports engaging customers with the right offers at the right time, and placing referral opportunities in strategic locations such as mobile apps, post-purchase pages, and dedicated website pages.",
+    "metrics": {
+      "average_selling_price_increase": "18%",
+      "referral_increase": "5x",
+      "user_engagement_increase": "10x"
+    }
   },
   {
     "vendor_name": "Salesforce",
     "website": "https://salesforce.com",
-    "mission": "Agentforce transforms Sales, Service, Commerce, Marketing, IT, and more by uniting apps, data, and agents on one trusted platform.",
-    "usp": "The #1 AI CRM that unites apps, data, and agents on one trusted platform to drive customer success across departments.",
-    "icp": [
-      "revenue teams",
-      "Small and medium-sized businesses (SMBs)",
-      "Enterprises looking for comprehensive CRM solutions",
-      "Industries requiring tailored AI-driven customer support solutions"
+    "mission": "We believe that business is the greatest platform for change. Grounded in trust, customer success, innovation, equality, and sustainability, we\u2019re committed to doing well in business and doing good in the world \u2014 investing 1% of our equity, technology, and time to create lasting change.",
+    "usp": "Salesforce is the #1 AI CRM platform that brings companies and customers together by providing a unified set of applications powered by agentic AI and data. It offers agentic CRM solutions tailored for companies of all sizes, ensuring scalability and flexibility.",
+    "icp": "Small businesses, startups, and large global enterprises across various industries such as financial services, retail, education, professional services, technology, and manufacturing.",
+    "icp_buyer": [
+      "Sales Manager",
+      "Marketing Manager",
+      "Customer Service Manager",
+      "IT Manager"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "meeting intelligence",
       "time to value",
@@ -5901,26 +5955,13 @@
       "Data integration and automation"
     ],
     "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "acquisition",
-      "retention",
-      "expansion",
-      "renewal"
+      "onboarding",
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "Standard Success Plan: Free",
-      "Premier Success Plan: Contact Us",
-      "Signature Success Plan: Contact Us",
-      "Professional Services: Contact Us"
-    ],
-    "free_trial": true,
+    "pricing": "$25 USD/user/month",
+    "free_trial": "Free for 30 days",
     "soc2": false,
     "founded": "1999",
     "case_study_details": [
@@ -5932,10 +5973,7 @@
         "source_url": "https://salesforce.com/au/agentforce/use-cases"
       }
     ],
-    "customers": [
-      "Talk",
-      "150,000+ companies worldwide"
-    ],
+    "customers": null,
     "value_statements": [
       "speed time to value",
       "reduce churn",
@@ -6082,53 +6120,59 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "San Francisco, CA",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "Salesforce provides a unified set of applications powered by agentic AI and data, helping departments like sales, service, marketing, commerce, and IT work together. It automates complex workflows, predicts business outcomes, and personalizes customer interactions, all on a single, integrated platform.",
+    "key_features": [
+      "Built-in AI for sales, marketing, and support",
+      "Agentforce technology for autonomous case resolution",
+      "Unified platform for apps, data, agents, and metadata",
+      "Industry-specific solutions",
+      "Agentic AI for workflow automation and business prediction"
+    ],
+    "outcomes": [
+      "Grow faster",
+      "Work smarter",
+      "Increase lead conversion",
+      "Enhance customer service",
+      "Boost productivity",
+      "Automate workflows",
+      "Unify and integrate data"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Salesforce provides a single, integrated platform that helps businesses find more leads, close more deals, and provide better service to customers. It offers a 360-degree view of every customer, allowing businesses to build stronger, more profitable relationships at scale.",
+    "workflows": [
+      "Automating lead qualification and service case resolution",
+      "Organizing contact information, leads, and customer service data",
+      "Automating tasks like logging calls and sending follow-up emails",
+      "Analyzing data to understand customer behavior and business performance",
+      "Personalizing customer interactions across various channels"
+    ],
+    "metrics": {
+      "autonomous_case_resolution": "66%",
+      "marketing_pipeline_increase": "15%",
+      "lead_conversion_increase": "1.8x",
+      "conversations_handled": "3M+"
+    }
   },
   {
     "vendor_name": "Salesforce AppExchange",
     "website": "https://appexchange.salesforce.com",
-    "mission": "Status By Product Sales Service Industries Sales and Service Available Agentforce Spiff ongoing events | 1 incident Integration MuleSoft Available Informatica Analytics Tableau Available Slack Slack Q",
-    "usp": "speed time to value",
-    "icp": [
-      "revenue teams"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "time to value",
       "product activation",
       "knowledge base"
     ],
-    "lifecycle_stages": [
-      "Onboard",
-      "Activate",
-      "Support"
-    ],
-    "pricing": [
-      "$",
-      "per user",
-      "per month",
-      "per year"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": null,
     "founded": "2011",
     "case_study_details": [],
-    "customers": [
-      "design",
-      "consulting",
-      "implementation",
-      "Save",
-      "Best",
-      "are",
-      "We",
-      "all",
-      "Digital",
-      "actively"
-    ],
+    "customers": null,
     "value_statements": [
       "speed time to value",
       "improve adoption"
@@ -6230,17 +6274,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [
-      "Salesforce",
-      "Slack",
-      "Front",
-      "Snowflake",
-      "Segment"
-    ],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Sentisum",
@@ -6297,30 +6338,23 @@
   {
     "vendor_name": "Sobot",
     "website": "https://sobot.io",
-    "mission": "Sobot leads in omnichannel & AI contact center solutions. Sobot customer service software includes AI Agent, Live Chat, Chatbot, Voice, Ticketing, WhatsApp API.",
-    "usp": "strengthen customer advocacy",
-    "icp": [
-      "Customer Support Manager",
-      "Marketing Director",
-      "Product Manager"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "support automation",
       "knowledge base",
       "voice of customer",
       "customer advocacy"
     ],
-    "lifecycle_stages": [
-      "Support",
-      "Advocate"
-    ],
-    "pricing": [],
-    "free_trial": true,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": null,
     "founded": "2014",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "medium",
     "evidence_urls": [
@@ -6337,38 +6371,30 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Springboard by Jackson River",
     "website": "https://jacksonriver.com",
-    "mission": "null Drive Engagement and Increase Donations Springboard by Jackson River is digital-first software solution that empowers your team and community to collaborate, fundraise, advocate and promote throu",
-    "usp": "automate workflows",
-    "icp": [
-      "support teams"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "knowledge base",
       "expansion",
       "voice of customer",
       "customer advocacy"
     ],
-    "lifecycle_stages": [
-      "Activate",
-      "Support",
-      "Expand",
-      "Advocate"
-    ],
-    "pricing": [
-      "$",
-      "per month",
-      "per year"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": null,
     "founded": "",
@@ -6438,16 +6464,7 @@
         "source_url": "https://jacksonriver.com/customer-success/aspca-case-study"
       }
     ],
-    "customers": [
-      "now",
-      "ASPCA",
-      "being",
-      "team",
-      "then",
-      "The",
-      "organization",
-      "were"
-    ],
+    "customers": null,
     "value_statements": [
       "automate workflows",
       "grow expansion revenue",
@@ -6521,31 +6538,22 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [
-      "Salesforce",
-      "ClickUp",
-      "Front",
-      "Segment"
-    ],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Staircase AI",
     "website": "https://staircase.ai",
-    "mission": "# Staircase AI | Customer Intelligence and Analytics Platform ![bg](https://staircase.ai/wp-content/uploads/2022/05/figure-1.svg) ## Staircase has been acquired by Gainsight!",
-    "usp": "improve customer health",
-    "icp": [
-      "SVP Sales & Partnerships",
-      "Head of Customer Success",
-      "Revenue Operations Manager",
-      "customer success teams",
-      "support teams",
-      "revenue teams"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "health scoring",
       "sentiment analysis",
@@ -6554,21 +6562,13 @@
       "voice of customer",
       "customer advocacy"
     ],
-    "lifecycle_stages": [
-      "Adopt",
-      "Expand",
-      "Renew",
-      "Advocate"
-    ],
-    "pricing": [
-      "$",
-      "per month"
-    ],
+    "lifecycle_stages": null,
+    "pricing": null,
     "free_trial": null,
     "soc2": null,
     "founded": "",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -6585,11 +6585,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Substack",
@@ -6683,39 +6686,22 @@
   {
     "vendor_name": "SuccessCOACHING",
     "website": "https://successcoaching.co",
-    "mission": "> CUSTOMER SUPPORT > ABOUT > LOGIN\u200d Training Customer Success Foundations Training Identifying & Communicating Value Training Value-Based Selling Training USF CS Certificate Program Change Management",
-    "usp": "Practical, proven methods and practices for Customer Success training, focusing on actionable content over general information.",
-    "icp": [
-      "Customer Success Managers",
-      "Customer Success Leaders",
-      "Sales Professionals"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": null,
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "Training Customer Success Managers",
       "Improving Customer Success leadership skills",
       "Enhancing sales techniques through Customer Success principles"
     ],
-    "lifecycle_stages": [
-      "adoption",
-      "retention",
-      "expansion",
-      "success"
-    ],
-    "pricing": [
-      "Solo CCSM Level 1 Subscription: $99.00\n1 User Per Year",
-      "Solo All-Access Bundle: $529.00\n1 User Per Year",
-      "USF Executive Certificate Programs: $1,695.00\n1 User With One-Time Purchase",
-      "Team All-Access Bundle: $1,295.00\n1 User Per Year",
-      "Team CCSM Level 1 Subscription: $249.00\n1 User Per Year",
-      "Outcome-Based Selling Certification Bootcamp: $1,195.00\n1 User With One-Time Purchase",
-      "3-Day CCSM Virtual Bootcamps: $1,395.00\n1 User With One-Time Purchase"
-    ],
-    "free_trial": false,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "2014",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -6777,17 +6763,20 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "San Carlos, US",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Supportbench",
     "website": "https://supportbench.com",
     "mission": null,
-    "usp": "Supportbench offers a unified agent workspace that integrates multiple communication channels, provides AI-driven insights, and automates various support processes, making it unique in its comprehensive approach to customer support management.",
+    "usp": "Supportbench offers a unified agent workspace that integrates multiple communication channels, advanced AI-driven features like sentiment analysis, and customizable dashboards, providing a comprehensive solution for managing customer support efficiently.",
     "icp": null,
     "icp_buyer": null,
     "use_cases": [
@@ -6959,6 +6948,8 @@
       "Customizable Dashboards",
       "Bulk Responses",
       "Merging and Splitting Cases",
+      "Custom Divisions and Grouping",
+      "Templates and Canned Responses",
       "Task Management",
       "Follow-The-Sun Support",
       "Collision Detection",
@@ -6966,6 +6957,7 @@
       "CSAT and CES Prediction",
       "AI Searching",
       "Knowledge Base GenAI Bot",
+      "GenAI FAQ Bot",
       "Automated Article Creation",
       "Activity Summarization",
       "Ticket Resolution Summarizations",
@@ -6986,8 +6978,13 @@
       "Fully White Labeled Email Authentication",
       "Dynamic SLAs",
       "Trigger Actions",
+      "Manually Set SLAs",
       "Multi-Level SLA",
-      "Escalation Management"
+      "Escalate to Next Level",
+      "De-escalate Back to Owner",
+      "Escalation Types",
+      "Escalation Templates",
+      "Multi-Level Escalations"
     ],
     "outcomes": [
       "Improved organization and searchability of support content",
@@ -6997,49 +6994,48 @@
       "Easier review and understanding of case outcomes"
     ],
     "ai_summary": "",
-    "value_proposition": "Supportbench streamlines customer support operations by unifying communication channels, automating ticket prioritization and tagging, and providing AI-driven insights, ultimately enhancing efficiency and customer satisfaction.",
+    "value_proposition": "Supportbench provides a robust platform for customer support teams to streamline their operations with features like smart auto prioritization, AI reporting, and multi-level escalations, ensuring critical issues are addressed promptly and efficiently.",
     "workflows": [
       "Agents manage customer interactions through a unified workspace, handling emails, chats, and other communication channels.",
-      "Custom views and dashboards are created to monitor and analyze support data.",
-      "Bulk responses and templates are used to streamline communication with customers.",
-      "Cases are merged, split, and managed according to custom policies and divisions.",
-      "Tasks are assigned and managed within cases to ensure timely resolution.",
-      "AI tools are used to predict customer satisfaction, prioritize tickets, and provide insights.",
-      "Escalation processes are managed through multi-level templates and dynamic SLAs."
+      "Custom views and dashboards are created to monitor and analyze support data effectively.",
+      "Cases are managed through merging, splitting, and applying custom policies to ensure efficient resolution.",
+      "AI tools are used to predict customer satisfaction, prioritize tickets, and provide insights into customer interactions.",
+      "Support teams utilize templates, canned responses, and task management to streamline communication and collaboration.",
+      "Escalation processes are managed through multi-level templates and dynamic SLAs to ensure timely resolution of critical issues."
     ],
     "metrics": null
   },
   {
     "vendor_name": "Survicate",
     "website": "https://survicate.com",
-    "mission": "A customer feedback platform that lets you survey every channel, automate feedback flows, and uncover customer insights from multiple sources",
-    "usp": "strengthen customer advocacy",
-    "icp": [
-      "Head of Customer Success",
-      "Marketing Manager",
-      "Operations Manager"
+    "mission": null,
+    "usp": "Survicate offers advanced survey capabilities with features like AI categorization, sentiment analysis, and extensive integrations, making it a preferred choice for CX, Product, Research, and Marketing teams.",
+    "icp": "CX, Product, Research and Marketing teams",
+    "icp_buyer": [
+      "UX Research Lead",
+      "CRM Manager",
+      "Product Lead"
     ],
-    "icp_buyer": [],
     "use_cases": [
       "churn prevention",
       "voice of customer"
     ],
     "lifecycle_stages": [
-      "Renew",
-      "Advocate"
+      "onboarding",
+      "adoption",
+      "renewal",
+      "expansion"
     ],
-    "pricing": [
-      "Free: Free",
-      "Good: $89.00\nPer Month",
-      "Better: $134.00",
-      "Best: $224.00",
-      "Better Than The Rest: Starting at $269.00\nPer Month"
-    ],
-    "free_trial": true,
+    "pricing": "Monthly or annually billed plans with custom yearly options",
+    "free_trial": "10-day free trial",
     "soc2": false,
     "founded": "2013",
     "case_study_details": [],
-    "customers": [],
+    "customers": [
+      "Intergiro",
+      "Wellhub",
+      "Kard"
+    ],
     "value_statements": [],
     "confidence": "medium",
     "evidence_urls": [
@@ -7060,11 +7056,41 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "Warsaw, MA",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": [
+      "Salesforce Marketing Cloud (Pardot)",
+      "25+ integrations",
+      "Pro integrations",
+      "All integrations available"
+    ],
+    "how_it_works": "Survicate allows users to create and distribute surveys across multiple channels to collect feedback. It clusters responses into themes to help shape user experiences and improve ratings on review sites.",
+    "key_features": [
+      "Unlimited multichannel surveys",
+      "Research Assistant",
+      "25+ integrations",
+      "Multilingual surveys",
+      "Custom branding",
+      "Advanced survey logic",
+      "Webhooks and Export API",
+      "AI Categorization & Sentiment",
+      "Respondent Identification",
+      "Event & Behaviour Targeting"
+    ],
+    "outcomes": [
+      "Shaping user experience",
+      "Increased Trustpilot rating",
+      "Faster feature validation"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Survicate provides a comprehensive survey platform that enables fast and efficient data collection and analysis, helping businesses improve user experience and make informed decisions.",
+    "workflows": "Users create surveys using templates or AI, distribute them across channels, and collect responses. They can target surveys based on attributes and events, filter results using CRM attributes, and analyze data using the Insights Hub. Responses are clustered into themes for actionable insights.",
+    "metrics": {
+      "responses_in_a_day_and_a_half": 2000,
+      "NPS_responses_in_a_day": 1000,
+      "Trustpilot_rating_increase": {
+        "from": 4.2,
+        "to": 4.8
+      }
+    }
   },
   {
     "vendor_name": "Teamgate",
@@ -7295,16 +7321,10 @@
   {
     "vendor_name": "The GitLab Handbook",
     "website": "https://handbook.gitlab.com",
-    "mission": "Company Values Mission Communication About the Handbook People Group Policies Hiring Diversity (DIB) Total Rewards Learning Development Product Product Handbook Product Principles Product Security Ope",
-    "usp": "GitLab offers a comprehensive suite for product development, including features that are available for free, catering to diverse user needs while promoting easy adoption through a unified application.",
-    "icp": [
-      "customer success teams",
-      "support teams",
-      "Product Managers",
-      "Customer Success Managers",
-      "IT Managers"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "GitLab is an all-remote company that takes a handbook-first approach.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "sales-to-cs handoff",
       "meeting intelligence",
@@ -7321,33 +7341,13 @@
       "Collaborating with cross-functional teams",
       "Customer Success Management"
     ],
-    "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "acquisition",
-      "onboarding",
-      "engagement",
-      "retention"
-    ],
-    "pricing": [
-      "Free: Free\n5 Users Per Month",
-      "Essentials: $1.00\n1 Users Per Month",
-      "Advanced: $2.50\n1 Users Per Month",
-      "Enterprise: $4.00\n1 Users Per Month"
-    ],
-    "free_trial": true,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "",
     "case_study_details": [],
-    "customers": [
-      "already"
-    ],
+    "customers": null,
     "value_statements": [
       "improve handoff",
       "speed time to value",
@@ -7494,11 +7494,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "N/A",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "GitLab operates as an all-remote company with a handbook-first approach, providing a comprehensive guide on company operations.",
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Thecscafe",
@@ -7550,35 +7553,23 @@
   {
     "vendor_name": "Thematic",
     "website": "https://getthematic.com",
-    "mission": "Get targeted, accurate insights from your customer feedback in seconds with Thematic\u2019s AI-powered platform. Easily transform unstructured feedback into clear, specific and actionable themes, without setup costs. Thematic makes it fast and easy to get insights that help you improve customer experienc",
-    "usp": "grow expansion revenue",
-    "icp": [
-      "Manager of Commercial Analytics & VOC",
-      "Head of Customer Experience",
-      "Product Manager"
-    ],
-    "icp_buyer": [],
+    "mission": "Turn customer feedback into clear, actionable insights.",
+    "usp": "Connects every customer voice to insights you can trust, understand, and act on.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "sentiment analysis",
       "expansion",
       "churn prevention",
       "voice of customer"
     ],
-    "lifecycle_stages": [
-      "Adopt",
-      "Expand",
-      "Renew",
-      "Advocate"
-    ],
-    "pricing": [
-      "Foundation: $25,000.00\nPer Year",
-      "Custom Plan: Contact Us"
-    ],
-    "free_trial": false,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "2016",
     "case_study_details": [],
-    "customers": [],
+    "customers": null,
     "value_statements": [],
     "confidence": "high",
     "evidence_urls": [
@@ -7599,11 +7590,16 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "San Francisco, CA",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": "Thematic connects every customer voice to insights you can trust, understand, and act on.",
+    "key_features": null,
+    "outcomes": [
+      "turns customer feedback into clear, actionable insights"
+    ],
+    "ai_summary": "",
+    "value_proposition": "Transforms customer feedback into actionable intelligence.",
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Totango",
@@ -7923,18 +7919,10 @@
   {
     "vendor_name": "Velaris",
     "website": "https://velaris.io",
-    "mission": "AI Customer Success Platform Meet the intelligent platform for Customer Success and Post-Sales Get complete visibility of every customer and process.",
-    "usp": "The only Customer Success Platform that offers a real AI teammate to help manage accounts, predict churn, and orchestrate personalized customer journeys.",
-    "icp": [
-      "SaaS companies",
-      "customer success teams",
-      "support teams",
-      "revenue teams",
-      "Customer Success Managers",
-      "Post-Sales Teams",
-      "Product Managers"
-    ],
-    "icp_buyer": [],
+    "mission": null,
+    "usp": "All the tools you need in one license.",
+    "icp": null,
+    "icp_buyer": null,
     "use_cases": [
       "meeting intelligence",
       "time to value",
@@ -7954,26 +7942,9 @@
       "Automate workflows for customer success",
       "Create personalized customer journeys"
     ],
-    "lifecycle_stages": [
-      "Sign",
-      "Onboard",
-      "Activate",
-      "Adopt",
-      "Support",
-      "Expand",
-      "Renew",
-      "Advocate",
-      "Onboarding",
-      "Monitoring",
-      "Renewal",
-      "Expansion",
-      "Churn Prevention"
-    ],
-    "pricing": [
-      "Small-Business",
-      "Mid-Market"
-    ],
-    "free_trial": false,
+    "lifecycle_stages": null,
+    "pricing": null,
+    "free_trial": null,
     "soc2": false,
     "founded": "2023",
     "case_study_details": [
@@ -8015,11 +7986,7 @@
         "metric": "N/A"
       }
     ],
-    "customers": [
-      "achieve",
-      "Velaris",
-      "describes"
-    ],
+    "customers": null,
     "value_statements": [
       "speed time to value",
       "reduce churn",
@@ -8114,11 +8081,14 @@
     "linkedin_url": "",
     "company_size": "",
     "hq_address": "London",
-    "integrations": [],
-    "how_it_works": "",
-    "key_features": [],
-    "outcomes": [],
-    "ai_summary": ""
+    "integrations": null,
+    "how_it_works": null,
+    "key_features": null,
+    "outcomes": null,
+    "ai_summary": "",
+    "value_proposition": null,
+    "workflows": null,
+    "metrics": null
   },
   {
     "vendor_name": "Vertice",
