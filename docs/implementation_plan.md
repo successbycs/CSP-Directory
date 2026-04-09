@@ -165,6 +165,16 @@ python3 scripts/autonomous_audit.py
 
 ---
 
+## Future / Non-Critical
+
+### M-BP1 CSP→AF backport: web_page_fetch, site_explorer, health_check ported to AF recipes
+Status: `deferred`
+Depends on: M46, M47
+
+This is future backport work for the Autonomous Framework. It is useful for reuse across products, but it is non-critical for the current CSP delivery path and stays paused until active CSP milestones are complete.
+
+---
+
 ## Not Started
 
 ### M44 Junk domain enforcement: config-driven denylist with subdomain matching

@@ -1260,7 +1260,7 @@
       "id": "M-BP1",
       "title": "CSP\u2192AF backport: web_page_fetch, site_explorer, health_check ported to AF recipes",
       "delivery_type": "capability_delivering",
-      "status": "in_progress",
+      "status": "deferred",
       "dependencies": [
         "M46",
         "M47"
@@ -1285,6 +1285,7 @@
       "interaction_targets": [
         "system"
       ],
+      "deferred_reason": "Future non-critical backport scope paused in favor of active CSP delivery work such as M109 and other production fixes.",
       "verify": [
         "python3 scripts/autonomous_audit.py"
       ]
