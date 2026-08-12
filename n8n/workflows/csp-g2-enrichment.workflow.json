@@ -1,0 +1,327 @@
+{
+  "name": "CSP G2 Enrichment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "csp-g2-enrichment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "g2-0001-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "csp-g2-enrichment"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst vendors = body.vendors || (body.website ? [{ vendor_name: body.vendor_name || '', website: body.website }] : []);\nif (!vendors.length) return [{ json: { _no_vendors: true } }];\nconst rapidapi_key = (body.rapidapi_key || '').trim();\nif (!rapidapi_key) throw new Error('rapidapi_key required in request body');\nconst supabase_url = (body.supabase_url || process.env.SUPABASE_URL || '').trim();\nconst supabase_key = (body.supabase_key || process.env.SUPABASE_KEY || '').trim();\nreturn vendors.map(v => ({\n  json: {\n    vendor_name: v.vendor_name || v.name || '',\n    website: (v.website || '').replace(/\\/$/, ''),\n    g2_slug: v.g2_slug || '',\n    rapidapi_key,\n    supabase_url,\n    supabase_key,\n  }\n}));"
+      },
+      "id": "g2-0002-0002-0002-0002-000000000002",
+      "name": "Split Vendors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n// Use provided slug, or derive from vendor name\nlet slug = item.g2_slug;\nif (!slug) {\n  // Strip common company suffixes\n  const clean = item.vendor_name\n    .replace(/\\s+(Software|Inc\\.?|LLC|Ltd\\.?|Corp\\.?|Group|Technologies|Tech|Solutions|Platform|Systems)$/i, '')\n    .trim();\n  slug = clean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');\n}\nreturn [{ json: { ...item, g2_slug: slug } }];"
+      },
+      "id": "g2-0003-0003-0003-0003-000000000003",
+      "name": "Build Slug",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://g2-data-api.p.rapidapi.com/g2-products",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "product",
+              "value": "={{ $json.g2_slug }}"
+            },
+            {
+              "name": "max_reviews",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "g2-data-api.p.rapidapi.com"
+            },
+            {
+              "name": "x-rapidapi-key",
+              "value": "={{ $json.rapidapi_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "g2-0004-0004-0004-0004-000000000004",
+      "name": "Call RapidAPI G2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const vendor = $('Build Slug').item.json;\nconst resp = $input.first().json;\n\nif (!resp.product_name) {\n  return [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, g2_slug: vendor.g2_slug, _has_data: false, _miss_reason: resp.message || 'no_match' } }];\n}\n\n// Plausibility check: G2 name should share a word with vendor name\nconst stopwords = new Set(['software','inc','llc','ltd','corp','platform','solutions','technologies','group','customer','success','the','and','for']);\nconst vendorWords = new Set(vendor.vendor_name.toLowerCase().split(/\\W+/).filter(w => w.length > 2 && !stopwords.has(w)));\nconst g2Words = new Set(resp.product_name.toLowerCase().split(/\\W+/).filter(w => w.length > 2));\nconst overlap = [...vendorWords].some(w => g2Words.has(w));\nif (!overlap) {\n  return [{ json: { vendor_name: vendor.vendor_name, website: vendor.website, g2_slug: vendor.g2_slug, _has_data: false, _miss_reason: `plausibility_fail:${resp.product_name}` } }];\n}\n\nconst cats = Array.isArray(resp.categories) ? resp.categories : (resp.category ? [resp.category] : []);\nconst g2_categories = cats.map(c => c.name || c).filter(Boolean).slice(0, 8);\nconst founded = resp.company_founded_year ? String(resp.company_founded_year) : null;\nconst hq_address = resp.company_location || null;\nconst plans = Array.isArray(resp.pricing_plans) ? resp.pricing_plans : [];\nconst pricing = plans.map(p => [p.plan_name, p.plan_price].filter(Boolean).join(': ')).filter(Boolean);\nconst free_trial = plans.some(p => /free/i.test((p.plan_name || '') + (p.plan_price || '')));\nconst featText = JSON.stringify(resp.features || '');\nconst soc2 = /SOC\\s*2/i.test(featText);\nconst gdpr = /\\bGDPR\\b/i.test(featText);\nconst compliance = [soc2 && 'SOC 2', gdpr && 'GDPR'].filter(Boolean);\n\nreturn [{ json: {\n  vendor_name: vendor.vendor_name,\n  website: vendor.website,\n  g2_slug: vendor.g2_slug,\n  supabase_url: vendor.supabase_url,\n  supabase_key: vendor.supabase_key,\n  g2_product_name: resp.product_name,\n  g2_url: resp.g2_link || resp.g2_reviews_link || '',\n  g2_rating: resp.rating || null,\n  g2_review_count: resp.reviews || null,\n  g2_market_segment: '',\n  g2_categories,\n  soc2,\n  compliance,\n  founded,\n  hq_address,\n  pricing: pricing.length ? pricing : null,\n  free_trial: plans.length ? free_trial : null,\n  pricing_source: pricing.length ? 'g2' : null,\n  _has_data: !!(resp.rating || resp.reviews || g2_categories.length),\n} }];"
+      },
+      "id": "g2-0005-0005-0005-0005-000000000005",
+      "name": "Map G2 Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json._has_data }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "g2-0006-0006-0006-0006-000000000006",
+      "name": "Has G2 Data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\n\n// Build upsert row \u2014 only include non-null bonus fields\nconst row = {\n  website: item.website,\n  g2_url: item.g2_url,\n  g2_rating: item.g2_rating,\n  g2_review_count: item.g2_review_count,\n  g2_market_segment: item.g2_market_segment || '',\n  g2_categories: item.g2_categories,\n  soc2: item.soc2,\n  compliance: item.compliance,\n};\nif (item.founded) row.founded = item.founded;\nif (item.hq_address) row.hq_address = item.hq_address;\nif (item.pricing) { row.pricing = item.pricing; row.pricing_source = item.pricing_source; }\nif (item.free_trial !== null) row.free_trial = item.free_trial;\n\nreturn [{ json: { ...item, _upsert_row: row } }];"
+      },
+      "id": "g2-0007-0007-0007-0007-000000000007",
+      "name": "Build Upsert Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -160
+      ]
+    },
+    {
+      "id": "store-crawl-result-g2",
+      "name": "Store Crawl Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1680,
+        -160
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $json.supabase_url + '/rest/v1/cs_vendors?website=eq.' + encodeURIComponent($json.website) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "={{ $json.supabase_key }}" },
+            { "name": "Authorization", "value": "={{ 'Bearer ' + $json.supabase_key }}" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json._upsert_row }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, vendor: $json.vendor_name, g2_product: $json.g2_product_name, g2_rating: $json.g2_rating, g2_review_count: $json.g2_review_count, supabase_status: $json.statusCode || $json.status || 'written' }) }}",
+        "options": {}
+      },
+      "id": "g2-0009-0009-0009-0009-000000000009",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, vendor: $json.vendor_name, miss: true, reason: $json._miss_reason || 'no_data' }) }}",
+        "options": {}
+      },
+      "id": "g2-0010-0010-0010-0010-000000000010",
+      "name": "Respond Miss",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Split Vendors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Vendors": {
+      "main": [
+        [
+          {
+            "node": "Build Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slug": {
+      "main": [
+        [
+          {
+            "node": "Call RapidAPI G2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call RapidAPI G2": {
+      "main": [
+        [
+          {
+            "node": "Map G2 Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map G2 Response": {
+      "main": [
+        [
+          {
+            "node": "Has G2 Data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has G2 Data?": {
+      "main": [
+        [
+          {
+            "node": "Build Upsert Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Miss",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Upsert Row": {
+      "main": [
+        [
+          {
+            "node": "Store Crawl Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Crawl Result": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "staticData": null,
+  "meta": {
+    "description": "CSP G2 enrichment via RapidAPI G2 Data Api (g2-data-api.p.rapidapi.com). Writes g2_rating, g2_review_count, g2_categories, soc2, compliance + bonus fields (founded, hq_address, pricing) directly to Supabase cs_vendors via REST upsert on website. No local admin API dependency."
+  },
+  "pinData": {}
+}
