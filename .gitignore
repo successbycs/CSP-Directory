@@ -140,3 +140,7 @@ Thumbs.db
 outputs/
 tools/agent_cli
 .mcp.json
+
+# Local integration configuration and runtime state
+# These files may contain credentials, webhook endpoints, or machine-specific paths.
+runs/
